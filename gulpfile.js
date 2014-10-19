@@ -1,16 +1,16 @@
 var fs = require('fs');
 var _ = require('lodash');
 var gulp = require('gulp'),
-	gutil = require('gulp-util'),
-	jshint = require('gulp-jshint'),
-	traceur = require('gulp-traceur'),
-	webpack = require('webpack'),
-	uglify = require('gulp-uglify'),
-	rename = require('gulp-rename'),
-	karma = require('gulp-karma'),
-	rimraf = require('rimraf'),
-	sourcemaps = require('gulp-sourcemaps'),
-	bump = require('gulp-bump');
+		gutil = require('gulp-util'),
+		jshint = require('gulp-jshint'),
+		traceur = require('gulp-traceur'),
+		webpack = require('webpack'),
+		uglify = require('gulp-uglify'),
+		rename = require('gulp-rename'),
+		karma = require('gulp-karma'),
+		rimraf = require('rimraf'),
+		sourcemaps = require('gulp-sourcemaps'),
+		bump = require('gulp-bump');
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,23 +48,23 @@ var MODULES = [];
 var EXTERNAL_MODULES = [];
 
 fs.readdirSync('./modules')
-	.map(function (filename) { return fs.readFileSync('./modules/'+filename) })
-	.map(JSON.parse)
-	.forEach(function (mod) {
-		if (mod.external || mod.type === 'external-library') {
-			EXTERNAL_MODULES.push(externalModule(mod.name, mod.var));
-		} else {
-			MODULES.push(mod);
-		}
-	});
+		.map(function (filename) { return fs.readFileSync('./modules/'+filename) })
+		.map(JSON.parse)
+		.forEach(function (mod) {
+			if (mod.external || mod.type === 'external-library') {
+				EXTERNAL_MODULES.push(externalModule(mod.name, mod.var));
+			} else {
+				MODULES.push(mod);
+			}
+		});
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 gulp.task('lint', function () {
 	return gulp.src('src/**/*.js')
-		.pipe(jshint())
-		.pipe(jshint.reporter('jshint-stylish'))
-		.pipe(jshint.reporter('fail'));
+			.pipe(jshint())
+			.pipe(jshint.reporter('jshint-stylish'))
+			.pipe(jshint.reporter('fail'));
 });
 
 gulp.task('clean-tmp', function (callback) {
@@ -73,19 +73,19 @@ gulp.task('clean-tmp', function (callback) {
 
 gulp.task('traceur', ['clean-tmp', 'lint'], function () {
 	return gulp.src('src/**/*.js')
-		.pipe(sourcemaps.init())
-		.pipe(traceur({
-			script: true,
-			sourceMaps: true
-		}))
-		.on('error', logAndKeepGoing())
-		.pipe(sourcemaps.write())
-		.pipe(gulp.dest('.intermediate-output'));
+			.pipe(sourcemaps.init())
+			.pipe(traceur({
+				script: true,
+				sourceMaps: true
+			}))
+			.on('error', logAndKeepGoing())
+			.pipe(sourcemaps.write())
+			.pipe(gulp.dest('.intermediate-output'));
 });
 
 gulp.task('copy-non-js-files', ['clean-tmp'], function () {
 	return gulp.src(['src/**/*.scss', 'src/**/*.html'])
-		.pipe(gulp.dest('.intermediate-output'));
+			.pipe(gulp.dest('.intermediate-output'));
 });
 
 MODULES.forEach(function (m) {
@@ -125,6 +125,7 @@ MODULES.forEach(function (m) {
 				output: {
 					path: './dist',
 					filename: m.file,
+					library: m.var,
 					libraryTarget: 'umd',
 					sourceMapFilename: m.file+'.map'
 				}
@@ -148,15 +149,15 @@ MODULES.forEach(function (m) {
 	if (m.type === 'internal-library') {
 		gulp.task('uglify:' + m.name, ['webpack:' + m.name], function () {
 			return gulp.src('dist/**/' + m.file)
-				.pipe(uglify())
-				.pipe(rename({suffix: '.min'}))
-				.pipe(gulp.dest('dist'));
+					.pipe(uglify())
+					.pipe(rename({suffix: '.min'}))
+					.pipe(gulp.dest('dist'));
 		});
 		gulp.task('build:' + m.name, ['webpack:' + m.name, 'uglify:' + m.name]);
 	} else if (m.type === 'application') {
 		gulp.task('copy-html:' + m.name, function () {
 			return gulp.src(['src/' + m.dir + '/*.html'])
-				.pipe(gulp.dest('dist/' + m.dir));
+					.pipe(gulp.dest('dist/' + m.dir));
 		});
 		gulp.task('build:' + m.name, ['webpack:' + m.name, 'copy-html:' + m.name]);
 	}
@@ -184,8 +185,8 @@ gulp.task('watch', function () {
 ['major', 'minor', 'patch', 'prerelease'].forEach(function (type) {
 	gulp.task('bump:'+type, function () {
 		return gulp.src(['package.json', 'bower.json'])
-			.pipe(bump({ type: type }))
-			.pipe(gulp.dest('./'));
+				.pipe(bump({ type: type }))
+				.pipe(gulp.dest('./'));
 	});
 });
 

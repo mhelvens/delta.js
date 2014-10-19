@@ -349,24 +349,22 @@ define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
 
 	// a delta model class with common operations and a partially ordered set of deltas
 	var PartiallyOrderedDM = U.newSubclass(ExtendedDM, function () {
-		var _graph = new JsGraph();
-		/* deltas in a strict partial order */
+		var _graph = new JsGraph(); /* deltas in a strict partial order */
 		U.extend(this, {
 			// get the graph of deltas
 			graph() { return _graph }
 		});
 
-		var _deltaConditions = {};
-		/* arrays of arrays: disjunctive normal forms */
-		var _settledDeltaConditions = {};
-		/* Booleans */
+		var _deltaConditions = {}; /* arrays of arrays: disjunctive normal forms */
+		var _settledDeltaConditions = {}; /* Booleans */
 		var _conditionsUnsettled = false;
 
 		function _registerDisjunct(id, disjunct) {
+			_conditionsUnsettled = true;
 			if (disjunct === true) {
 				_settledDeltaConditions[id] = true;
 			} else if (_deltaConditions[id] !== true) {
-				U.array(_deltaConditions, 'id').push(disjunct);
+				U.array(_deltaConditions, id).push(disjunct);
 			}
 		}
 
@@ -427,7 +425,7 @@ define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
 					selected: {
 						get() {
 							_settleConditions();
-							return !!_settledDeltaConditions[config['id']];
+							return !!_settledDeltaConditions[delta.id];
 						}
 					},
 					if: {
@@ -477,8 +475,10 @@ define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
 
 				// update conditions
 				_conditionsUnsettled = true;
-				_registerDisjunct(delta.id, delta.if);
-				delta.selects.forEach((id) => { _registerDisjunct(id, [delta.id]); });
+				if (U.isDefined(delta.if)) { _registerDisjunct(delta.id, delta.if) }
+				delta.selects.forEach((id) => {
+					_registerDisjunct(id, [delta.id]);
+				});
 
 				// update the graph
 				_graph.addVertex(delta.id, delta);
@@ -508,14 +508,17 @@ define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
 				obj[name] = val;
 
 				// check if any 'onlyIf' conditions are being violated
+				_settleConditions();
 				_graph.eachVertex((id, delta) => {
-					U.assert(!delta.selected || delta.onlyIf.every((d) => d.selected),
+					U.assert(!delta.selected || delta.onlyIf.every((d) => _graph.vertexValue(d).selected),
 							`The 'onlyIf' condition of delta '${delta.id}' was violated.`);
 				});
 
-				// apply the delta
+				// apply the proper deltas
 				_graph.topologically((id, delta) => {
-					delta.selectivelyApplyTo(obj, name);
+					if (delta.selected) {
+						delta.selectivelyApplyTo(obj, name);
+					}
 				});
 
 				// return the transformed value
