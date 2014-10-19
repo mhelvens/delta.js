@@ -1,0 +1,29 @@
+# http://editorconfig.org
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+
+[*.js]
+indent_style = tab
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.json]
+indent_style = tab
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.scss]
+indent_style = tab
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.html]
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.md]
+trim_trailing_whitespace = false
+insert_final_newline = true

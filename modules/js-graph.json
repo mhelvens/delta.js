@@ -1,0 +1,6 @@
+{
+    "type": "external-library",
+	"external": true,
+	"name": "js-graph",
+	"var": "JsGraph"
+}

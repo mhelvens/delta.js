@@ -1,0 +1,25 @@
+{
+  "trailing":  true,
+  "freeze":    true,
+  "latedef":   "nofunc",
+  "node":      true,
+  "noarg":     true,
+  "smarttabs": true,
+  "esnext":    true,
+  "sub":       true,
+  "boss":      true,
+  "eqeqeq":    true,
+  "newcap":    true,
+  "lastsemic": true,
+  "devel":     true,
+  "immed":     true,
+  "browser":   true,
+  "bitwise":   true,
+  "curly":     true,
+  "undef":     true,
+  "nonew":     true,
+  "forin":     true,
+  "evil":      true,
+
+  "predef": [ "requirejs", "define", "describe", "beforeEach", "it", "expect" ]
+}
