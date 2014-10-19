@@ -1,4 +1,4 @@
-define(['js-graph', 'bluebird', './traverse-dag.js', './misc.js'], function (JsGraph, P, traverse, U) {
+define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
 	'use strict';
 
 	/******************************************************************************************************************/
@@ -397,12 +397,12 @@ define(['js-graph', 'bluebird', './traverse-dag.js', './misc.js'], function (JsG
 				// perform sanity checks
 				U.assert(config instanceof Object,
 						`A delta should be given as an object.`);
-				U.assert(typeof config.id === 'string',
+				U.assert(typeof config['id'] === 'string',
 						`A delta should have a unique 'id'.`);
 
 				// normalize configuration
-				if (config.resolves && config.resolves.length > 0) {
-					config.manuallySelectable = false;
+				if (config['resolves'] && config['resolves'].length > 0) {
+					config['manuallySelectable'] = false;
 				}
 				[
 					['manuallySelectable', true],
@@ -418,27 +418,27 @@ define(['js-graph', 'bluebird', './traverse-dag.js', './misc.js'], function (JsG
 						});
 
 				// create delta
-				var delta = new this.Delta();
+				var delta = new this.Delta(config);
 
 				// create delta properties
 				Object.defineProperties(delta, {
-					id: { get() { return config.id } },
-					manuallySelectable: { get() { return !!config.manuallySelectable } },
+					id: { get() { return config['id'] } },
+					manuallySelectable: { get() { return !!config['manuallySelectable'] } },
 					selected: {
 						get() {
 							_settleConditions();
-							return !!_settledDeltaConditions[config.id];
+							return !!_settledDeltaConditions[config['id']];
 						}
 					},
 					if: {
 						get() {
-							if (config.if === true) { /* literal 'true' */
+							if (config['if'] === true) { /* literal 'true' */
 								return true;
-							} else if (config.if || config.iff || config.resolves) { /* array of ids */
+							} else if (config['if'] || config['iff'] || config['resolves']) { /* array of ids */
 								return [].concat(
-										config.if || [],
-										config.iff || [],
-										config.resolves || []
+										config['if'] || [],
+										config['iff'] || [],
+										config['resolves'] || []
 								);
 							} else { /* no if clause */
 								return undefined;
@@ -448,28 +448,28 @@ define(['js-graph', 'bluebird', './traverse-dag.js', './misc.js'], function (JsG
 					onlyIf: {
 						get() {
 							return [].concat(
-									config.onlyIf || [],
-									config.iff || [],
-									config.expects || [],
-									config.resolves || []
+									config['onlyIf'] || [],
+									config['iff'] || [],
+									config['expects'] || [],
+									config['resolves'] || []
 							);
 						}
 					},
 					after: {
 						get() {
 							return [].concat(
-									config.after || [],
-									config.expects || [],
-									config.resolves || [],
-									config.requires || []
+									config['after'] || [],
+									config['expects'] || [],
+									config['resolves'] || [],
+									config['requires'] || []
 							);
 						}
 					},
 					selects: {
 						get() {
 							return [].concat(
-									config.selects || [],
-									config.requires || []
+									config['selects'] || [],
+									config['requires'] || []
 							);
 						}
 					}
