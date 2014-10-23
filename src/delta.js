@@ -1,4 +1,4 @@
-define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
+define(['js-graph', './misc.js'], function (JsGraph, U) {
 	'use strict';
 
 	/******************************************************************************************************************/
@@ -322,7 +322,7 @@ define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
 				var partOne = obj[property];
 				var partTwo = this.value;
 				obj[property] = function (...args) {
-					return P.resolve(partOne.apply(this, args)).then(function () {
+					return resolvePromise(partOne.apply(this, args)).then(function () {
 						return partTwo.apply(this, args);
 					}.bind(this));
 				};
@@ -342,6 +342,8 @@ define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
 		this._addCompositionRule('after', 'insert', applySecondToFirstValue);
 		/* TODO: the above compositions of 'insert' and 'after' are not actually correct (e.g., not associative). */
 	});
+
+
 
 
 	/******************************************************************************************************************/
@@ -531,6 +533,16 @@ define(['js-graph', 'bluebird', './misc.js'], function (JsGraph, P, U) {
 
 
 	/******************************************************************************************************************/
+
+	var resolvePromise = null;
+	U.extend(PartiallyOrderedDM, {
+		registerPromiseResolver(promiseResolverFn) {
+			resolvePromise = promiseResolverFn;
+		}
+	});
+
+	/******************************************************************************************************************/
+
 
 
 	// return the main object
