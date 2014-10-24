@@ -102,7 +102,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		});
 
 		// an easy way to get the 'modify' delta constructor
-		Object.defineProperty(this, 'Delta', {
+		Object.defineProperty(this, 'ModifyDelta', {
 			get() { return _opTypes['modify'].Delta }
 		});
 
@@ -361,12 +361,14 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		var _settledDeltaConditions = {}; /* Booleans */
 		var _conditionsUnsettled = false;
 
-		function _registerDisjunct(id, disjunct) {
+		function _registerDisjunct(deltaName, disjunct) {
 			_conditionsUnsettled = true;
 			if (disjunct === true) {
-				_settledDeltaConditions[id] = true;
-			} else if (_deltaConditions[id] !== true) {
-				U.array(_deltaConditions, id).push(disjunct);
+				_settledDeltaConditions[deltaName] = true;
+			} else if (disjunct === false) {
+				// change nothing
+			} else if (_deltaConditions[deltaName] !== true) {
+				U.array(_deltaConditions, deltaName).push(disjunct);
 			}
 		}
 
@@ -376,13 +378,13 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 				var somethingChanged;
 				do {
 					somethingChanged = false;
-					_graph.eachVertex((id) => {
-						if (_settledDeltaConditions[id]) { return }
-						if (U.isUndefined(_deltaConditions[id])) { return }
-						if (_deltaConditions[id].some((disjunct) =>
+					_graph.eachVertex((deltaName) => {
+						if (_settledDeltaConditions[deltaName]) { return }
+						if (U.isUndefined(_deltaConditions[deltaName])) { return }
+						if (_deltaConditions[deltaName].some((disjunct) =>
 										disjunct.every((conjunct) =>
 												_settledDeltaConditions[conjunct]))) {
-							_settledDeltaConditions[id] = true;
+							_settledDeltaConditions[deltaName] = true;
 							somethingChanged = true;
 						}
 					});
@@ -391,85 +393,83 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		}
 
 		U.extend(this, {
-			// register a new delta into the delta model
-			register(config) {
+			// a constructor to create a new delta and register it into the delta model
+			Delta(deltaName, options) {
 
 				// perform sanity checks
-				U.assert(config instanceof Object,
+				U.assert(options instanceof Object,
 						`A delta should be given as an object.`);
-				U.assert(typeof config['id'] === 'string',
-						`A delta should have a unique 'id'.`);
+				// TODO: check uniqueness of `deltaName`
 
-				// normalize configuration
-				if (config['resolves'] && config['resolves'].length > 0) {
-					config['manuallySelectable'] = false;
-				}
-				[
-					['manuallySelectable', true],
-					['onlyIf', []],
-					['after', []],
-					['selects', []],
-					['expects', []],
-					['requires', []]
-				].forEach((prop, def) => {
-							if (U.isUndefined(config[prop])) {
-								config[prop] = def;
-							}
-						});
-
-				// create delta
-				var delta = new this.Delta(config);
+				// make this delta a ModifyDelta, so run its constructor
+				this.ModifyDelta.apply(this, options);
 
 				// create delta properties
-				Object.defineProperties(delta, {
-					id: { get() { return config['id'] } },
-					manuallySelectable: { get() { return !!config['manuallySelectable'] } },
+				Object.defineProperties(this, {
+					name: { get() { return deltaName } },
+					manuallySelectable: {
+						get() {
+							if (U.isDefined(options['manuallySelectable'])) {
+								return !!options['manuallySelectable'];
+							} else if (U.isDefined(options['resolves']) && options['resolves'].length > 0) {
+								return false;
+							} else {
+								return true;
+							}
+						}
+					},
 					selected: {
 						get() {
 							_settleConditions();
-							return !!_settledDeltaConditions[delta.id];
+							return !!_settledDeltaConditions[deltaName];
 						}
 					},
 					if: {
 						get() {
-							if (config['if'] === true) { /* literal 'true' */
-								return true;
-							} else if (config['if'] || config['iff'] || config['resolves']) { /* array of ids */
+							if (options['if'] === true || options['if'] === false) { /* literal 'true' or 'false' */
+								return options['if'];
+							} else if (options['if'] || options['iff'] || options['resolves']) { /* array of names */
 								return [].concat(
-										config['if'] || [],
-										config['iff'] || [],
-										config['resolves'] || []
+										options['if'] || [],
+										options['iff'] || [],
+										options['resolves'] || []
 								);
-							} else { /* no if clause */
-								return undefined;
+							} else { /* default: false */
+								return false;
 							}
 						}
 					},
 					onlyIf: {
 						get() {
-							return [].concat(
-									config['onlyIf'] || [],
-									config['iff'] || [],
-									config['expects'] || [],
-									config['resolves'] || []
-							);
+							if (options['onlyIf'] === true || options['onlyIf'] === false) { /* literal 'true' or 'false' */
+								return options['onlyIf'];
+							} else if (options['onlyIf'] || options['iff'] || options['expects'] ||  options['resolves']) { /* array of names */
+								return [].concat(
+										options['onlyIf'] || [],
+										options['iff'] || [],
+										options['expects'] || [],
+										options['resolves'] || []
+								);
+							} else { /* default: true */
+								return true;
+							}
 						}
 					},
 					after: {
 						get() {
 							return [].concat(
-									config['after'] || [],
-									config['expects'] || [],
-									config['resolves'] || [],
-									config['requires'] || []
+									options['after'] || [],
+									options['expects'] || [],
+									options['resolves'] || [],
+									options['requires'] || []
 							);
 						}
 					},
 					selects: {
 						get() {
 							return [].concat(
-									config['selects'] || [],
-									config['requires'] || []
+									options['selects'] || [],
+									options['requires'] || []
 							);
 						}
 					}
@@ -477,54 +477,50 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 
 				// update conditions
 				_conditionsUnsettled = true;
-				if (U.isDefined(delta.if)) { _registerDisjunct(delta.id, delta.if) }
-				delta.selects.forEach((id) => {
-					_registerDisjunct(id, [delta.id]);
+				if (U.isDefined(this.if)) { _registerDisjunct(deltaName, this.if) }
+				this.selects.forEach((otherDeltaName) => {
+					_registerDisjunct(otherDeltaName, [deltaName]);
 				});
 
 				// update the graph
-				_graph.addVertex(delta.id, delta);
-				delta.after.forEach((id) => {
-					_graph.createEdge(id, delta.id);
+				_graph.addVertex(deltaName, this);
+				this.after.forEach((otherDeltaName) => {
+					_graph.createEdge(otherDeltaName, deltaName);
 				});
 				U.assert(!_graph.hasCycle(),
-						`The delta ${delta.id} introduced a cycle in the application order.`);
-
-				// return the delta, so additional operations can be added to it
-				return delta;
+						`The delta ${deltaName} introduced a cycle in the application order.`);
 
 			},
 
-			// select a number of deltas by id, so they will be applied when this delta model is applied
-			select(...ids) {
-				// process single plugin name by making its condition 'true'
-				ids.forEach((id) => { _registerDisjunct(id, true) });
+			// select a number of deltas by name, so they will be applied when applicable
+			select(...deltaNames) {
+				deltaNames.forEach((deltaName) => { _registerDisjunct(deltaName, true) });
 			},
 
 			// register a named variation point in the code-base
 			// (i.e., apply all registered deltas and return the resulting value)
-			vp(name, val) {
+			vp(vpName, val) {
 
 				// a temporary object to hold the value while it is undergoing change
 				var obj = {};
-				obj[name] = val;
+				obj[vpName] = val;
 
 				// check if any 'onlyIf' conditions are being violated
 				_settleConditions();
-				_graph.eachVertex((id, delta) => {
+				_graph.eachVertex((name, delta) => {
 					U.assert(!delta.selected || delta.onlyIf.every((d) => _graph.vertexValue(d).selected),
-							`The 'onlyIf' condition of delta '${delta.id}' was violated.`);
+							`The 'onlyIf' condition of delta '${delta.name}' was violated.`);
 				});
 
 				// apply the proper deltas
-				_graph.topologically((id, delta) => {
+				_graph.topologically((name, delta) => {
 					if (delta.selected) {
 						delta.selectivelyApplyTo(obj, name);
 					}
 				});
 
 				// return the transformed value
-				return obj[name];
+				return obj[vpName];
 
 			}
 		});
@@ -535,6 +531,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 	/******************************************************************************************************************/
 
 	var resolvePromise = null;
+	//noinspection JSUnusedGlobalSymbols
 	U.extend(PartiallyOrderedDM, {
 		registerPromiseResolver(promiseResolverFn) {
 			resolvePromise = promiseResolverFn;
@@ -544,8 +541,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 	/******************************************************************************************************************/
 
 
-
-	// return the main object
+	// return the main delta model class
 	return PartiallyOrderedDM;
 
 });
