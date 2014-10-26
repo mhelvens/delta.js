@@ -18,8 +18,7 @@ define(() => {
 		newSubclass(superClass, constructor, prototype) {
 			prototype = prototype || {};
 			var cls = function (...args) {
-				superClass.prototype.constructor.apply(this, args);
-				constructor.apply(this, args);
+				constructor.apply(this, [superClass.prototype.constructor].concat(args));
 			};
 			cls.prototype = Object.create(superClass.prototype, prototype);
 			cls.prototype.constructor = cls;

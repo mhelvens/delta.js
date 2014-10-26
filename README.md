@@ -1,4 +1,4 @@
-# delta-js [![Build Status](https://secure.travis-ci.org/mhelvens/delta-js.png?branch=master)](https://travis-ci.org/mhelvens/delta-js)
+# delta.js
 
 achieve modularity and separation of concerns through feature-oriented development
 
@@ -346,7 +346,11 @@ used to generate a new promise from an arbitrary value:
 
 ```javascript
 DeltaJs.registerPromiseResolver(Q)         // kriskowal's Q
+```
+```javascript
 DeltaJs.registerPromiseResolver(P.resolve) // Bluebird
+```
+```javascript
 DeltaJs.registerPromiseResolver($q.when)   // AngularJs
 ```
 

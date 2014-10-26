@@ -1,11 +1,37 @@
 define(['js-graph', './misc.js'], function (JsGraph, U) {
 	'use strict';
 
+
 	/******************************************************************************************************************/
+
+
+	// convenience definitions for the application and composition functions below
+	var keepFirst = () => {};
+	var keepSecond = (d1, p, d2) => { d1[p] = d2 };
+	var applySecondToFirstValue = (d1, p, d2) => { d2.applyTo(d1[p], 'value') };
+
+	function assertFunction(val, opType) {
+		U.assert(typeof val === 'function',
+				`The operation '${opType}' expects the property it acts on to be a function.`);
+	}
+
+	function assertDefined(val, opType) {
+		U.assert(U.isDefined(val),
+				`The operation '${opType}' expects the property to be defined.`);
+	}
+
+	function assertUndefined(val, opType) {
+		U.assert(U.isUndefined(val),
+				`The operation '${opType}' expects the property to be undefined.`);
+	}
+
+
+	/******************************************************************************************************************/
+
 
 	// the delta-model class, which is the container of all operation types,
 	// all deltas, their ordering and rules
-	var CoreDM = U.newClass(function () {
+	var DeltaModel = U.newClass(function () {
 
 		// Accumulated data for the available delta operation types
 		var _opTypes = {};
@@ -101,11 +127,6 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 			}
 		});
 
-		// an easy way to get the 'modify' delta constructor
-		Object.defineProperty(this, 'ModifyDelta', {
-			get() { return _opTypes['modify'].Delta }
-		});
-
 		// the modify operation (MUST BE THE FIRST OPERATION TYPE TO BE DEFINED)
 		var thisDM = this;
 		this._addOperationType({
@@ -178,39 +199,10 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 			}
 		});
 
-	});
+
+		/**************************************************************************************************************/
 
 
-	/******************************************************************************************************************/
-
-
-	// convenience definitions for the application and composition functions below
-	var keepFirst = () => {};
-	var keepSecond = (d1, p, d2) => { d1[p] = d2 };
-	var applySecondToFirstValue = (d1, p, d2) => { d2.applyTo(d1[p], 'value') };
-
-	function assertFunction(val, opType) {
-		U.assert(typeof val === 'function',
-				`The operation '${opType}' expects the property it acts on to be a function.`);
-	}
-
-	function assertDefined(val, opType) {
-		U.assert(U.isDefined(val),
-				`The operation '${opType}' expects the property to be defined.`);
-	}
-
-	function assertUndefined(val, opType) {
-		U.assert(U.isUndefined(val),
-				`The operation '${opType}' expects the property to be undefined.`);
-	}
-
-
-	/******************************************************************************************************************/
-
-
-	// a delta model class with a number of common operations already added in
-	var ExtendedDM = U.newSubclass(CoreDM, function () {
-		// the other standard operation types
 		this._addOperationType({
 			name: 'add',
 			constructor: function Add(value) { this.value = value },
@@ -243,9 +235,9 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 
 
 		// composition of the standard operation types
-		this._addCompositionRule('add', 'replace', (d1, p, d2) => { d1[p] = CoreDM._newDelta('add', d2.value) });
+		this._addCompositionRule('add', 'replace', (d1, p, d2) => { d1[p] = DeltaModel._newDelta('add', d2.value) });
 		this._addCompositionRule('add', 'modify', applySecondToFirstValue);
-		this._addCompositionRule('add', 'remove', (d1, p) => { d1[p] = CoreDM._newDelta('forbid') });
+		this._addCompositionRule('add', 'remove', (d1, p) => { d1[p] = DeltaModel._newDelta('forbid') });
 		this._addCompositionRule('replace', 'replace', keepSecond);
 		this._addCompositionRule('replace', 'modify', applySecondToFirstValue);
 		this._addCompositionRule('replace', 'remove', keepSecond);
@@ -256,7 +248,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 			});
 		});
 		this._addCompositionRule('modify', 'remove', keepSecond);
-		this._addCompositionRule('remove', 'add', (d1, p, d2) => { d1[p] = CoreDM._newDelta('replace', d2.value) });
+		this._addCompositionRule('remove', 'add', (d1, p, d2) => { d1[p] = DeltaModel._newDelta('replace', d2.value) });
 		this._addCompositionRule('remove', 'forbid', keepFirst);
 		this._addCompositionRule('forbid', 'add', keepSecond);
 		this._addCompositionRule('forbid', 'forbid', keepFirst);
@@ -292,7 +284,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 			[].push.apply(d1[p].value, d2.value);
 		});
 		this._addCompositionRule('alter', 'replace', keepSecond);
-		this._addCompositionRule('alter', 'remove', (d1, p) => { d1[p] = CoreDM._newDelta('forbid') });
+		this._addCompositionRule('alter', 'remove', (d1, p) => { d1[p] = DeltaModel._newDelta('forbid') });
 		this._addCompositionRule('add', 'alter', (d1, p, d2) => {
 			assertFunction(d1[p].value, d2.alias);
 			applySecondToFirstValue(d1, p, d2);
@@ -316,7 +308,11 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		// 'after' operation type
 		this._addOperationType({
 			name: 'after',
-			constructor: function After(value) { this.value = value },
+			constructor: function After(value) {
+				U.assert(typeof resolvePromise === 'function',
+						`Before creating an 'after' operation, you must register a promise resolver with delta.js.`);
+				this.value = value;
+			},
 			applyTo(obj, property) {
 				assertFunction(obj[property], 'after');
 				var partOne = obj[property];
@@ -341,16 +337,11 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		this._addCompositionRule('insert', 'after', applySecondToFirstValue);
 		this._addCompositionRule('after', 'insert', applySecondToFirstValue);
 		/* TODO: the above compositions of 'insert' and 'after' are not actually correct (e.g., not associative). */
-	});
 
 
+		/**************************************************************************************************************/
 
 
-	/******************************************************************************************************************/
-
-
-	// a delta model class with common operations and a partially ordered set of deltas
-	var PartiallyOrderedDM = U.newSubclass(ExtendedDM, function () {
 		var _graph = new JsGraph(); /* deltas in a strict partial order */
 		U.extend(this, {
 			// get the graph of deltas
@@ -392,109 +383,115 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 			}
 		}
 
-		U.extend(this, {
-			// a constructor to create a new delta and register it into the delta model
-			Delta(deltaName, options) {
 
-				// perform sanity checks
-				U.assert(options instanceof Object,
-						`A delta should be given as an object.`);
-				// TODO: check uniqueness of `deltaName`
+		// a class of a standard named delta with meta-data that is registered into the delta model
+		this.Delta = U.newSubclass(_opTypes['modify'].Delta, function Delta(superFn, deltaName, options) {
+			// call the constructor of the 'modify' delta
+			superFn.call(this, options);
 
-				// make this delta a ModifyDelta, so run its constructor
-				this.ModifyDelta.apply(this, options);
+			// perform sanity checks
+			U.assert(options instanceof Object,
+					`A delta should be given as an object.`);
+			// TODO: check uniqueness of `deltaName`
 
-				// create delta properties
-				Object.defineProperties(this, {
-					name: { get() { return deltaName } },
-					manuallySelectable: {
-						get() {
-							if (U.isDefined(options['manuallySelectable'])) {
-								return !!options['manuallySelectable'];
-							} else if (U.isDefined(options['resolves']) && options['resolves'].length > 0) {
-								return false;
-							} else {
-								return true;
-							}
-						}
-					},
-					selected: {
-						get() {
-							_settleConditions();
-							return !!_settledDeltaConditions[deltaName];
-						}
-					},
-					if: {
-						get() {
-							if (options['if'] === true || options['if'] === false) { /* literal 'true' or 'false' */
-								return options['if'];
-							} else if (options['if'] || options['iff'] || options['resolves']) { /* array of names */
-								return [].concat(
-										options['if'] || [],
-										options['iff'] || [],
-										options['resolves'] || []
-								);
-							} else { /* default: false */
-								return false;
-							}
-						}
-					},
-					onlyIf: {
-						get() {
-							if (options['onlyIf'] === true || options['onlyIf'] === false) { /* literal 'true' or 'false' */
-								return options['onlyIf'];
-							} else if (options['onlyIf'] || options['iff'] || options['expects'] ||  options['resolves']) { /* array of names */
-								return [].concat(
-										options['onlyIf'] || [],
-										options['iff'] || [],
-										options['expects'] || [],
-										options['resolves'] || []
-								);
-							} else { /* default: true */
-								return true;
-							}
-						}
-					},
-					after: {
-						get() {
-							return [].concat(
-									options['after'] || [],
-									options['expects'] || [],
-									options['resolves'] || [],
-									options['requires'] || []
-							);
-						}
-					},
-					selects: {
-						get() {
-							return [].concat(
-									options['selects'] || [],
-									options['requires'] || []
-							);
+			// make this delta a ModifyDelta, so run its constructor
+			_opTypes['modify'].Delta.apply(this, options);
+
+			// create delta properties
+			Object.defineProperties(this, {
+				name: { get() { return deltaName } },
+				manuallySelectable: {
+					get() {
+						if (U.isDefined(options['manuallySelectable'])) {
+							return !!options['manuallySelectable'];
+						} else if (U.isDefined(options['resolves']) && options['resolves'].length > 0) {
+							return false;
+						} else {
+							return true;
 						}
 					}
-				});
+				},
+				selected: {
+					get() {
+						_settleConditions();
+						return !!_settledDeltaConditions[deltaName];
+					}
+				},
+				if: {
+					get() {
+						if (options['if'] === true || options['if'] === false) { /* literal 'true' or 'false' */
+							return options['if'];
+						} else if (options['if'] || options['iff'] || options['resolves']) { /* array of names */
+							return [].concat(
+									options['if'] || [],
+									options['iff'] || [],
+									options['resolves'] || []
+							);
+						} else { /* default: false */
+							return false;
+						}
+					}
+				},
+				onlyIf: {
+					get() {
+						if (options['onlyIf'] === true || options['onlyIf'] === false) { /* literal 'true' or 'false' */
+							return options['onlyIf'];
+						} else if (options['onlyIf'] || options['iff'] || options['expects'] ||  options['resolves']) { /* array of names */
+							return [].concat(
+									options['onlyIf'] || [],
+									options['iff'] || [],
+									options['expects'] || [],
+									options['resolves'] || []
+							);
+						} else { /* default: true */
+							return true;
+						}
+					}
+				},
+				after: {
+					get() {
+						return [].concat(
+								options['after'] || [],
+								options['expects'] || [],
+								options['resolves'] || [],
+								options['requires'] || []
+						);
+					}
+				},
+				selects: {
+					get() {
+						return [].concat(
+								options['selects'] || [],
+								options['requires'] || []
+						);
+					}
+				}
+			});
 
-				// update conditions
-				_conditionsUnsettled = true;
-				if (U.isDefined(this.if)) { _registerDisjunct(deltaName, this.if) }
-				this.selects.forEach((otherDeltaName) => {
-					_registerDisjunct(otherDeltaName, [deltaName]);
-				});
+			// update conditions
+			_conditionsUnsettled = true;
+			if (U.isDefined(this.if)) { _registerDisjunct(deltaName, this.if) }
+			this.selects.forEach((otherDeltaName) => {
+				_registerDisjunct(otherDeltaName, [deltaName]);
+			});
 
-				// update the graph
-				_graph.addVertex(deltaName, this);
-				this.after.forEach((otherDeltaName) => {
-					_graph.createEdge(otherDeltaName, deltaName);
-				});
-				U.assert(!_graph.hasCycle(),
-						`The delta ${deltaName} introduced a cycle in the application order.`);
+			// update the graph
+			_graph.addVertex(deltaName, this);
+			this.after.forEach((otherDeltaName) => {
+				_graph.createEdge(otherDeltaName, deltaName);
+			});
+			U.assert(!_graph.hasCycle(),
+					`The delta ${deltaName} introduced a cycle in the application order.`);
 
-			},
+		});
 
+
+		U.extend(this, {
 			// select a number of deltas by name, so they will be applied when applicable
 			select(...deltaNames) {
-				deltaNames.forEach((deltaName) => { _registerDisjunct(deltaName, true) });
+				deltaNames.forEach((deltaName) => {
+					_registerDisjunct(deltaName, true);
+				});
 			},
 
 			// register a named variation point in the code-base
@@ -508,14 +505,14 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 				// check if any 'onlyIf' conditions are being violated
 				_settleConditions();
 				_graph.eachVertex((name, delta) => {
-					U.assert(!delta.selected || delta.onlyIf.every((d) => _graph.vertexValue(d).selected),
+					U.assert(!delta.selected || delta.onlyIf === true || delta.onlyIf.every((d) => _graph.vertexValue(d).selected),
 							`The 'onlyIf' condition of delta '${delta.name}' was violated.`);
 				});
 
 				// apply the proper deltas
 				_graph.topologically((name, delta) => {
 					if (delta.selected) {
-						delta.selectivelyApplyTo(obj, name);
+						delta.selectivelyApplyTo(obj, vpName);
 					}
 				});
 
@@ -530,18 +527,20 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 
 	/******************************************************************************************************************/
 
+
 	var resolvePromise = null;
 	//noinspection JSUnusedGlobalSymbols
-	U.extend(PartiallyOrderedDM, {
+	U.extend(DeltaModel, {
 		registerPromiseResolver(promiseResolverFn) {
 			resolvePromise = promiseResolverFn;
 		}
 	});
 
+
 	/******************************************************************************************************************/
 
 
 	// return the main delta model class
-	return PartiallyOrderedDM;
+	return DeltaModel;
 
 });
