@@ -45,7 +45,7 @@ var DeltaJs = require('lib/delta.js/dist/delta.js')
 
 ```html
 <script src="lib/delta.js/dist/delta.js"></script>
-// use DeltaJs
+<!-- use DeltaJs -->
 ```
 
 ## Using `DeltaJs`
