@@ -1,0 +1,8 @@
+{
+    "type": "external-library",
+	"external": true,
+	"name": "bluebird",
+	"var": "P",
+	"dir": "bower_components/js/browser",
+	"file": "bluebird.js"
+}

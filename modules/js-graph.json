@@ -2,5 +2,7 @@
     "type": "external-library",
 	"external": true,
 	"name": "js-graph",
-	"var": "JsGraph"
+	"var": "JsGraph",
+	"dir": "bower_components/js-graph/dist",
+	"file": "js-graph.js"
 }
