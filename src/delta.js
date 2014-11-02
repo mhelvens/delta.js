@@ -2,13 +2,13 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 	'use strict';
 
 
-	/******************************************************************************************************************/
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	// convenience definitions for the application and composition functions below
+	/* convenience definitions for the application and composition functions below */
 	var keepFirst = () => {};
-	var keepSecond = (d1, p, d2) => { d1[p] = d2 };
-	var applySecondToFirstValue = (d1, p, d2) => { d2.applyTo(d1[p], 'value') };
+	var keepSecond = (d1, p, d2) => { d1.operations[p] = d2 };
+	var applySecondToFirstValue = (d1, p, d2) => { d2.applyTo(d1.operations[p], 'value') };
 
 	function assertFunction(val, opType) {
 		U.assert(typeof val === 'function',
@@ -26,7 +26,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 	}
 
 
-	/******************************************************************************************************************/
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	// the delta-model class, which is the container of all operation types,
@@ -34,10 +34,8 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 	var DeltaModel = U.newClass(function () {
 
 		// Accumulated data for the available delta operation types
-		var _opTypes = {};
-		/* the name and delta classes */
-		var _composeFns = [];
-		/* the case distinctions of delta composition */
+		var _opTypes = {}; // the name and delta classes
+		var _composeFns = []; // the case distinctions of delta composition
 
 		U.extend(this, {
 
@@ -58,28 +56,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 				U.extend(_opTypes[name].Delta.prototype, prototype, {
 					constructor: constructor,
 					type: name,
-					applyTo: applyTo,
-					compose(property, op2) {
-						if (U.isUndefined(op2)) { return this }
-						var foundComposeFn;
-						_composeFns.some(({op1Type, op2Type, composeFn}) => {
-							if (this.type === op1Type && op2.type === op2Type) {
-								foundComposeFn = composeFn;
-								return true;
-							}
-						});
-						if (foundComposeFn) {
-							foundComposeFn(this, property, op2);
-						} else {
-							var err = new Error(
-									`You cannot follow a '${this.type}' operation ` +
-									`with a '${op2.type}' operation on the same property.`
-							);
-							err.op1 = this.type;
-							err.op2 = op2.type;
-							throw err;
-						}
-					}
+					applyTo: applyTo
 				});
 
 				// make the operation method available on the 'modify' delta
@@ -174,6 +151,27 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 						this.operations[subProperty].applyTo(obj, subProperty);
 					}
 				},
+				compose(property, op2) {
+					if (U.isUndefined(op2)) { return this }
+					var foundComposeFn;
+					_composeFns.some(({op1Type, op2Type, composeFn}) => {
+						if (this.operations[property].type === op1Type && op2.type === op2Type) {
+							foundComposeFn = composeFn;
+							return true;
+						}
+					});
+					if (foundComposeFn) {
+						foundComposeFn(this, property, op2);
+					} else {
+						var err = new Error(
+								`You cannot follow a '${this.operations[property].type}' operation ` +
+								`with a '${op2.type}' operation on the same property.`
+						);
+						err.op1 = this.type;
+						err.op2 = op2.type;
+						throw err;
+					}
+				},
 				_addOperation(opType, property, values) {
 					var dotIndex = property.indexOf('.');
 					if (dotIndex !== -1) {
@@ -200,7 +198,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		});
 
 
-		/**************************************************************************************************************/
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 		this._addOperationType({
@@ -235,9 +233,9 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 
 
 		// composition of the standard operation types
-		this._addCompositionRule('add', 'replace', (d1, p, d2) => { d1[p] = DeltaModel._newDelta('add', d2.value) });
+		this._addCompositionRule('add', 'replace', (d1, p, d2) => { d1.operations[p] = DeltaModel._newDelta('add', d2.value) });
 		this._addCompositionRule('add', 'modify', applySecondToFirstValue);
-		this._addCompositionRule('add', 'remove', (d1, p) => { d1[p] = DeltaModel._newDelta('forbid') });
+		this._addCompositionRule('add', 'remove', (d1, p) => { d1.operations[p] = DeltaModel._newDelta('forbid') });
 		this._addCompositionRule('replace', 'replace', keepSecond);
 		this._addCompositionRule('replace', 'modify', applySecondToFirstValue);
 		this._addCompositionRule('replace', 'remove', keepSecond);
@@ -248,7 +246,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 			});
 		});
 		this._addCompositionRule('modify', 'remove', keepSecond);
-		this._addCompositionRule('remove', 'add', (d1, p, d2) => { d1[p] = DeltaModel._newDelta('replace', d2.value) });
+		this._addCompositionRule('remove', 'add', (d1, p, d2) => { d1.operations[p] = DeltaModel._newDelta('replace', d2.value) });
 		this._addCompositionRule('remove', 'forbid', keepFirst);
 		this._addCompositionRule('forbid', 'add', keepSecond);
 		this._addCompositionRule('forbid', 'forbid', keepFirst);
@@ -281,16 +279,16 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 			}
 		});
 		this._addCompositionRule('alter', 'alter', (d1, p, d2) => {
-			[].push.apply(d1[p].value, d2.value);
+			[].push.apply(d1.operations[p].value, d2.value);
 		});
 		this._addCompositionRule('alter', 'replace', keepSecond);
-		this._addCompositionRule('alter', 'remove', (d1, p) => { d1[p] = DeltaModel._newDelta('forbid') });
+		this._addCompositionRule('alter', 'remove', (d1, p) => { d1.operations[p] = DeltaModel._newDelta('forbid') });
 		this._addCompositionRule('add', 'alter', (d1, p, d2) => {
-			assertFunction(d1[p].value, d2.alias);
+			assertFunction(d1.operations[p].value, d2.alias);
 			applySecondToFirstValue(d1, p, d2);
 		});
 		this._addCompositionRule('replace', 'alter', (d1, p, d2) => {
-			assertFunction(d1[p].value, d2.alias);
+			assertFunction(d1.operations[p].value, d2.alias);
 			applySecondToFirstValue(d1, p, d2);
 		});
 
@@ -327,11 +325,11 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		this._addCompositionRule('after', 'replace', keepSecond);
 		this._addCompositionRule('after', 'remove', keepSecond);
 		this._addCompositionRule('add', 'after', (d1, p, d2) => {
-			assertFunction(d1[p].value, 'after');
+			assertFunction(d1.operations[p].value, 'after');
 			applySecondToFirstValue(d1, p, d2);
 		});
 		this._addCompositionRule('replace', 'after', (d1, p, d2) => {
-			assertFunction(d1[p].value, 'after');
+			assertFunction(d1.operations[p].value, 'after');
 			applySecondToFirstValue(d1, p, d2);
 		});
 		this._addCompositionRule('insert', 'after', applySecondToFirstValue);
@@ -339,7 +337,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		/* TODO: the above compositions of 'insert' and 'after' are not actually correct (e.g., not associative). */
 
 
-		/**************************************************************************************************************/
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 		var _graph = new JsGraph(); /* deltas in a strict partial order */
@@ -525,11 +523,10 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 	});
 
 
-	/******************************************************************************************************************/
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	var resolvePromise = null;
-	//noinspection JSUnusedGlobalSymbols
 	U.extend(DeltaModel, {
 		registerPromiseResolver(promiseResolverFn) {
 			resolvePromise = promiseResolverFn;
@@ -537,10 +534,11 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 	});
 
 
-	/******************************************************************************************************************/
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	// return the main delta model class
+	/* return the main delta model class */
 	return DeltaModel;
+
 
 });
