@@ -195,7 +195,7 @@ var d4 = d1.modify('vp1.foo.bar');       // d4 === d3
 This also works for the all the other operations below. It implicitly
 constructs a `.modify` chain to reach the right-most key.
 
-***Note**: because of this shorthand notation, property names that actually
+* **Note**: because of this shorthand notation, property names that actually
 contain the `.` character are not supported (at least for now).*
 
 When you've targeted the proper object, you can use the operations described
@@ -262,11 +262,14 @@ vp('my-vp', { foo: { bar: 'bas' }, bar: [] })
 ```
 
 
-### `.prepend(key, value)`, `.append(key, value)`, `.insert(key, value)`
+### `.prepend(key, value)`
+### `.append(key, value)`
+### `.insert(key, value)`
 
 These methods work if `target[key]` is a *function*,
 and respectively prepend, append or insert `value` into it,
-which also needs to be a function.
+which also needs to be a function. (In the future, these operations
+will also be supported for arrays.)
 
 The `.prepend` operation places the code in the beginning,
 and `.append` places it at the end of the existing function.
@@ -347,19 +350,45 @@ used to generate a new promise from an arbitrary value:
 
 ```javascript
 DeltaJs.registerPromiseResolver(Q)         // kriskowal's Q
-```
-```javascript
 DeltaJs.registerPromiseResolver(P.resolve) // Bluebird
-```
-```javascript
 DeltaJs.registerPromiseResolver($q.when)   // AngularJs
 ```
 
 Do this as early in your application as possible. You can then use `.after`:
 
+**operation**
 ```javascript
-TODO
+delta.after('f', function (a, b) {
+          return doMoreThings(a, b);
+      });
 ```
+**before**
+```javascript
+vp('my-vp', {
+    f: function (a, b, c) {
+        return doThings(b, c);
+    }
+})
+```
+**after**
+```javascript
+{
+    f: function () {
+        promiseResolver(
+            function (a, b, c) {
+                return doThings(a, b);
+            }.apply(this, arguments)
+        ).then(
+            function (a, b) {
+                doOtherThings(a, b);
+            }.bind(this, arguments)
+        );
+    }
+}
+```
+
+Note that this operation will still work if the original function does *not* return a promise.
+In that case, `fn` is run immediately (though still asynchronously) after the original.
 
 
 ## License
