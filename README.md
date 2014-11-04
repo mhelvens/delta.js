@@ -5,6 +5,7 @@ achieve modularity and separation of concerns through feature-oriented programmi
 ## Description
 
 <img align="right" src="./docs/sculptor.png" />
+
 Programming is an activity very prone to human error, especially if you have
 multiple humans trying to do it at the same time.
 As more and more features are implemented by different programmers, progress will
@@ -38,6 +39,8 @@ applied by a preprocessor. This will be supported by a future version.
 
 
 ## Installation
+
+<img align="right" src="./docs/foundation.png" />
 
 This library depends only on
 [js-graph](https://github.com/mhelvens/js-graph).
@@ -84,6 +87,8 @@ var DeltaJs = require('lib/delta.js/dist/delta.js')
 ```
 
 ## Using `DeltaJs`
+
+<img align="right" src="./docs/selection.png" />
 
 `DeltaJs` is a class that can be instantiated:
 
@@ -427,5 +432,7 @@ In that case, `fn` is run immediately (though still asynchronously) after the or
 
 
 ## License
+
+<img align="right" src="./docs/conflict-resolution.png" />
 
 MIT
