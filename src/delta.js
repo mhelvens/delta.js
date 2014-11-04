@@ -167,7 +167,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 								`You cannot follow a '${this.operations[property].type}' operation ` +
 								`with a '${op2.type}' operation on the same property.`
 						);
-						err.op1 = this.type;
+						err.op1 = this.operations[property].type;
 						err.op2 = op2.type;
 						throw err;
 					}
