@@ -1,6 +1,42 @@
 # delta.js
 
-achieve modularity and separation of concerns through feature-oriented development
+achieve modularity and separation of concerns through feature-oriented programming
+
+## Description
+
+<img style="float: right" src="./docs/sculptor.png" />
+
+Programming is an activity very prone to human error, especially if you have
+multiple humans trying to do it at the same time.
+As more and more features are implemented by different programmers, progress will
+often slow to a crawl. Programmers can easily lose overview and step on each others
+toes when their code is spread across the code base surrounded by
+the code of others.
+
+*delta.js* helps you organize your JavaScript code in terms of *features*.
+As it turns out, files, modules, objects, functions (and so on), are not
+the right abstractions for describing a feature. But they are very good at
+other stuff! This library introduces the notion of a *delta*, which complements
+those other constructs.
+
+A delta is the place to gather all the code belonging to a specific feature.
+Basically, for each piece of code, you instruct the delta to put that code in
+the file, module, object or function where it belongs. That way, the code
+can *physically* be gathered in one place, and therefore be easy to maintain.
+
+This has other benefits as well. By having some deltas be explicitly applied
+*after* others, you give them permission to overwrite things.
+If two deltas that are *unordered* try to overwrite each others code,
+you will get a friendly error message. Moreover, by separating your features
+so explicitly, you will be able to turn them on or off with a switch, for
+either debugging or production.
+
+This might all seem overly complicated at first. But once you get started,
+you'll soon fall in love with this approach.
+
+At this time, delta.js is a runtime library. But in concept, deltas could be
+applied by a preprocessor. This will be supported by a future version.
+
 
 ## Installation
 
