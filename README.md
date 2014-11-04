@@ -4,8 +4,7 @@ achieve modularity and separation of concerns through feature-oriented programmi
 
 ## Description
 
-<img style="float: right" src="./docs/sculptor.png" />
-
+<img align="right" src="./docs/sculptor.png" />
 Programming is an activity very prone to human error, especially if you have
 multiple humans trying to do it at the same time.
 As more and more features are implemented by different programmers, progress will
