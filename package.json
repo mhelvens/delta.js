@@ -1,6 +1,6 @@
 {
   "name": "delta.js",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "achieve modularity and separation of concerns through feature-oriented development",
   "contributors": [
     {
@@ -10,12 +10,11 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^2.3.2",
-    "js-graph": "^0.4.0",
-    "traceur-loader": "^0.6.0"
+    "js-graph": "^0.4.0"
   },
   "devDependencies": {
     "autoprefixer-loader": "^1.0.0",
+	"bluebird": "^2.3.2",
     "bower": "^1.3.10",
     "css-loader": "^0.8.0",
     "gulp": "^3.8.7",
@@ -38,6 +37,7 @@
     "source-map-loader": "^0.1.3",
     "style-loader": "^0.8.0",
     "traceur": "^0.0.58",
-    "webpack": "^1.4.0-beta8"
+    "webpack": "^1.4.0-beta8",
+	"traceur-loader": "^0.6.0"
   }
 }
