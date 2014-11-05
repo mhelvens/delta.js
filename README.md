@@ -114,8 +114,8 @@ a copy. For example:
 
 ```javascript
 function MyClass() {
-    someMethod: function () {},
-    someField: 'some value'
+    this.someMethod = function () {};
+    this.someField  = 'some value';
 };
 dm.vp('MyClass', MyClass);
 ```
@@ -126,8 +126,8 @@ to the example above:
 
 ```javascript
 var MyClass = dm.vp('MyClass', function () {
-    someMethod: function () {},
-    someField: 'some value'
+    this.someMethod = function () {};
+    this.someField  = 'some value';
 });
 ```
 
@@ -326,8 +326,8 @@ array or function without this being regarded as a conflict.
 **operation**
 ```javascript
 delta.append('f', function (a, b) {
-          doOtherThings(a, b);
-      });
+    doOtherThings(a, b);
+});
 ```
 **before**
 ```javascript
@@ -399,8 +399,8 @@ Do this as early in your application as possible. You can then use `.after`:
 **operation**
 ```javascript
 delta.after('f', function (a, b) {
-          return doMoreThings(a, b);
-      });
+    return doMoreThings(a, b);
+});
 ```
 **before**
 ```javascript
