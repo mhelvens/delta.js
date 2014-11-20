@@ -1,20 +1,20 @@
 'use strict';
 
-beforeEach(function () {
-	(jasmine || this).addMatchers({
-		toBeReachable: function () {
+beforeEach(() => {
+	jasmine.addMatchers({
+		toBeReachable() {
 			return {
-				compare: function () {
-					var result = {};
-					result.message = "Expected this test not to be reachable.";
-					result.pass = true;
-					return result;
+				compare() {
+					return {
+						message: `Expected this test not to be reachable.`,
+						pass   : true
+					};
 				}
 			};
 		},
-		toThrowSpecific: function (util, customEqualityTesters) {
+		toThrowSpecific(util, customEqualityTesters) {
 			return {
-				compare: function (actual, expectedType, expectedContent) {
+				compare(actual, expectedType, expectedContent) {
 					var result = {};
 					result.message = "";
 
@@ -28,35 +28,46 @@ beforeEach(function () {
 					} catch (exception) {
 						result.pass = exception instanceof expectedType;
 						if (result.pass) {
-							Object.keys(expectedContent).map(function (prop) {
-								result.pass = result.pass && util.equals(expectedContent[prop], exception[prop], customEqualityTesters);
-							});
-							result.message = "However, the thrown " + expectedType.prototype.name + " had the following properties: " + JSON.stringify(exception, undefined, ' ');
+							result.pass = Object.keys(expectedContent).every((prop) => util.equals(expectedContent[prop], exception[prop], customEqualityTesters));
+							result.message = `However, the thrown ${expectedType.prototype.name} had the following properties: ${JSON.stringify(exception, null, ' ')}`;
 						} else {
-							result.message = "However, the thrown exception was not a subclass of " + expectedType.prototype.name + ".";
+							result.message = `However, the thrown exception was not a subclass of ${expectedType.prototype.name}.`;
 						}
 					}
 
-					result.message = "Expected the function to throw a new " + expectedType.prototype.name + " with the following properties: " +
-						  JSON.stringify(expectedContent, undefined, ' ') + ". " + result.message;
+					result.message = `Expected the function to throw a new ${expectedType.prototype.name} with the following properties:
+									 ${JSON.stringify(expectedContent, null, ' ')}.
+									 ${result.message}`;
 
 					return result;
 				}
 			};
 		},
-		toEqualOneOf: function (util, customEqualityTesters) {
+		toEqualOneOf(util, customEqualityTesters) {
 			return {
-				compare: function (actual, expected) {
-					var candidates = Array.prototype.slice.call(arguments, 1);
+				compare(actual, ...expected) {
 					var result = {};
 
-					result.pass = candidates.some(function (candidate) {
-						return util.equals(actual, candidate, customEqualityTesters);
-					});
+					result.pass = expected.some((candidate) => util.equals(actual, candidate, customEqualityTesters));
 
 					if (!result.pass) {
-						result.message = "Expected " + JSON.stringify(actual) + " to equal one of: " +
-							  candidates.map(function (c) {return JSON.stringify(c);}).join(', ');
+						result.message = `Expected ${JSON.stringify(actual)} to equal one of:
+										 ${expected.map(JSON.stringify).join(', ')}`;
+					}
+
+					return result;
+				}
+			};
+		},
+		toContainSomethingEqualTo(util, customEqualityTesters) {
+			return {
+				compare(actual, expected) {
+					var result = {};
+
+					result.pass = actual.some((candidate) => util.equals(expected, candidate, customEqualityTesters));
+
+					if (!result.pass) {
+						result.message = `Expected ${JSON.stringify(actual)} to contain an element equal to ${JSON.stringify(expected)}`;
 					}
 
 					return result;

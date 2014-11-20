@@ -11,6 +11,7 @@ var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
 var karma = require('gulp-karma');
 var bump = require('gulp-bump');
+var traceur = require('gulp-traceur');
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +20,7 @@ var bump = require('gulp-bump');
 function externalModule(modName, varName) {
 	if (!varName) { return modName }
 	var obj = {};
-	obj[modName] = { root: varName, commonjs2: modName, commonjs: modName, amd: modName };
+	obj[modName] = {root: varName, commonjs2: modName, commonjs: modName, amd: modName};
 	return obj;
 }
 
@@ -32,7 +33,7 @@ var EXTERNAL_LIBRARIES = [];
 var APPLICATIONS = [];
 
 fs.readdirSync('./modules')
-		.map(function (filename) { return fs.readFileSync('./modules/'+filename) })
+		.map(function (filename) { return fs.readFileSync('./modules/' + filename) })
 		.map(JSON.parse)
 		.forEach(function (mod) {
 			if (mod.type === 'external-library') {
@@ -59,6 +60,22 @@ EXTERNAL_LIBRARIES.forEach(function (mod) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/* Webpack configuration shared for both apps and libraries */
+var WEBPACK_COMMON = {
+	devtool: 'inline-source-map',
+	module : {
+		loaders: [
+			{test: /\.scss$/, loader: "style!css!autoprefixer!sass"},
+			{test: /\.css$/, loader: "style!css!autoprefixer"},
+			{test: /\.js/, loader: "traceur?script"}
+		]
+	}
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 gulp.task('lint', function () {
 	return gulp.src('src/**/*.js')
 			.pipe(jshint())
@@ -68,54 +85,68 @@ gulp.task('lint', function () {
 
 INTERNAL_LIBRARIES.concat(APPLICATIONS).forEach(function (m) {
 
-	/* Webpack configuration shared for both apps and libraries */
-	var commonConfig = {
-		devtool: 'inline-source-map',
-		module: {
-			loaders: [
-				{ test: /\.scss$/, loader: "style!css!autoprefixer!sass" },
-				{ test: /\.css$/, loader: "style!css!autoprefixer" },
-				{ test: /\.js/, loader: "traceur?script" }
-			]
-		}
-	};
-
 	/* the webpack task for the internal module */
 	gulp.task('webpack:' + m.name, function (callback) {
-		// output after Webpack does its thing
-		function webpackCallback(err, stats) {
-			if (err) { throw new gutil.PluginError('webpack', err) }
-			gutil.log(stats.toString({ colors: true }));
-			callback();
-		}
+
+		var config = (m.type === 'internal-library') ? {
+			entry    : './src/' + m.file,
+			externals: EXTERNAL_LIBRARIES.map(function (lib) { return lib.webpackExternal }),
+			output   : {
+				path             : './dist',
+				filename         : m.file,
+				library          : m.var,
+				libraryTarget    : 'umd',
+				sourceMapFilename: m.file + '.map'
+			}
+		} : { // 'application'
+			entry  : './src/' + m.dir + '/' + m.file,
+			output : {
+				path             : './dist/' + m.dir,
+				filename         : m.file,
+				sourceMapFilename: m.file + '.map'
+			},
+			resolve: {
+				modulesDirectories: ['node_modules', 'bower_components'],
+				alias             : WEBPACK_ALIAS
+			},
+			target : 'web'
+		};
+
 
 		if (m.type === 'internal-library') {
-			webpack(_.defaults({
-				entry: './src/' + m.file,
+			config = {
+				entry    : './src/' + m.file,
 				externals: EXTERNAL_LIBRARIES.map(function (lib) { return lib.webpackExternal }),
-				output: {
-					path: './dist',
-					filename: m.file,
-					library: m.var,
-					libraryTarget: 'umd',
-					sourceMapFilename: m.file+'.map'
+				output   : {
+					path             : './dist',
+					filename         : m.file,
+					library          : m.var,
+					libraryTarget    : 'umd',
+					sourceMapFilename: m.file + '.map'
 				}
-			}, commonConfig), webpackCallback);
+			};
 		} else if (m.type === 'application') {
-			webpack(_.defaults({
-				entry: './src/' + m.dir + '/' + m.file,
-				output: {
-					path: './dist/' + m.dir,
-					filename: m.file,
-					sourceMapFilename: m.file+'.map'
+			config = {
+				entry  : './src/' + m.dir + '/' + m.file,
+				output : {
+					path             : './dist/' + m.dir,
+					filename         : m.file,
+					sourceMapFilename: m.file + '.map'
 				},
 				resolve: {
 					modulesDirectories: ['node_modules', 'bower_components'],
-					alias: WEBPACK_ALIAS
+					alias             : WEBPACK_ALIAS
 				},
-				target: 'web'
-			}, commonConfig), webpackCallback);
+				target : 'web'
+			};
 		}
+
+		webpack(_.defaults(config, WEBPACK_COMMON), function (err, stats) {
+			if (err) { throw new gutil.PluginError('webpack', err) }
+			gutil.log(stats.toString({colors: true}));
+			callback();
+		});
+
 	});
 
 	/* the build-task for internal libraries */
@@ -143,19 +174,30 @@ INTERNAL_LIBRARIES.concat(APPLICATIONS).forEach(function (m) {
 /* 'build everything' task */
 gulp.task('build',
 		INTERNAL_LIBRARIES.concat(APPLICATIONS).map(function (mod) {
-			return 'build:'+mod.name
-		}));
+			return 'build:' + mod.name
+		})
+);
 
-/* test task */
-gulp.task('test', ['build'], function () {
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/* build tests with traceur */
+gulp.task('build-tests', function () {
+	return gulp.src('test/**/*.js')
+			.pipe(traceur({script: true}))
+			.pipe(gulp.dest('test-dist'));
+});
+
+/* run tests */
+gulp.task('test', ['build', 'build-tests'], function () {
 	return gulp.src(EXTERNAL_LIBRARIES.map(function (lib) {
 		return lib.dir + '/' + lib.file;
 	}).concat([
 		'dist/**/*.js',
 		'!dist/**/*.min.js',
-		'',
-		'test/**/*.js'
-	])).pipe(karma({ configFile: 'karma.conf.js' }));
+		'test-dist/**/*.js'
+	])).pipe(karma({configFile: 'karma.conf.js'}));
 });
 
 
@@ -169,6 +211,9 @@ gulp.task('watch', function () {
 		'src/**/*.css',
 		'src/**/*.html'
 	], ['lint', 'build', 'test']);
+	gulp.watch([
+		'test/**/*.js'
+	], ['build-tests', 'test']);
 });
 
 
@@ -176,9 +221,9 @@ gulp.task('watch', function () {
 
 
 ['major', 'minor', 'patch', 'prerelease'].forEach(function (type) {
-	gulp.task('bump:'+type, function () {
+	gulp.task('bump:' + type, function () {
 		return gulp.src(['package.json', 'bower.json'])
-				.pipe(bump({ type: type }))
+				.pipe(bump({type: type}))
 				.pipe(gulp.dest('./'));
 	});
 });
@@ -187,4 +232,4 @@ gulp.task('watch', function () {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-gulp.task('default', ['lint', 'build', 'watch']);
+gulp.task('default', ['lint', 'build', 'test', 'watch']);
