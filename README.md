@@ -250,7 +250,7 @@ it cannot already have a property named `key`.
 
 **operation**
 ```javascript
-delta.modify('foo').add('bar', 'bas');
+delta.modify('my-vp.foo').add('bar', 'bas');
 ```
 **before**
 ```javascript
@@ -270,7 +270,7 @@ must first *have* a property named `key`.
 
 **operation**
 ```javascript
-delta.remove('foo');
+delta.modify('my-vp').remove('foo');
 ```
 **before**
 ```javascript
@@ -290,7 +290,7 @@ must already *have* a property named `key`.
 
 **operation**
 ```javascript
-delta.replace('foo', 'bar');
+delta.modify('my-vp').replace('foo', 'bar');
 ```
 **before**
 ```javascript
@@ -325,7 +325,7 @@ array or function without this being regarded as a conflict.
 
 **operation**
 ```javascript
-delta.append('f', function (a, b) {
+delta.modify('my-vp').append('f', function (a, b) {
     doOtherThings(a, b);
 });
 ```
@@ -369,7 +369,7 @@ MyClass.prototype.construct = function () {};
 dm.vp('MyClass', MyClass)
 ```
 ```javascript
-dm.delta('my-delta')
+dm.delta('my-delta').modify('my-vp')
     .append('MyClass.prototype.construct', function (a, b, c) {
         this.doExtraThings(a, b, c);
     });
@@ -398,7 +398,7 @@ Do this as early in your application as possible. You can then use `.after`:
 
 **operation**
 ```javascript
-delta.after('f', function (a, b) {
+delta.modify('my-vp').after('f', function (a, b) {
     return doMoreThings(a, b);
 });
 ```
