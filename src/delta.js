@@ -215,6 +215,14 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 				obj[property] = this.value;
 			}
 		});
+		this._addOperationType({ // TODO: document this operation
+			name: 'replaceAround',
+			constructor: function ReplaceAround(value) { this.value = value },
+			applyTo(obj, property) {
+				assertDefined(obj[property], 'replaceAround');
+				obj[property] = this.value(obj[property]);
+			}
+		});
 		this._addOperationType({
 			name: 'remove',
 			constructor: function Remove() {},
@@ -237,6 +245,13 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		this._addCompositionRule('replace', 'replace', keepSecond);
 		this._addCompositionRule('replace', 'modify', applySecondToFirstValue);
 		this._addCompositionRule('replace', 'remove', keepSecond);
+
+		//this._addCompositionRule('add', 'replaceAround', applySecondToFirstValue); // too tricky right now; must refactor
+		//this._addCompositionRule('replaceAround', 'replace', keepSecond);
+		//this._addCompositionRule('replaceAround', 'modify', applySecondToFirstValue);
+		//this._addCompositionRule('replaceAround', 'remove', keepSecond);
+		//this._addCompositionRule('replaceAround', 'replaceAround', keepSecond);
+
 		this._addCompositionRule('modify', 'replace', keepSecond);
 		this._addCompositionRule('modify', 'modify', (d1, p, d2) => {
 			Object.keys(d2.operations).forEach((prop) => {
