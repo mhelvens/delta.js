@@ -108,11 +108,8 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		var thisDM = this;
 		this._addOperationType({
 			name: 'modify',
-			constructor: function Modify(deltaDescription, operations) {
-				// normalize things
-				deltaDescription = deltaDescription || {};
-				this.operations = operations || {};
-
+			constructor: function Modify(deltaDescription = {}, operations = {}) {
+				this.operations = operations;
 				// process possible delta description
 				Object.keys(deltaDescription).forEach((key) => {
 					var match = key.match(/^(\w+)\s+([\w\.]+)$/);
@@ -181,6 +178,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 						var newModifyDelta = this._addOperation(_opTypes['modify'], actualProperty);
 						return newModifyDelta[opType.name].apply(newModifyDelta, [restOfProperty].concat(values));
 					} else {
+
 						// the property is a single name; add the new delta directly
 						var _newDelta = thisDM._newDelta.apply(thisDM, [opType.name].concat(values));
 						if (this.operations.hasOwnProperty(property) && U.isDefined(this.operations[property])) {
@@ -217,6 +215,14 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 				obj[property] = this.value;
 			}
 		});
+		this._addOperationType({ // TODO: document this operation
+			name: 'replaceAround',
+			constructor: function ReplaceAround(value) { this.value = value },
+			applyTo(obj, property) {
+				assertDefined(obj[property], 'replaceAround');
+				obj[property] = this.value(obj[property]);
+			}
+		});
 		this._addOperationType({
 			name: 'remove',
 			constructor: function Remove() {},
@@ -239,6 +245,13 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 		this._addCompositionRule('replace', 'replace', keepSecond);
 		this._addCompositionRule('replace', 'modify', applySecondToFirstValue);
 		this._addCompositionRule('replace', 'remove', keepSecond);
+
+		//this._addCompositionRule('add', 'replaceAround', applySecondToFirstValue); // too tricky right now; must refactor
+		//this._addCompositionRule('replaceAround', 'replace', keepSecond);
+		//this._addCompositionRule('replaceAround', 'modify', applySecondToFirstValue);
+		//this._addCompositionRule('replaceAround', 'remove', keepSecond);
+		//this._addCompositionRule('replaceAround', 'replaceAround', keepSecond);
+
 		this._addCompositionRule('modify', 'replace', keepSecond);
 		this._addCompositionRule('modify', 'modify', (d1, p, d2) => {
 			Object.keys(d2.operations).forEach((prop) => {
@@ -383,7 +396,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 
 
 		// a class of a standard named delta with meta-data that is registered into the delta model
-		this.Delta = U.newSubclass(_opTypes['modify'].Delta, function Delta(superFn, deltaName, options) {
+		this.Delta = U.newSubclass(_opTypes['modify'].Delta, function Delta(superFn, deltaName, options = {}) {
 			// call the constructor of the 'modify' delta
 			superFn.call(this, options);
 
@@ -392,8 +405,9 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 					`A delta should be given as an object.`);
 			// TODO: check uniqueness of `deltaName`
 
-			// make this delta a ModifyDelta, so run its constructor
-			_opTypes['modify'].Delta.apply(this, options);
+			//// make this delta a ModifyDelta, so run its constructor
+			//console.log(this, options);
+			//_opTypes['modify'].Delta.prototype.constructor.call(this, options);
 
 			// create delta properties
 			Object.defineProperties(this, {
