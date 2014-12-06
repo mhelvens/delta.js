@@ -1,7 +1,7 @@
 module.exports = function (config) {
 	config.set({
 		basePath:      '',
-		frameworks:    ['jasmine', 'traceur'],
+		frameworks:    ['jasmine'],
 		exclude:       [],
 		reporters:     ['progress'],
 		port:          9876,
@@ -17,12 +17,6 @@ module.exports = function (config) {
 			'dist/**/*.js',
 			'!dist/**/*.min.js',
 			'test-dist/**/*.js'
-		],
-		preprocessors: {
-			'src/**/*.es6': ['traceur']
-		},
-		traceurPreprocessor: {
-			options: { script: true }
-		}
+		]
 	});
 };
