@@ -210,10 +210,10 @@ gulp.task('watch', function () {
 		'src/**/*.scss',
 		'src/**/*.css',
 		'src/**/*.html'
-	], ['lint', 'build', 'test']);
+	], ['lint', 'build']);
 	gulp.watch([
 		'test/**/*.js'
-	], ['build-tests', 'test']);
+	], ['build-tests']);
 });
 
 
@@ -232,4 +232,4 @@ gulp.task('watch', function () {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-gulp.task('default', ['lint', 'build', 'test', 'watch']);
+gulp.task('default', ['lint', 'build', 'watch']);

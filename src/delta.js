@@ -460,10 +460,10 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 						}
 					}
 				},
-				after: {
+				appliedAfter: {
 					get() {
 						return [].concat(
-								options['after'] || [],
+								options['appliedAfter'] || [],
 								options['expects'] || [],
 								options['resolves'] || [],
 								options['requires'] || []
@@ -489,7 +489,7 @@ define(['js-graph', './misc.js'], function (JsGraph, U) {
 
 			// update the graph
 			_graph.addVertex(deltaName, this);
-			this.after.forEach((otherDeltaName) => {
+			this.appliedAfter.forEach((otherDeltaName) => {
 				_graph.createEdge(otherDeltaName, deltaName);
 			});
 			U.assert(!_graph.hasCycle(),
