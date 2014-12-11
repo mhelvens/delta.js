@@ -1,4 +1,4 @@
-define(['js-graph', './misc.js'], function (JsGraph, U) {
+define(['js-graph', './../src/misc.js'], function (JsGraph, U) {
 	'use strict';
 
 

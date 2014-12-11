@@ -34,21 +34,19 @@ define(['./misc.js'], function (U) {
 			 * @param prop {String}
 			 */
 			applyTo(obj, prop) {
-				if (U.isDefined(prop)) {
-					/* if a property is passed, apply this delta to `obj[prop]` */
-					U.assert(obj[prop] instanceof Object,
-							`The 'modify' operation expects the property to be an already defined Object.`);
-					Object.keys(this.deltas).forEach((subProp) => {
-						this.deltas[subProp].applyTo(obj[prop], subProp);
-					});
-				} else {
-					/* if a property is not passed, apply this delta to `obj` */
-					U.assert(obj instanceof Object,
-							`The 'modify' operation expects the property to be an already defined Object.`);
-					Object.keys(this.deltas).forEach((subProp) => {
-						this.deltas[subProp].applyTo(obj, subProp);
-					});
-				}
+				if (U.isDefined(prop)) { obj = obj[prop] }
+				U.assert(obj instanceof Object,
+						`The 'modify' operation expects the property to be an already defined Object.`);
+				Object.keys(this.deltas).forEach((subProp) => {
+					this.deltas[subProp].applyTo(obj, subProp);
+				});
+			},
+
+			appliedTo(obj, prop) {
+				if (U.isDefined(prop)) { obj = obj[prop] }
+				var result = U.extend({}, obj);
+				this.applyTo(result);
+				return result;
 			},
 
 			/** {@public}{@method}
@@ -111,7 +109,7 @@ define(['./misc.js'], function (U) {
 						} else {
 							this.deltas[match[2]] = newDelta;
 						}
-					})(U.applyConstructor(thisDeltaJs.operations[opType], [match[2]].concat(args)));
+					})(U.applyConstructor(thisDeltaJs.operations[opType], args));
 					resultDelta = this.deltas[match[2]];
 				} else {
 					resultDelta = this.modify(match[2])._addOperation(opType, match[3], args);
@@ -128,7 +126,8 @@ define(['./misc.js'], function (U) {
 			 * @param property  {String?}
 			 */
 			toString(indentLvl = 0, prop = '(root)') {
-				return `${U.repeat(indentLvl, '    ')}modify '${prop}'\n` +
+				var indent = U.repeat(0 + indentLvl, '    ');
+				return `${indent}modify '${prop}'\n` +
 						Object.keys(this.deltas).map((p) => this.deltas[p].toString(indentLvl + 1, p)).join('\n');
 			}
 
@@ -141,6 +140,18 @@ define(['./misc.js'], function (U) {
 
 
 	}, /** @lends DeltaJs.prototype */  {
+
+		/** {@public}{@property}
+		 * quick access to the 'modify' delta constructor
+		 */
+		get Delta() { return this.operations['modify'] },
+
+		/** {@public}{@method}
+		 *
+		 */
+		vp(vpName, val) {
+			// TODO
+		},
 
 		/** {@public}{@method}
 		 *
@@ -182,7 +193,8 @@ define(['./misc.js'], function (U) {
 				 * @param property  {String?}
 				 */
 				toString(indentLvl = 0, prop = '(root)') {
-					return `${U.repeat(0 + indentLvl, '    ')}${name} '${prop}': ${JSON.stringify(this.a).slice(1, -1)}`;
+					var indent = U.repeat(0 + indentLvl, '    ');
+					return `${indent}${name} '${prop}': ${JSON.stringify(this.a).slice(1, -1)}`;
 				}
 			});
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
@@ -207,12 +219,24 @@ define(['./misc.js'], function (U) {
 		 */
 		_defineStandardOperationTypes() {
 
+			var deltaJs = this;
+
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 
 			/* convenience definitions for the application and composition functions below */
 			var keepFirst = () => {};
 			var keepSecond = (d1, p, d2) => { d1.deltas[p] = d2 };
-			var applySecondToFirstValue = (d1, p, d2) => { d2.applyTo(d1.deltas[p].a, 0) };
+			var applySecondToFirst = (d1, p, d2) => { d2.applyTo(d1.deltas[p].a, 0) };
+			var error = (d1, p, d2) => { throw new Error(`You cannot follow '${d1[p].type}' with '${d2.type}'.`) };
+
+			function d(type,  fn = ()=>null) {
+				if (typeof fn === 'string') { fn = ((v) => (o) => o[v])(fn) }
+				return (d1, p, d2) => {
+					d1.deltas[p] = U.applyConstructor(deltaJs.operations[type],
+							[fn({ d1: d1.deltas[p], d2: d2, p1: d1.deltas[p].a[0], p2: d2.a[0] })]);
+				};
+			}
+			function v(thing) { return (o) => o[thing] }
 
 			function assertFunction(val, opType) {
 				U.assert(typeof val === 'function',
@@ -222,12 +246,10 @@ define(['./misc.js'], function (U) {
 				U.assert(val instanceof Object,
 						`The operation '${opType}' expects the property it acts on to be an Object.`);
 			}
-
 			function assertDefined(val, opType) {
 				U.assert(U.isDefined(val),
 						`The operation '${opType}' expects the property to be defined.`);
 			}
-
 			function assertUndefined(val, opType) {
 				U.assert(U.isUndefined(val),
 						`The operation '${opType}' expects the property to be undefined.`);
@@ -235,34 +257,63 @@ define(['./misc.js'], function (U) {
 
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 
-			this.newComposition('modify', 'modify', (d1, p, d2) => {
-				Object.keys(d2.deltas).forEach((prop) => {
-					d1.compose(prop, d2.deltas[prop]);
-				});
+			// 'modify' is more fundamental, and defined above
+			this.newOperationType('add', function applyTo(obj, p) {
+				assertUndefined(obj[p], 'add');
+				obj[p] = this.a[0];
 			});
-
-			this.newOperationType('add', function applyTo(obj, prop) {
-				assertUndefined(obj[prop], 'add');
-				obj[prop] = this.a[0];
-			});
-
-			//this.newComposition('modify', 'add', (d1, p, d2) => { error });
-
-			this.newComposition('add', 'modify', (d1, p, d2) => {
-				assertObject(d1.deltas[p].a[0], 'modify');
-				applySecondToFirstValue(d1, p, d2);
-			});
-
 			this.newOperationType('remove', function applyTo(obj, p) {
 				assertDefined(obj[p], 'remove');
 				delete obj[p];
 			});
+			this.newOperationType('forbid', function applyTo(obj, p) {
+				assertUndefined(obj[p], 'forbid');
+			});
+			this.newOperationType('replace', function applyTo(obj, p) {
+				assertDefined(obj[p], 'replace');
+				obj[p] = this.a[0];
+			});
 
-			this.newComposition('modify', 'remove', keepSecond);
-			this.newComposition('add', 'remove', keepSecond);
-			//this.newComposition('remove', 'modify', error);
-			this.newComposition('remove', 'add', (d1, p, d2) => {  }); // TODO: replace
+			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 
+			// modify
+			this.newComposition('modify', 'modify', (d1, p, d2) => {
+				Object.keys(d2.deltas).forEach((prop) => {
+					d1.compose(p, d2.deltas[prop]);
+				});
+			});
+
+			// add
+			this.newComposition('modify', 'add'   , error);
+			this.newComposition('add'   , 'add'   , error);
+			this.newComposition('add'   , 'modify', d('add', ({d2, p1}) => d2.appliedTo(p1)));
+
+			// remove
+			this.newComposition('modify', 'remove', d('remove'));
+			this.newComposition('add'   , 'remove', d('forbid'));
+			this.newComposition('remove', 'modify', error);
+			this.newComposition('remove', 'add'   , d('replace', 'p2'));
+			this.newComposition('remove', 'remove', error);
+
+			// forbid
+			this.newComposition('modify', 'forbid', error);
+			this.newComposition('add'   , 'forbid', error);
+			this.newComposition('remove', 'forbid', d('remove'));
+			this.newComposition('forbid', 'modify', error);
+			this.newComposition('forbid', 'add'   , d('add', 'p2'));
+			this.newComposition('forbid', 'remove', error);
+			this.newComposition('forbid', 'forbid', d('forbid'));
+
+			// replace
+			this.newComposition('modify' , 'replace', d('replace', 'p2'));
+			this.newComposition('add'    , 'replace', d('add', 'p2'));
+			this.newComposition('remove' , 'replace', error);
+			this.newComposition('forbid' , 'replace', error);
+			this.newComposition('replace', 'add'    , error);
+			this.newComposition('replace', 'remove' , d('remove'));
+			this.newComposition('replace', 'forbid' , error);
+			this.newComposition('replace', 'modify' , d('replace', ({d2, p1}) => d2.appliedTo(p1)));
+			this.newComposition('replace', 'replace', d('replace', 'p2'));
 
 		}
 
