@@ -1,0 +1,9 @@
+{
+  "type": "external-library",
+  "name": "jquery",
+  "dir": "jquery/dist",
+  "file": "jquery.js"
+  
+      , "var": "jQuery"
+  
+}

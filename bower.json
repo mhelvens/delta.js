@@ -1,18 +1,19 @@
 {
-  "name": "delta.js",
-  "version": "0.5.0",
-  "description": "achieve modularity and separation of concerns through feature-oriented development",
-  "authors": [
-    {
-      "name": "Michiel Helvensteijn",
-      "email": "mhelvens@gmail.com"
-    }
-  ],
-  "license": "MIT",
-  "dependencies": {
-    "bluebird": "^2.3.2",
-	"js-graph": "^0.4.0"
-  },
-  "devDependencies": {
-  }
+	"name": "delta.js",
+	"version": "0.6.0",
+	"description": "achieve modularity and separation of concerns through feature-oriented development",
+	"authors": [
+		{
+			"name": "Michiel Helvensteijn",
+			"email": "mhelvens@gmail.com"
+		}
+	],
+	"license": "MIT",
+	"dependencies": {
+		"js-graph": "^0.4.0"
+	},
+	"devDependencies": {
+		"bluebird": "^2.3.2",
+		"jquery": "~2.1.1"
+	}
 }

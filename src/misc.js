@@ -4,23 +4,18 @@ define(() => {
 	var U = {
 
 		// create a new class, given a constructor and possible prototype
-		newClass(constructor, prototype) {
-			prototype = prototype || {};
-			var cls = function (...args) {
-				constructor.apply(this, args);
-			};
+		newClass(constructor, prototype = {}) {
+			var cls = constructor;
 			cls.prototype = prototype;
 			cls.prototype.constructor = cls;
 			return cls;
 		},
 
 		// create a new subclass, given a superclass, constructor and possible prototype
-		newSubclass(superClass, constructor, prototype) {
-			prototype = prototype || {};
-			var cls = function (...args) {
-				constructor.apply(this, [superClass.prototype.constructor].concat(args));
-			};
-			cls.prototype = Object.create(superClass.prototype, prototype);
+		newSubclass(superClass, constructorMaker, prototype = {}) {
+			var cls = constructorMaker(superClass.prototype.constructor);
+			cls.prototype = Object.create(superClass.prototype);
+			U.extend(cls.prototype, prototype);
 			cls.prototype.constructor = cls;
 			return cls;
 		},
@@ -32,7 +27,7 @@ define(() => {
 			rest.forEach((obj) => {
 				for (var key in obj) {
 					if (obj.hasOwnProperty(key)) {
-						obj1[key] = obj[key];
+						Object.defineProperty(obj1, key, Object.getOwnPropertyDescriptor(obj, key));
 					}
 				}
 			});
@@ -69,7 +64,10 @@ define(() => {
 		isUndefined(val) { return typeof val === 'undefined' },
 
 		// test if a value is defined (not `undefined`)
-		isDefined(val) { return typeof val !== 'undefined' }
+		isDefined(val) { return typeof val !== 'undefined' },
+
+		// repeat a string a given number of times
+		repeat(nr, str) { return new Array(nr+1).join(str) }
 	};
 
 	return U;
