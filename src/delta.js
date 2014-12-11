@@ -21,26 +21,30 @@ define(['./misc.js'], function (U) {
 
 		//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 		/* define the fundamental 'modify' delta */
-		this.operations['modify'] = U.newSubclass(this.operations.Delta, (superFn) => function (prop) {
+		this.operations['modify'] = U.newSubclass(this.operations.Delta, (superFn) => function () {
 			superFn();
-			this.prop = prop;
 			this.deltas = {};
 		}, {
 
 			type: 'modify',
 
+			/** {@public}{@method}
+			 *
+			 * @param obj  {Object}
+			 * @param prop {String}
+			 */
 			applyTo(obj, prop) {
 				if (U.isDefined(prop)) {
 					/* if a property is passed, apply this delta to `obj[prop]` */
-					U.assert(U.isDefined(obj[prop]),
-							`The 'modify' operation expects the property to be already defined.`);
+					U.assert(obj[prop] instanceof Object,
+							`The 'modify' operation expects the property to be an already defined Object.`);
 					Object.keys(this.deltas).forEach((subProp) => {
 						this.deltas[subProp].applyTo(obj[prop], subProp);
 					});
 				} else {
 					/* if a property is not passed, apply this delta to `obj` */
-					U.assert(U.isDefined(obj),
-							`The 'modify' operation expects the property to be already defined.`);
+					U.assert(obj instanceof Object,
+							`The 'modify' operation expects the property to be an already defined Object.`);
 					Object.keys(this.deltas).forEach((subProp) => {
 						this.deltas[subProp].applyTo(obj, subProp);
 					});
@@ -48,6 +52,7 @@ define(['./misc.js'], function (U) {
 			},
 
 			/** {@public}{@method}
+			 *
 			 * @param prop  {String}
 			 * @param other {DeltaJs#operations.Delta}
 			 */
@@ -70,6 +75,7 @@ define(['./misc.js'], function (U) {
 			},
 
 			/** {@public}{@method}
+			 *
 			 * @param prop {String}
 			 */
 			modify(prop) {
@@ -77,6 +83,7 @@ define(['./misc.js'], function (U) {
 			},
 
 			/** {@private}{@method}
+			 *
 			 * @param opType {String}
 			 * @param prop   {String}
 			 * @param args   {[*]}
@@ -116,12 +123,13 @@ define(['./misc.js'], function (U) {
 			},
 
 			/** {@public}{@method}
+			 *
 			 * @param indentLvl {Number?}
 			 * @param property  {String?}
 			 */
-			toString(indentLvl = 0) {
-				return `${U.repeat(indentLvl, '    ')}modify '${this.prop}'\n` +
-						Object.keys(this.deltas).map((prop) => this.deltas[prop].toString(indentLvl + 1, prop)).join('\n');
+			toString(indentLvl = 0, prop = '(root)') {
+				return `${U.repeat(indentLvl, '    ')}modify '${prop}'\n` +
+						Object.keys(this.deltas).map((p) => this.deltas[p].toString(indentLvl + 1, p)).join('\n');
 			}
 
 		});
@@ -135,6 +143,7 @@ define(['./misc.js'], function (U) {
 	}, /** @lends DeltaJs.prototype */  {
 
 		/** {@public}{@method}
+		 *
 		 * @param name    {String}
 		 * @param applyTo {(DeltaJs#operations.Delta, Object, String) => undefined}
 		 */
@@ -161,9 +170,8 @@ define(['./misc.js'], function (U) {
 
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 			/* create the Delta superclass representing this operation type */
-			this.operations[name] = U.newSubclass(this.operations.Delta, (superFn) => function (prop, ...args) {
+			this.operations[name] = U.newSubclass(this.operations.Delta, (superFn) => function (...args) {
 				superFn();
-				this.prop = prop;
 				this.a = args;
 			}, {
 				type: name,
@@ -173,8 +181,8 @@ define(['./misc.js'], function (U) {
 				 * @param indentLvl {Number?}
 				 * @param property  {String?}
 				 */
-				toString(indentLvl = 0) {
-					return `${U.repeat(0 + indentLvl, '    ')}${name} '${this.prop}': ${JSON.stringify(this.a).slice(1, -1)}`;
+				toString(indentLvl = 0, prop = '(root)') {
+					return `${U.repeat(0 + indentLvl, '    ')}${name} '${prop}': ${JSON.stringify(this.a).slice(1, -1)}`;
 				}
 			});
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
@@ -183,6 +191,7 @@ define(['./misc.js'], function (U) {
 		},
 
 		/** {@public}{@method}
+		 *
 		 * @param type1   {String}
 		 * @param type2   {String}
 		 * @param compose {(DeltaJs#operations.modify, String, DeltaJs#operations.Delta) => undefined}
@@ -194,20 +203,30 @@ define(['./misc.js'], function (U) {
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		/** {@private}{@method}
+		 *
 		 */
 		_defineStandardOperationTypes() {
 
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 
-			//function assertFunction(val, opType) {
-			//	U.assert(typeof val === 'function',
-			//			`The operation '${opType}' expects the property it acts on to be a function.`);
-			//}
-			//
-			//function assertDefined(val, opType) {
-			//	U.assert(U.isDefined(val),
-			//			`The operation '${opType}' expects the property to be defined.`);
-			//}
+			/* convenience definitions for the application and composition functions below */
+			var keepFirst = () => {};
+			var keepSecond = (d1, p, d2) => { d1.deltas[p] = d2 };
+			var applySecondToFirstValue = (d1, p, d2) => { d2.applyTo(d1.deltas[p].a, 0) };
+
+			function assertFunction(val, opType) {
+				U.assert(typeof val === 'function',
+						`The operation '${opType}' expects the property it acts on to be a function.`);
+			}
+			function assertObject(val, opType) {
+				U.assert(val instanceof Object,
+						`The operation '${opType}' expects the property it acts on to be an Object.`);
+			}
+
+			function assertDefined(val, opType) {
+				U.assert(U.isDefined(val),
+						`The operation '${opType}' expects the property to be defined.`);
+			}
 
 			function assertUndefined(val, opType) {
 				U.assert(U.isUndefined(val),
@@ -222,11 +241,28 @@ define(['./misc.js'], function (U) {
 				});
 			});
 
-
-			this.newOperationType('add', function applyTo(obj) {
-				assertUndefined(obj[this.prop], 'add');
-				obj[this.prop] = this.a[0];
+			this.newOperationType('add', function applyTo(obj, prop) {
+				assertUndefined(obj[prop], 'add');
+				obj[prop] = this.a[0];
 			});
+
+			//this.newComposition('modify', 'add', (d1, p, d2) => { error });
+
+			this.newComposition('add', 'modify', (d1, p, d2) => {
+				assertObject(d1.deltas[p].a[0], 'modify');
+				applySecondToFirstValue(d1, p, d2);
+			});
+
+			this.newOperationType('remove', function applyTo(obj, p) {
+				assertDefined(obj[p], 'remove');
+				delete obj[p];
+			});
+
+			this.newComposition('modify', 'remove', keepSecond);
+			this.newComposition('add', 'remove', keepSecond);
+			//this.newComposition('remove', 'modify', error);
+			this.newComposition('remove', 'add', (d1, p, d2) => {  }); // TODO: replace
+
 
 		}
 
