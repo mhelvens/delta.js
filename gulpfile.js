@@ -190,7 +190,7 @@ gulp.task('build-tests', function () {
 });
 
 /* run tests */
-gulp.task('test', ['build', 'build-tests'], function () {
+gulp.task('test', ['build-tests'], function () {
 	return gulp.src(EXTERNAL_LIBRARIES.map(function (lib) {
 		return lib.dir + '/' + lib.file;
 	}).concat([
@@ -210,10 +210,11 @@ gulp.task('watch', function () {
 		'src/**/*.scss',
 		'src/**/*.css',
 		'src/**/*.html'
-	], ['lint', 'build', 'tests']);
+	], ['lint', 'build']);
 	gulp.watch([
+		'dist/**/*.js',
 		'test/**/*.js'
-	], ['build-tests', 'test']);
+	], ['test']);
 });
 
 

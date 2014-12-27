@@ -8,8 +8,8 @@ module.exports = function (config) {
 		colors:        true,
 		logLevel:      config.LOG_INFO,
 		autoWatch:     false,
-		browsers:      ['Chrome'],
 		singleRun:     true,
+		browsers:      ['PhantomJS'],
 
 		files: [
 			'bower_components/bluebird/js/browser/bluebird.js',

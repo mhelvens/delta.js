@@ -33,9 +33,9 @@ describe("Delta instance", function () {
 				var rootObj = { obj: (typeof pre === 'function' ? pre() : pre) };
 				action();
 				if (post === Error) {
-					expect(delta.applyTo.bind(delta, rootObj)).toThrowError();
+					expect(() => delta.applyTo(rootObj)).toThrowError();
 				} else {
-					expect(delta.applyTo.bind(delta, rootObj)).not.toThrowError();
+					expect(() => delta.applyTo(rootObj)).not.toThrowError();
 					if (typeof post === 'function') {
 						post(rootObj.obj);
 					} else {
@@ -124,31 +124,31 @@ describe("Delta instance", function () {
 				]);
 
 		itCan('replace an existing field in an object',
-			[
-				{ foo: 'bar' },
-				() => { delta.replace('obj.foo', 'BAS') },
-				{ foo: 'BAS' }
-			], [
-				{ foo: 'bar' },
-				() => { delta.modify('obj').replace('foo', 'BAS') },
-				{ foo: 'BAS' }
-			], [
-				{ key: 'val', foo: 'bar' },
-				() => { delta.replace('obj.foo', 'BAS') },
-				{ key: 'val', foo: 'BAS' }
-			], [
-				{ key: 'val', foo: 'bar' },
-				() => { delta.modify('obj').replace('foo', 'BAS') },
-				{ key: 'val', foo: 'BAS' }
-			], [
-				{ foo: 'bar' },
-				() => { delta.replace('obj.key', 'BAS') },
-				Error
-			], [
-				{ foo: 'bar' },
-				() => { delta.modify('obj').replace('key', 'BAS') },
-				Error
-			]);
+				[
+					{ foo: 'bar' },
+					() => { delta.replace('obj.foo', 'BAS') },
+					{ foo: 'BAS' }
+				], [
+					{ foo: 'bar' },
+					() => { delta.modify('obj').replace('foo', 'BAS') },
+					{ foo: 'BAS' }
+				], [
+					{ key: 'val', foo: 'bar' },
+					() => { delta.replace('obj.foo', 'BAS') },
+					{ key: 'val', foo: 'BAS' }
+				], [
+					{ key: 'val', foo: 'bar' },
+					() => { delta.modify('obj').replace('foo', 'BAS') },
+					{ key: 'val', foo: 'BAS' }
+				], [
+					{ foo: 'bar' },
+					() => { delta.replace('obj.key', 'BAS') },
+					Error
+				], [
+					{ foo: 'bar' },
+					() => { delta.modify('obj').replace('key', 'BAS') },
+					Error
+				]);
 
 	});
 
