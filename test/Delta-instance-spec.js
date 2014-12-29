@@ -166,7 +166,7 @@ describe("Delta instance", function () {
 	});
 
 
-	describe('composed object operations', () => {
+	describe('composite object operations', () => {
 
 
 		itCan('correctly modify objects when the composition is valid', [[
@@ -423,6 +423,268 @@ describe("Delta instance", function () {
 
 
 	});
+
+
+	describe('array operations', () => {
+
+
+		itCan('prepend a new value to an array', [[
+			{ arr: [] },
+			() => { delta.prepend('obj.arr', 'val') },
+			{ arr: ['val'] }
+		], [
+			{ arr: ['init'] },
+			() => { delta.prepend('obj.arr', 'val') },
+			{ arr: ['val', 'init'] }
+		], [
+			{ arr: ['init1', 'init2'] },
+			() => { delta.prepend('obj.arr', 'val') },
+			{ arr: ['val', 'init1', 'init2'] }
+		], [
+			{ arr: 'not an array' },
+			() => { delta.prepend('obj.arr', 'val') },
+			expectError('delta-application')
+		], [
+			{ key: 'val' },
+			() => { delta.prepend('obj.arr', 'val') },
+			expectError('delta-application')
+		]]);
+
+
+		itCan('insert a new value into an array', [[
+			{ arr: [] },
+			() => { delta.insert('obj.arr', 'val') },
+			{ arr: ['val'] }
+		], [
+			{ arr: ['init'] },
+			() => { delta.insert('obj.arr', 'val') },
+			(obj) => {
+				expect(obj).toEqualOneOf(
+					{ arr: ['val', 'init'] },
+					{ arr: ['init', 'val'] }
+				);
+			}
+		], [
+			{ arr: ['init1', 'init2'] },
+			() => { delta.insert('obj.arr', 'val') },
+			(obj) => {
+				expect(obj).toEqualOneOf(
+					{ arr: ['val', 'init1', 'init2'] },
+					{ arr: ['init1', 'val', 'init2'] },
+					{ arr: ['init1', 'init2', 'val'] }
+				);
+			}
+		], [
+			{ arr: 'not an array' },
+			() => { delta.insert('obj.arr', 'val') },
+			expectError('delta-application')
+		], [
+			{ key: 'val' },
+			() => { delta.insert('obj.arr', 'val') },
+			expectError('delta-application')
+		]]);
+
+
+		itCan('append a new value to an array', [[
+			{ arr: [] },
+			() => { delta.append('obj.arr', 'val') },
+			{ arr: ['val'] }
+		], [
+			{ arr: ['init'] },
+			() => { delta.append('obj.arr', 'val') },
+			{ arr: ['init', 'val'] }
+		], [
+			{ arr: ['init1', 'init2'] },
+			() => { delta.append('obj.arr', 'val') },
+			{ arr: ['init1', 'init2', 'val'] }
+		], [
+			{ arr: 'not an array' },
+			() => { delta.append('obj.arr', 'val') },
+			expectError('delta-application')
+		], [
+			{ key: 'val' },
+			() => { delta.append('obj.arr', 'val') },
+			expectError('delta-application')
+		]]);
+
+
+	});
+
+
+	describe('composite array operations', () => {
+
+
+		itCan("combine multiple array operations", [[
+			{ arr: ['init'] },
+			() => {
+				delta.prepend('obj.arr', 1);
+				delta.prepend('obj.arr', 2);
+			},
+			{ arr: [2, 1, 'init'] }
+		], [
+			{ arr: ['init'] },
+			() => {
+				delta.prepend('obj.arr', 1);
+				delta.insert ('obj.arr', 2);
+			},
+			(obj) => {
+				expect(obj).toEqualOneOf(
+					{ arr: [2, 1, 'init'] },
+					{ arr: [1, 2, 'init'] },
+					{ arr: [1, 'init', 2] }
+				);
+			}
+		], [
+			{ arr: ['init'] },
+			() => {
+				delta.prepend('obj.arr', 1);
+				delta.append ('obj.arr', 2);
+			},
+			{ arr: [1, 'init', 2] }
+		], [
+			{ arr: ['init'] },
+			() => {
+				delta.insert ('obj.arr', 1);
+				delta.prepend('obj.arr', 2);
+			},
+			(obj) => {
+				expect(obj).toEqualOneOf(
+					{ arr: [2, 1, 'init'] },
+					{ arr: [2, 'init', 1] }
+				);
+			}
+		], [
+			{ arr: ['init'] },
+			() => {
+				delta.insert('obj.arr', 1);
+				delta.insert('obj.arr', 2);
+			},
+			(obj) => {
+				expect(obj).toEqualOneOf(
+						{ arr: [2, 1, 'init'] },
+						{ arr: [1, 2, 'init'] },
+						{ arr: [1, 'init', 2] },
+						{ arr: [2, 'init', 1] },
+						{ arr: ['init', 2, 1] },
+						{ arr: ['init', 1, 2] }
+				);
+			}
+		], [
+			{ arr: ['init'] },
+			() => {
+				delta.insert('obj.arr', 1);
+				delta.append('obj.arr', 2);
+			},
+			(obj) => {
+				expect(obj).toEqualOneOf(
+					{ arr: [1, 'init', 2] },
+					{ arr: ['init', 1, 2] }
+				);
+			}
+		], [
+			{ arr: ['init'] },
+			() => {
+				delta.append ('obj.arr', 1);
+				delta.prepend('obj.arr', 2);
+			},
+			{ arr: [2, 'init', 1] }
+		], [
+			{ arr: ['init'] },
+			() => {
+				delta.append('obj.arr', 1);
+				delta.insert('obj.arr', 2);
+			},
+			(obj) => {
+				expect(obj).toEqualOneOf(
+					{ arr: [2, 'init', 1] },
+					{ arr: ['init', 2, 1] },
+					{ arr: ['init', 1, 2] }
+				);
+			}
+		], [
+			{ arr: ['init'] },
+			() => {
+				delta.append('obj.arr', 1);
+				delta.append('obj.arr', 2);
+			},
+			{ arr: ['init', 1, 2] }
+		]]);
+
+
+		itCan("combine array operations with other types of operations if the composition is valid", [[
+			{ key: 'val' },
+			() => {
+				delta.add   ('obj.arr', ['init']);
+				delta.append('obj.arr', 'val');
+			},
+			{ key: 'val', arr: ['init', 'val'] }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.add   ('obj.arr', 'not an array');
+				delta.append('obj.arr', 'val');
+			},
+			expectError('delta-composition') // 'obj.arr', left by the 'add' operation, has to be an array
+		], [
+			{ key: 'val', arr: 'whatever' },
+			() => {
+				delta.add   ('obj.arr', ['init']);
+				delta.append('obj.arr', 'val');
+			},
+			expectError('delta-application') // 'obj.arr' is forbidden, but was present
+		], [
+			{ key: 'val', arr: 'whatever' },
+			() => {
+				delta.replace('obj.arr', ['init']);
+				delta.append ('obj.arr', 'val');
+			},
+			{ key: 'val', arr: ['init', 'val'] }
+		], [
+			{ key: 'val', arr: 'whatever' },
+			() => {
+				delta.replace('obj.arr', 'not an array');
+				delta.append ('obj.arr', 'val');
+			},
+			expectError('delta-composition') // 'obj.arr', left by the 'replace' operation, has to be an array
+		], [
+			{ key: 'val' },
+			() => {
+				delta.replace('obj.arr', ['init']);
+				delta.append ('obj.arr', 'val');
+			},
+			expectError('delta-application') // 'obj.arr' is mandatory, but was absent
+		], [
+			{ key: 'val', arr: ['init'] },
+			() => {
+				delta.append('obj.arr', 'val');
+				delta.remove('obj.arr');
+			},
+			{ key: 'val' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.append('obj.arr', 'val');
+				delta.remove('obj.arr');
+			},
+			expectError('delta-application') // 'obj.arr' is mandatory, but was absent
+		], [
+			{ key: 'val', arr: ['init'] },
+			() => {
+				delta.append ('obj.arr', 'val');
+				delta.replace('obj.arr', 'whatever');
+			},
+			{ key: 'val', arr: 'whatever' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.append ('obj.arr', 'val');
+				delta.replace('obj.arr', 'whatever');
+			},
+			expectError('delta-application') // 'obj.arr' is mandatory, but was absent
+		]]);
+
+	});
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
