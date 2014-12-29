@@ -1,4 +1,4 @@
-define(['./misc.js'], function (U) {
+define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 	'use strict';
 
 
@@ -13,19 +13,35 @@ define(['./misc.js'], function (U) {
 		this.operations = {};   // property -> Delta
 		this.compositions = {}; // type1 -> type2 -> [composeFn]
 
-		/* define the base 'Delta' class */
-		this.operations.Delta = U.newClass(function () {});
+		/* define the base 'Delta' class *///--------------------------------------------------------------------(Delta)
+		this.operations.Delta = U.newClass(function () {}, {
+			/** {@public}{@method}
+			 *
+			 * @param indentLvl {Number?}
+			 * @param property  {String?}
+			 */
+			toString(indentLvl = 0, prop = '(root)') {
+				var indent = U.repeat(0 + indentLvl, '    ');
+				var str = `${indent}${this.type} '${prop}'`;
+				if (this.a && this.a.length > 0) {
+					str += `: ${JSON.stringify(this.a).slice(1, -1)}`;
+				}
+				if (this.deltas && Object.keys(this.deltas).length > 0) {
+					str += '\n' + Object.keys(this.deltas)
+							.map((p) => this.deltas[p].toString(indentLvl + 1, p))
+							.join('\n');
+				}
+				return str;
+			}
+		});
+		//------------------------------------------------------------------------------------------------------(/Delta)
 
-		/* put the right foundation in 'this.composition' */
-		this.compositions['modify'] = { 'modify': [] };
 
-		//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
-		/* define the fundamental 'modify' delta */
-		this.operations['modify'] = U.newSubclass(this.operations.Delta, (superFn) => function () {
-			superFn();
+		/* define the fundamental 'modify' delta *///-----------------------------------------------------------(modify)
+		this.operations['modify'] = U.newSubclass(this.operations.Delta, (superFn) => function (...args) {
+			superFn.apply(this, args);
 			this.deltas = {};
 		}, {
-
 			type: 'modify',
 
 			/** {@public}{@method}
@@ -51,25 +67,15 @@ define(['./misc.js'], function (U) {
 
 			/** {@public}{@method}
 			 *
-			 * @param prop  {String}
-			 * @param other {DeltaJs#operations.Delta}
+			 * @param prop       {String}
+			 * @param otherDelta {DeltaJs#operations.Delta}
 			 */
-			compose(prop, other) {
-
-				if (other) {
-					var thisDelta = this.deltas[prop];
-					var success = thisDeltaJs.compositions[thisDelta.type][other.type].some((comp) => {
-						try {
-							comp(this, prop, other);
-							return true;
-						} catch (__) {}
-						return false;
-					});
-					U.assert(success,
-							`No composition is defined between '${thisDelta.type}' and '${other.type}'.`);
-				}
-
-				return this;
+			compose(prop, otherDelta) {
+				var firstDelta = this.deltas[prop];
+				var arr = thisDeltaJs.compositions[firstDelta.type][otherDelta.type];
+				U.assert(arr.length > 0,
+						`No composition is defined between '${firstDelta.type}' and '${otherDelta.type}'.`);
+				return arr[0](this, prop, otherDelta);
 			},
 
 			/** {@public}{@method}
@@ -85,6 +91,7 @@ define(['./misc.js'], function (U) {
 			 * @param opType {String}
 			 * @param prop   {String}
 			 * @param args   {[*]}
+			 * @return {DeltaJs#operations.modify} - the deepest 'modify' delta involved in this method-call
 			 */
 			_addOperation(opType, prop, args) {
 
@@ -100,39 +107,85 @@ define(['./misc.js'], function (U) {
 					return this._addOperation(opType, `.(instance).${match[2]}${match[3]}`, args);
 				}
 
-				/* create the resulting delta, possibly calling this method recursively for a longer chain */
-				var resultDelta;
-				if (match[3] === '') {
-					((newDelta) => {
-						if (this.deltas[match[2]]) {
-							this.compose(match[2], newDelta);
-						} else {
-							this.deltas[match[2]] = newDelta;
-						}
-					})(U.applyConstructor(thisDeltaJs.operations[opType], args));
-					resultDelta = this.deltas[match[2]];
-				} else {
-					resultDelta = this.modify(match[2])._addOperation(opType, match[3], args);
+				/* if there is a longer chain, call this method recursively */
+				if (match[3].length > 0) {
+					// recurse..[indirectly].....[directly]
+					return this.modify(match[2])._addOperation(opType, match[3], args);
 				}
 
-				/* if this operation was a modification, return the new delta; otherwise, return this delta */
-				return opType === 'modify' ? resultDelta : this;
+				/* at this point, we construct the new delta */
+				var newDelta = U.applyConstructor(thisDeltaJs.operations[opType], args);
 
-			},
+				/* OK, no targeted deltas; do we need to compose the new delta with an existing one? */
+				var result;
+				if (this.deltas[match[2]]) {
+					result = this.compose(match[2], newDelta);
+				} else {
+					result = this.deltas[match[2]] = newDelta;
+				}
+				return result.type === 'modify' ? result : this;
 
-			/** {@public}{@method}
-			 *
-			 * @param indentLvl {Number?}
-			 * @param property  {String?}
-			 */
-			toString(indentLvl = 0, prop = '(root)') {
-				var indent = U.repeat(0 + indentLvl, '    ');
-				return `${indent}modify '${prop}'\n` +
-						Object.keys(this.deltas).map((p) => this.deltas[p].toString(indentLvl + 1, p)).join('\n');
 			}
-
 		});
-		//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
+		//-----------------------------------------------------------------------------------------------------(/modify)
+
+		// In order to process delta compositions like
+		//     delta.add('obj', {});
+		//     delta.modify('obj');
+		// and still return 'modify' deltas to the user for further operations,
+		// we need temporary 'modify' deltas that remember their target, which
+		// we will call 'targeted deltas'.
+
+		/* define the 'targetedModify' delta subclass *///----------------------------------------------(targetedModify)
+		this.operations['targetedModify'] = U.newSubclass(this.operations['modify'], (superFn) => function (target, ...args) {
+			superFn.apply(this, [target].concat(args));
+			this._target = target;
+		}, {
+			/** {@private}{@method}
+			 *
+			 * @param opType {String}
+			 * @param prop   {String}
+			 * @param args   {[*]}
+			 * @return {DeltaJs#operations.modify} - the deepest 'modify' delta involved in this method-call
+			 */
+			_addOperation(opType, prop, args) {
+
+				/* dissect the 'prop' string */
+				////////////////////////  11111  22222222222  33  //
+				var match = prop.match(/^([.#]?)(\w+|\(\w+\))(.*)$/);
+				U.assert(match, `The path string '${prop}' is not well formed.`);
+
+				/* if 'prop' has a leading '#' character, transform it and recall this method */
+				if (match[1] === '#') {
+					// the # separator expects the current object to be a constructor function,
+					// and yields a delta to modify new instances of the corresponding class
+					return this._addOperation(opType, `.(instance).${match[2]}${match[3]}`, args);
+				}
+
+				/* if there is a longer chain, call this method recursively */
+				if (match[3].length > 0) {
+					// recurse..[indirectly].....[directly]
+					return this.modify(match[2])._addOperation(opType, match[3], args);
+				}
+
+				/* if the new delta should be a 'modify' delta, it is a targeted delta */
+				if (opType === 'modify') {
+					var newDelta = U.applyConstructor(thisDeltaJs.operations['targetedModify'], args);
+					newDelta._target = this._target[match[2]];
+					return newDelta;
+				}
+
+				/* apply the new delta to its target, discard it and return 'this' delta */
+				U.applyConstructor(thisDeltaJs.operations[opType], args).applyTo(this._target, match[2]);
+				return this;
+
+			}
+		});
+		//---------------------------------------------------------------------------------------------(/targetedModify)
+
+
+		/* set the foundation of the compositions array */
+		this.compositions['modify'] = { 'modify': [] };
 
 
 		/* define standard operations */
@@ -146,26 +199,26 @@ define(['./misc.js'], function (U) {
 		 */
 		get Delta() { return this.operations['modify'] },
 
-		/** {@public}{@method}
-		 *
-		 */
-		vp(vpName, val) {
-			// TODO
-		},
+		///** {@public}{@method}
+		// *
+		// */
+		//vp(vpName, val) {
+		//	// TODO
+		//},
 
 		/** {@public}{@method}
 		 *
 		 * @param name    {String}
 		 * @param applyTo {(DeltaJs#operations.Delta, Object, String) => undefined}
 		 */
-		newOperationType(name, applyTo) {
+		newOperationType(name, applyTo, prototype = {}) {
 
 			/* sanity checks */
 			U.assert(!this.operations[name],
 					`The '${name}' operation type already exists.`);
 
 			/* create the corresponding method in the 'modify' delta */
-			this.operations.modify.prototype[name] = function (prop, ...args) {
+			this.operations.Delta.prototype[name] = function (prop, ...args) {
 				return this._addOperation(name, prop, args);
 			};
 
@@ -178,27 +231,15 @@ define(['./misc.js'], function (U) {
 				this.compositions[name][type] = [];
 			});
 
-
-			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
-			/* create the Delta superclass representing this operation type */
+			/* create the Delta subclass representing this operation type *///-----------------------------------(other)
 			this.operations[name] = U.newSubclass(this.operations.Delta, (superFn) => function (...args) {
-				superFn();
+				superFn.apply(this, args);
 				this.a = args;
-			}, {
+			}, U.extend({
 				type: name,
-				applyTo: applyTo,
-
-				/** {@public}{@method}
-				 * @param indentLvl {Number?}
-				 * @param property  {String?}
-				 */
-				toString(indentLvl = 0, prop = '(root)') {
-					var indent = U.repeat(0 + indentLvl, '    ');
-					return `${indent}${name} '${prop}': ${JSON.stringify(this.a).slice(1, -1)}`;
-				}
-			});
-			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
-
+				applyTo: applyTo
+			}, prototype));
+			//--------------------------------------------------------------------------------------------------(/other)
 
 		},
 
@@ -224,28 +265,21 @@ define(['./misc.js'], function (U) {
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 
 			/* convenience definitions for the application and composition functions below */
-			var keepFirst = () => {};
-			var keepSecond = (d1, p, d2) => { d1.deltas[p] = d2 };
-			var applySecondToFirst = (d1, p, d2) => { d2.applyTo(d1.deltas[p].a, 0) };
 			var error = (d1, p, d2) => { throw new Error(`You cannot follow '${d1[p].type}' with '${d2.type}'.`) };
 
-			function d(type,  fn = ()=>null) {
+			function d(type,  fn = (()=>null)) {
 				if (typeof fn === 'string') { fn = ((v) => (o) => o[v])(fn) }
 				return (d1, p, d2) => {
-					d1.deltas[p] = U.applyConstructor(deltaJs.operations[type],
-							[fn({ d1: d1.deltas[p], d2: d2, p1: d1.deltas[p].a[0], p2: d2.a[0] })]);
+					var args = {
+						d1: d1.deltas && d1.deltas[p],
+						d2: d2,
+						p1: d1.deltas && d1.deltas[p] && d1.deltas[p].a && d1.deltas[p].a[0],
+						p2: d2.a && d2.a[0]
+					};
+					return d1.deltas[p] = new (deltaJs.operations[type])(fn(args));
 				};
 			}
-			function v(thing) { return (o) => o[thing] }
 
-			function assertFunction(val, opType) {
-				U.assert(typeof val === 'function',
-						`The operation '${opType}' expects the property it acts on to be a function.`);
-			}
-			function assertObject(val, opType) {
-				U.assert(val instanceof Object,
-						`The operation '${opType}' expects the property it acts on to be an Object.`);
-			}
 			function assertDefined(val, opType) {
 				U.assert(U.isDefined(val),
 						`The operation '${opType}' expects the property to be defined.`);
@@ -256,8 +290,31 @@ define(['./misc.js'], function (U) {
 			}
 
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
+			// DeltaModel
+			//
+			// modify       -  (object, [Delta])   => (object)             -  { deltas: {String->Delta} }
+			//
+			// add          -  (undefined, T)      => (T)                  -  { newValue: T }
+			// remove       -  (T)                 => (undefined)          -  { }
+			// replace      -  (T, U)              => (U)                  -  { newValue: U }
+			// replaceWith  -  (T, T => U)         => (U)                  -  { newValueFn: T => U }
+			//
+			// alter        -  ([*], [Delta])      => ([*])                -  { alterations: [AlterArrayDelta] }
+			// prepend      -  ([*], T)            => ([*])                -  { newValue: T }
+			// insert       -  ([*], T)            => ([*])                -  { newValue: T }
+			// append       -  ([*], T)            => ([*])                -  { newValue: T }
+			//
+			// alter        -  (T => U, [Delta])   => (T => *)             -  { alterations: [AlterFnDelta] }
+			// prepend      -  (T => U, T => void) => (T => U)             -  { newCode: T => void }
+			// insert       -  (T => U, T => void) => (T => U)             -  { newCode: T => void }
+			// append       -  (T => U, T => V)    => (T => V)             -  { newCode: T => V }
+			//
+			// after        -  (T => P<U>, P<U> => T => V) => (T => P<V>)  -  { newCode: P<U> => T => V }
+			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 
-			// 'modify' is more fundamental, and defined above
+			/* declaring the basic operation types */
+			// 'modify' is the most fundamental operation,
+			//  and is defined above rather than here
 			this.newOperationType('add', function applyTo(obj, p) {
 				assertUndefined(obj[p], 'add');
 				obj[p] = this.a[0];
@@ -276,26 +333,27 @@ define(['./misc.js'], function (U) {
 
 			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
 
-			// modify
+			/* composition - introducing 'modify' ***********************************************/
 			this.newComposition('modify', 'modify', (d1, p, d2) => {
 				Object.keys(d2.deltas).forEach((prop) => {
 					d1.compose(p, d2.deltas[prop]);
 				});
+				return d1.deltas[p];
 			});
 
-			// add
+			/* composition - introducing 'add' **************************************************/
 			this.newComposition('modify', 'add'   , error);
 			this.newComposition('add'   , 'add'   , error);
-			this.newComposition('add'   , 'modify', d('add', ({d2, p1}) => d2.appliedTo(p1)));
+			this.newComposition('add'   , 'modify', (d1, p) => new (deltaJs.operations['targetedModify'])(d1.deltas[p].a[0]));
 
-			// remove
+			/* composition - introducing 'remove' ***********************************************/
 			this.newComposition('modify', 'remove', d('remove'));
 			this.newComposition('add'   , 'remove', d('forbid'));
 			this.newComposition('remove', 'modify', error);
 			this.newComposition('remove', 'add'   , d('replace', 'p2'));
 			this.newComposition('remove', 'remove', error);
 
-			// forbid
+			/* composition - introducing 'forbid' ***********************************************/
 			this.newComposition('modify', 'forbid', error);
 			this.newComposition('add'   , 'forbid', error);
 			this.newComposition('remove', 'forbid', d('remove'));
@@ -304,16 +362,51 @@ define(['./misc.js'], function (U) {
 			this.newComposition('forbid', 'remove', error);
 			this.newComposition('forbid', 'forbid', d('forbid'));
 
-			// replace
+			/* composition - introducing 'replace' **********************************************/
 			this.newComposition('modify' , 'replace', d('replace', 'p2'));
 			this.newComposition('add'    , 'replace', d('add', 'p2'));
 			this.newComposition('remove' , 'replace', error);
 			this.newComposition('forbid' , 'replace', error);
+			this.newComposition('replace', 'modify', (d1, p) => new (deltaJs.operations['targetedModify'])(d1.deltas[p].a[0]));
 			this.newComposition('replace', 'add'    , error);
 			this.newComposition('replace', 'remove' , d('remove'));
 			this.newComposition('replace', 'forbid' , error);
-			this.newComposition('replace', 'modify' , d('replace', ({d2, p1}) => d2.appliedTo(p1)));
 			this.newComposition('replace', 'replace', d('replace', 'p2'));
+
+			//  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //  //
+
+			///* declaring the 'deltaModel' operation */
+			//this.newOperationType('deltaModel', function applyTo(obj, p) {
+			//	this.a[0].topologically((subDelta) => {
+			//		// the graph is allowed to contain 'null' vertices for ordering purposes
+			//		if (subDelta) { subDelta.applyTo(obj, p) }
+			//	});
+			//}, {
+			//
+			//});
+			//
+			//
+			///* composition - introducing 'deltaModel' *******************************************/
+			//// to compose delta models, we simply have one apply after the other
+			//// without any composability checks; in the future, this may become more clever
+			//var orderedBySimpleDeltaModel = (d1, p, d2) => {
+			//	var graph = new JsGraph();
+			//	graph.addNewVertex(1, d1.deltas[p]);
+			//	graph.addNewVertex(2, d2);
+			//	graph.addNewEdge(1, 2);
+			//	return d1.deltas[p] = new (deltaJs.operations['deltaModel'])(graph);
+			//};
+			//this.newComposition('modify',     'deltaModel', orderedBySimpleDeltaModel);
+			//this.newComposition('add',        'deltaModel', orderedBySimpleDeltaModel);
+			//this.newComposition('remove',     'deltaModel', orderedBySimpleDeltaModel);
+			//this.newComposition('forbid',     'deltaModel', orderedBySimpleDeltaModel);
+			//this.newComposition('replace',    'deltaModel', orderedBySimpleDeltaModel);
+			//this.newComposition('deltaModel', 'modify',     orderedBySimpleDeltaModel);
+			//this.newComposition('deltaModel', 'add',        orderedBySimpleDeltaModel);
+			//this.newComposition('deltaModel', 'remove',     orderedBySimpleDeltaModel);
+			//this.newComposition('deltaModel', 'forbid',     orderedBySimpleDeltaModel);
+			//this.newComposition('deltaModel', 'replace',    orderedBySimpleDeltaModel);
+			//this.newComposition('deltaModel', 'deltaModel', orderedBySimpleDeltaModel);
 
 		}
 

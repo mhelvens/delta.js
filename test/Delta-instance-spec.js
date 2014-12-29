@@ -21,25 +21,42 @@ describe("Delta instance", function () {
 	var delta;
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
-		delta = new deltaJs.Delta('test-delta', {if: true});
+		delta = new deltaJs.Delta('test-delta', { if: true });
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function itCan(description, ...triples) {
+	function ExpectedError() {}
+
+	function expectError(when) {
+		var result = new ExpectedError();
+		result.when = when;
+		return result;
+	}
+
+	function itCan(description, triples) {
 		var counter = 0;
 		triples.forEach(([pre, action, post]) => {
 			it(`can ${description} (${++counter})`, () => {
+				/* creating the initial object using the given 'pre' */
 				var rootObj = { obj: (typeof pre === 'function' ? pre() : pre) };
-				action();
-				if (post === Error) {
-					expect(() => delta.applyTo(rootObj)).toThrowError();
+
+				/* creating the delta through the given code */
+				if (post instanceof ExpectedError && post.when === 'delta-composition') {
+					expect(() => action()).toThrowError();
 				} else {
-					expect(() => delta.applyTo(rootObj)).not.toThrowError();
-					if (typeof post === 'function') {
-						post(rootObj.obj);
+					action();
+
+					/* applying the delta to the given 'pre' value */
+					if (post instanceof ExpectedError && post.when === 'delta-application') {
+						expect(() => delta.applyTo(rootObj)).toThrowError();
 					} else {
-						expect(rootObj.obj).toEqual(post);
+						expect(() => delta.applyTo(rootObj)).not.toThrowError();
+						if (typeof post === 'function') {
+							post(rootObj.obj);
+						} else {
+							expect(rootObj.obj).toEqual(post);
+						}
 					}
 				}
 			});
@@ -50,109 +67,366 @@ describe("Delta instance", function () {
 
 	describe('object operations', () => {
 
-		itCan('add a new field to an object',
-			[
-				{},
-				() => { delta.add('obj.foo', 'bar') },
-				{ foo: 'bar' }
-			], [
-				{},
-				() => { delta.modify('obj').add('foo', 'bar') },
-				{ foo: 'bar' }
-			], [
-				{ key: 'val' },
-				() => { delta.add('obj.foo', 'bar') },
-				{ key: 'val', foo: 'bar' }
-			], [
-				{ key: 'val' },
-				() => { delta.modify('obj').add('foo', 'bar') },
-				{ key: 'val', foo: 'bar' }
-			], [
-				{ key: 'val' },
-				() => { delta.add('obj.key', 'bar') },
-				Error
-			], [
-				{ key: 'val' },
-				() => { delta.modify('obj').add('key', 'bar') },
-				Error
-			]);
+		itCan('add a new field to an object', [[
+			{},
+			() => { delta.add('obj.foo', 'bar') },
+			{ foo: 'bar' }
+		], [
+			{},
+			() => { delta.modify('obj').add('foo', 'bar') },
+			{ foo: 'bar' }
+		], [
+			{ key: 'val' },
+			() => { delta.add('obj.foo', 'bar') },
+			{ key: 'val', foo: 'bar' }
+		], [
+			{ key: 'val' },
+			() => { delta.modify('obj').add('foo', 'bar') },
+			{ key: 'val', foo: 'bar' }
+		], [
+			{ key: 'val' },
+			() => { delta.add('obj.key', 'bar') },
+			expectError('delta-application')
+		], [
+			{ key: 'val' },
+			() => { delta.modify('obj').add('key', 'bar') },
+			expectError('delta-application')
+		]]);
 
-		itCan('remove an existing field from an object',
-			[
-				{ foo: 'bar' },
-				() => { delta.remove('obj.foo') },
-				{}
-			], [
-				{ foo: 'bar' },
-				() => { delta.modify('obj').remove('foo') },
-				{}
-			], [
-				{ key: 'val', foo: 'bar' },
-				() => { delta.remove('obj.foo') },
-				{ key: 'val' }
-			], [
-				{ key: 'val', foo: 'bar' },
-				() => { delta.modify('obj').remove('foo') },
-				{ key: 'val' }
-			], [
-				{ foo: 'bar' },
-				() => { delta.remove('obj.key') },
-				Error
-			], [
-				{ foo: 'bar' },
-				() => { delta.modify('obj').remove('key') },
-				Error
-			]);
+		itCan('remove an existing field from an object', [[
+			{ foo: 'bar' },
+			() => { delta.remove('obj.foo') },
+			{}
+		], [
+			{ foo: 'bar' },
+			() => { delta.modify('obj').remove('foo') },
+			{}
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => { delta.remove('obj.foo') },
+			{ key: 'val' }
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => { delta.modify('obj').remove('foo') },
+			{ key: 'val' }
+		], [
+			{ foo: 'bar' },
+			() => { delta.remove('obj.key') },
+			expectError('delta-application')
+		], [
+			{ foo: 'bar' },
+			() => { delta.modify('obj').remove('key') },
+			expectError('delta-application')
+		]]);
 
-		itCan('forbid a field from being in an object',
-				[
-					{ foo: 'bar' },
-					() => { delta.forbid('obj.key') },
-					{ foo: 'bar' }
-				], [
-					{ foo: 'bar' },
-					() => { delta.modify('obj').forbid('key') },
-					{ foo: 'bar' }
-				], [
-					{ key: 'val', foo: 'bar' },
-					() => { delta.forbid('obj.key') },
-					Error
-				], [
-					{ key: 'val', foo: 'bar' },
-					() => { delta.modify('obj').forbid('key') },
-					Error
-				]);
+		itCan('forbid a field from being in an object', [[
+			{ foo: 'bar' },
+			() => { delta.forbid('obj.key') },
+			{ foo: 'bar' }
+		], [
+			{ foo: 'bar' },
+			() => { delta.modify('obj').forbid('key') },
+			{ foo: 'bar' }
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => { delta.forbid('obj.key') },
+			expectError('delta-application')
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => { delta.modify('obj').forbid('key') },
+			expectError('delta-application')
+		]]);
 
-		itCan('replace an existing field in an object',
-				[
-					{ foo: 'bar' },
-					() => { delta.replace('obj.foo', 'BAS') },
-					{ foo: 'BAS' }
-				], [
-					{ foo: 'bar' },
-					() => { delta.modify('obj').replace('foo', 'BAS') },
-					{ foo: 'BAS' }
-				], [
-					{ key: 'val', foo: 'bar' },
-					() => { delta.replace('obj.foo', 'BAS') },
-					{ key: 'val', foo: 'BAS' }
-				], [
-					{ key: 'val', foo: 'bar' },
-					() => { delta.modify('obj').replace('foo', 'BAS') },
-					{ key: 'val', foo: 'BAS' }
-				], [
-					{ foo: 'bar' },
-					() => { delta.replace('obj.key', 'BAS') },
-					Error
-				], [
-					{ foo: 'bar' },
-					() => { delta.modify('obj').replace('key', 'BAS') },
-					Error
-				]);
+		itCan('replace an existing field in an object', [[
+			{ foo: 'bar' },
+			() => { delta.replace('obj.foo', 'BAS') },
+			{ foo: 'BAS' }
+		], [
+			{ foo: 'bar' },
+			() => { delta.modify('obj').replace('foo', 'BAS') },
+			{ foo: 'BAS' }
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => { delta.replace('obj.foo', 'BAS') },
+			{ key: 'val', foo: 'BAS' }
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => { delta.modify('obj').replace('foo', 'BAS') },
+			{ key: 'val', foo: 'BAS' }
+		], [
+			{ foo: 'bar' },
+			() => { delta.replace('obj.key', 'BAS') },
+			expectError('delta-application')
+		], [
+			{ foo: 'bar' },
+			() => { delta.modify('obj').replace('key', 'BAS') },
+			expectError('delta-application')
+		]]);
+
+	});
+
+
+	describe('composed object operations', () => {
+
+
+		itCan('correctly modify objects when the composition is valid', [[
+			{ key: 'val' },
+			() => {
+				delta.add('obj.foo1', 'bar1');
+				delta.add('obj.foo2', 'bar2');
+			},
+			{ key: 'val', foo1: 'bar1', foo2: 'bar2' }
+		], [
+			{ key: 'val', key1: 'val1', key2: 'val2' },
+			() => {
+				delta.remove('obj.key1');
+				delta.remove('obj.key2');
+			},
+			{ key: 'val' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.forbid('obj.foo1');
+				delta.forbid('obj.foo2');
+			},
+			{ key: 'val' }
+		], [
+			{ key1: 'val1', key2: 'val2' },
+			() => {
+				delta.replace('obj.key1', 'VAL1');
+				delta.replace('obj.key2', 'VAL2');
+			},
+			{ key1: 'VAL1', key2: 'VAL2' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.add('obj.foo', {});
+				delta.modify('obj.foo').add('bar', 'bas');
+			},
+			{ key: 'val', foo: { bar: 'bas' } }
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => {
+				delta.add('obj.foo', {});
+				delta.modify('obj.foo').add('bar', 'bas');
+			},
+			expectError('delta-application') // 'obj.foo' is forbidden, but was present
+		], [
+			{ key: 'val' },
+			() => {
+				// a more complex / deep version of 'add' composed with 'modify'
+				delta.add('obj.level1', { level2: {} });
+				delta.add('obj.level1.level2.sideLevel', 'final');
+				delta.modify('obj.level1.level2').add('level3', {});
+				delta.modify('obj.level1').modify('level2.level3').add('level4', 'final');
+			},
+			{ key: 'val', level1: { level2: { sideLevel: 'final', level3: { level4: 'final' } } } }
+		], [
+			{ key: 'val', foo: { bar: 'bas' } },
+			() => {
+				delta.modify('obj.foo').add('newKey', 'newVal');
+				delta.remove('obj.foo');
+			},
+			{ key: 'val' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.add('obj.foo', 'bar');
+				delta.remove('obj.foo');
+			},
+			{ key: 'val' }
+		], [
+			{ key: 'val', foo: 'whatever' },
+			() => {
+				delta.add('obj.foo', 'bar');
+				delta.remove('obj.foo');
+			},
+			expectError('delta-application') // 'obj.foo' is forbidden, but was present
+		], [
+			{ key: 'val', foo: 'whatever' },
+			() => {
+				delta.remove('obj.foo');
+				delta.add('obj.foo', 'bar');
+			},
+			{ key: 'val', foo: 'bar' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.remove('obj.foo');
+				delta.add('obj.foo', 'bar');
+			},
+			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+		], [
+			{ key: 'val', foo: 'whatever' },
+			() => {
+				delta.remove('obj.foo');
+				delta.forbid('obj.foo');
+			},
+			{ key: 'val' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.remove('obj.foo');
+				delta.forbid('obj.foo');
+			},
+			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+		], [
+			{ key: 'val' },
+			() => {
+				delta.forbid('obj.foo');
+				delta.add('obj.foo', 'bar');
+			},
+			{ key: 'val', foo: 'bar' }
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => {
+				delta.forbid('obj.foo');
+				delta.add('obj.foo', 'bar');
+			},
+			expectError('delta-application') // 'obj.foo' is forbidden, but was present
+		], [
+			{ key: 'val' },
+			() => {
+				delta.forbid('obj.foo');
+				delta.forbid('obj.foo');
+			},
+			{ key: 'val' }
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => {
+				delta.forbid('obj.foo');
+				delta.forbid('obj.foo');
+			},
+			expectError('delta-application') // 'obj.foo' is forbidden (twice), but was present
+		], [
+			{ key: 'val', foo: { bar: 'bas' } },
+			() => {
+				delta.modify('obj.foo');
+				delta.replace('obj.foo', 'newValue');
+			},
+			{ key: 'val', foo: 'newValue' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.modify('obj.foo');
+				delta.replace('obj.foo', 'newValue');
+			},
+			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+		], [
+			{ key: 'val' },
+			() => {
+				delta.add('obj.foo', 'oldValue');
+				delta.replace('obj.foo', 'newValue');
+			},
+			{ key: 'val', foo: 'newValue' }
+		], [
+			{ key: 'val', foo: { bar: 'bas' } },
+			() => {
+				delta.add('obj.foo', 'oldValue');
+				delta.replace('obj.foo', 'newValue');
+			},
+			expectError('delta-application') // 'obj.foo' is forbidden, but was present
+		], [
+			{ key: 'val', foo: 'bar' },
+			() => {
+				delta.replace('obj.foo', {});
+				delta.modify('obj.foo').add('bar', 'bas');
+			},
+			{ key: 'val', foo: { bar: 'bas' } }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.replace('obj.foo', {});
+				delta.modify('obj.foo').add('bar', 'bas');
+			},
+			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+		], [
+			{ key: 'val', level1: 'oldValue' },
+			() => {
+				// a more complex / deep version of 'replace' composed with 'modify'
+				delta.replace('obj.level1', { level2: {} });
+				delta.add('obj.level1.level2.sideLevel', 'final');
+				delta.modify('obj.level1.level2').add('level3', {});
+				delta.modify('obj.level1').modify('level2.level3').add('level4', 'final');
+			},
+			{ key: 'val', level1: { level2: { sideLevel: 'final', level3: { level4: 'final' } } } }
+		], [
+			{ key: 'val', foo: { bar: 'bas' } },
+			() => {
+				delta.replace('obj.foo', 'newValue');
+				delta.remove('obj.foo');
+			},
+			{ key: 'val' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.replace('obj.foo', 'newValue');
+				delta.remove('obj.foo');
+			},
+			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+		], [
+			{ key: 'val', foo: { bar: 'bas' } },
+			() => {
+				delta.replace('obj.foo', 'oldValue');
+				delta.replace('obj.foo', 'newValue');
+			},
+			{ key: 'val', foo: 'newValue' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.replace('obj.foo', 'oldValue');
+				delta.replace('obj.foo', 'newValue');
+			},
+			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+		]]);
+
+
+		itCan('throw an error when the composition is detectably invalid', [
+			() => {
+				delta.modify('obj.foo');
+				delta.add('obj.foo', 'bar');
+			}, () => {
+				delta.add('obj.foo', 'bar1');
+				delta.add('obj.foo', 'bar2');
+			}, () => {
+				delta.remove('obj.foo');
+				delta.modify('obj.foo');
+			}, () => {
+				delta.remove('obj.foo');
+				delta.remove('obj.foo');
+			}, () => {
+				delta.modify('obj.foo');
+				delta.forbid('obj.foo');
+			}, () => {
+				delta.add('obj.foo', 'bar');
+				delta.forbid('obj.foo');
+			}, () => {
+				delta.forbid('obj.foo');
+				delta.modify('obj.foo');
+			}, () => {
+				delta.forbid('obj.foo');
+				delta.remove('obj.foo');
+			}, () => {
+				delta.remove('obj.foo');
+				delta.replace('obj.foo', 'bar');
+			}, () => {
+				delta.forbid('obj.foo');
+				delta.replace('obj.foo', 'bar');
+			}, () => {
+				delta.replace('obj.foo', 'bar1');
+				delta.add('obj.foo', 'bar2');
+			}, () => {
+				delta.replace('obj.foo', 'bar');
+				delta.forbid('obj.foo');
+			}
+		].map((action) => [null, action, expectError('delta-composition')]));
+
 
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	// TODO: function operations; the old tests are below
 
 	//describe('function operations', () => {
 	//
@@ -312,8 +586,6 @@ describe("Delta instance", function () {
 	//
 	//
 	//});
-
-
 
 
 });
