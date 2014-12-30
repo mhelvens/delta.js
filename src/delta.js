@@ -90,31 +90,47 @@ define(['./misc.js', 'js-graph'], function (U/*, JsGraph*/) {
 			/** {@private}{@method}
 			 *
 			 * @param opType {String}
-			 * @param prop   {String}
+			 * @param path   {String}
 			 * @param arg    {*}
 			 * @param meta   {Object} - meta information about the operation
-			 * @return {DeltaJs#operations.modify} - the deepest 'Modify' delta involved in this method-call
+			 * @return {{prop: String, result: DeltaJs#operations.modify}} - the deepest 'Modify' delta involved in this method-call
 			 */
-			_addOperation(opType, path, arg, meta) {
+			_preProcessNewOperation(opType, path, arg, meta) {
 
 				/* dissect the 'path' string */
 				////////////////////////  11111  22222222222  33  //
 				var match = path.match(/^([.#]?)(\w+|\(\w+\))(.*)$/);
 				U.assert(match, `The path string '${path}' is not well formed.`);
 				var [, lead, prop, rest] = match;
+				var result = null;
 
-				/* if 'path' has a leading '#' character, transform it and recall this method */
 				if (lead === '#') {
+					/* if 'path' has a leading '#' character, transform it and recall this method */
 					// the # separator expects the current object to be a constructor function,
 					// and yields a delta to modify new instances of the corresponding class
-					return this._addOperation(opType, `.(instance).${prop}${rest}`, arg, meta);
+					result = this._addOperation(opType, `.(instance).${prop}${rest}`, arg, meta);
+				} else if (rest.length > 0) {
+					/* if there is a longer chain, call this method recursively */
+					// recurse....indirectly...directly
+					result = this.modify(prop)._addOperation(opType, rest, arg, meta);
 				}
 
-				/* if there is a longer chain, call this method recursively */
-				if (rest.length > 0) {
-					// recurse..indirectly.......directly
-					return this.modify(prop)._addOperation(opType, rest, arg, meta);
-				}
+				return {prop, result};
+			},
+
+			/** {@private}{@method}
+			 *
+			 * @param opType {String}
+			 * @param path   {String}
+			 * @param arg    {*}
+			 * @param meta   {Object} - meta information about the operation
+			 * @return {DeltaJs#operations.modify} - the deepest 'Modify' delta involved in this method-call
+			 */
+			_addOperation(opType, path, arg, meta) {
+
+				/* pre-process the arguments, possibly already get the result by delegation */
+				var {prop, result} = this._preProcessNewOperation(opType, path, arg, meta);
+				if (result) { return result }
 
 				/* at this point, we construct the new delta */
 				var newDelta = new thisDeltaJs.operations[opType](arg, meta);
@@ -153,46 +169,39 @@ define(['./misc.js', 'js-graph'], function (U/*, JsGraph*/) {
 			superFn.call(this, arg, meta);
 			this.target = target;
 		}, {
+
+			/** {@public}{@method}
+			 * Targeted deltas can't be applied TO anything.
+			 * This method is overwritten to avoid mistakes.
+			 */
+			applyTo() { throw new Error(`TargetedModify deltas cannot be applied TO anything.`) },
+
 			/** {@private}{@method}
 			 *
 			 * @param opType {String}
-			 * @param prop   {String}
+			 * @param path   {String}
 			 * @param arg    {*}
 			 * @param meta   {Object} - meta information about the operation
 			 * @return {DeltaJs#operations.modify} - the deepest 'Modify' delta involved in this method-call
 			 */
-			_addOperation(opType, prop, arg, meta) {
-
-				/* dissect the 'prop' string */
-				////////////////////////  11111  22222222222  33  //
-				var match = prop.match(/^([.#]?)(\w+|\(\w+\))(.*)$/);
-				U.assert(match, `The path string '${prop}' is not well formed.`);
-
-				/* if 'prop' has a leading '#' character, transform it and recall this method */
-				if (match[1] === '#') {
-					// the # separator expects the current object to be a constructor function,
-					// and yields a delta to modify new instances of the corresponding class
-					return this._addOperation(opType, `.(instance).${match[2]}${match[3]}`, arg, meta);
-				}
-
-				/* if there is a longer chain, call this method recursively */
-				if (match[3].length > 0) {
-					// recurse..[indirectly].....[directly]
-					return this.modify(match[2])._addOperation(opType, match[3], arg, meta);
-				}
+			_addOperation(opType, path, arg, meta) {
+				/* pre-process the arguments, possibly already get the result by delegation */
+				var {prop, result} = this._preProcessNewOperation(opType, path, arg, meta);
+				if (result) { return result }
 
 				/* if the new delta should be a 'Modify' delta, it is a targeted delta */
 				if (opType === 'Modify') {
 					var newDelta = new thisDeltaJs.operations.TargetedModify(arg, meta);
-					newDelta.target = this.target[match[2]];
+					newDelta.target = this.target[prop];
 					return newDelta;
 				}
 
 				/* apply the new delta to its target, discard it and return 'this' delta */
-				(new thisDeltaJs.operations[opType](arg, meta)).applyTo(this.target, match[2]);
-				return this;
 
+				(new thisDeltaJs.operations[opType](arg, meta)).applyTo(this.target, prop);
+				return this;
 			}
+
 		});
 		//---------------------------------------------------------------------------------------------(/targetedModify)
 
