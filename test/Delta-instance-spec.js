@@ -49,9 +49,9 @@ describe("Delta instance", function () {
 
 					/* applying the delta to the given 'pre' value */
 					if (post instanceof ExpectedError && post.when === 'delta-application') {
-						expect(() => delta.applyTo(rootObj)).toThrowError();
+						expect(() => delta.applyToPropertiesOf(rootObj)).toThrowError();
 					} else {
-						expect(() => delta.applyTo(rootObj)).not.toThrowError();
+						expect(() => delta.applyToPropertiesOf(rootObj)).not.toThrowError();
 						if (typeof post === 'function') {
 							post(rootObj.obj);
 						} else {
