@@ -4,20 +4,38 @@ define(() => {
 	var U = {
 
 		/* create a new class, given a constructor and possible prototype */
-		newClass(constructor, prototype = {}) {
+		newClass(constructor = {}, prototype = {}) {
+
+			/* allow for no constructor function to be passed */
+			if (typeof constructor !== 'function') {
+				prototype = constructor;
+				constructor = function () {};
+			}
+
+			/* define the class */
 			var cls = constructor;
 			cls.prototype = prototype;
 			cls.prototype.constructor = cls;
 			return cls;
+
 		},
 
 		/* create a new subclass, given a superclass, constructor and possible prototype */
-		newSubclass(superClass, constructorMaker, prototype = {}) {
+		newSubclass(superClass, constructorMaker = {}, prototype = {}) {
+
+			/* allow for no constructor function to be passed */
+			if (typeof constructorMaker !== 'function') {
+				prototype = constructorMaker;
+				constructorMaker = (superFn) => function (...args) { superFn.apply(this, args) };
+			}
+
+			/* define the subclass */
 			var cls = constructorMaker(superClass.prototype.constructor);
 			cls.prototype = Object.create(superClass.prototype);
 			U.extend(cls.prototype, prototype);
 			cls.prototype.constructor = cls;
 			return cls;
+
 		},
 
 		/*  extend the first passed object with the properties     */

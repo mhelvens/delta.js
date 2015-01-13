@@ -2,26 +2,13 @@
 
 describe("Delta instance", function () {
 
-	//beforeEach(() => {
-	//	DeltaJs.registerPromiseResolver(P.resolve);
-	//});
-	//
-	//function defer() {
-	//	var result = {};
-	//	result.promise = new P((resolve, reject) => {
-	//		result.resolve = resolve;
-	//		result.reject = reject;
-	//	});
-	//	return result;
-	//}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	var deltaJs;
-	var delta;
+	var deltaJs, rootDelta, delta;
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
-		delta = new deltaJs.Delta('test-delta', { if: true });
+		rootDelta = new deltaJs.operations.Modify();
+		delta = rootDelta.operations;
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,18 +27,19 @@ describe("Delta instance", function () {
 			it(`can ${description} (${++counter})`, () => {
 				/* creating the initial object using the given 'pre' */
 				var rootObj = { obj: (typeof pre === 'function' ? pre() : pre) };
+				var target = new DeltaJs.ReadableTarget(rootObj);
 
 				/* creating the delta through the given code */
 				if (post instanceof ExpectedError && post.when === 'delta-composition') {
-					expect(() => action()).toThrowError();
+					expect(action).toThrowError();
 				} else {
 					action();
 
 					/* applying the delta to the given 'pre' value */
 					if (post instanceof ExpectedError && post.when === 'delta-application') {
-						expect(() => delta.applyToPropertiesOf(rootObj)).toThrowError();
+						expect(() => rootDelta.applyTo(target)).toThrowError();
 					} else {
-						expect(() => delta.applyToPropertiesOf(rootObj)).not.toThrowError();
+						expect(() => rootDelta.applyTo(target)).not.toThrowError();
 						if (typeof post === 'function') {
 							post(rootObj.obj);
 						} else {
@@ -165,6 +153,7 @@ describe("Delta instance", function () {
 
 	});
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	describe('composite object operations', () => {
 
@@ -424,6 +413,7 @@ describe("Delta instance", function () {
 
 	});
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	describe('array operations', () => {
 
@@ -441,7 +431,7 @@ describe("Delta instance", function () {
 			() => { delta.prepend('obj.arr', 'val') },
 			{ arr: ['val', 'init1', 'init2'] }
 		], [
-			{ arr: 'not an array' },
+			{ arr: 'not an array or a function' },
 			() => { delta.prepend('obj.arr', 'val') },
 			expectError('delta-application')
 		], [
@@ -475,7 +465,7 @@ describe("Delta instance", function () {
 				);
 			}
 		], [
-			{ arr: 'not an array' },
+			{ arr: 'not an array or a function' },
 			() => { delta.insert('obj.arr', 'val') },
 			expectError('delta-application')
 		], [
@@ -498,7 +488,7 @@ describe("Delta instance", function () {
 			() => { delta.append('obj.arr', 'val') },
 			{ arr: ['init1', 'init2', 'val'] }
 		], [
-			{ arr: 'not an array' },
+			{ arr: 'not an array or a function' },
 			() => { delta.append('obj.arr', 'val') },
 			expectError('delta-application')
 		], [
@@ -510,6 +500,7 @@ describe("Delta instance", function () {
 
 	});
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	describe('composite array operations', () => {
 
@@ -561,12 +552,12 @@ describe("Delta instance", function () {
 			},
 			(obj) => {
 				expect(obj).toEqualOneOf(
-						{ arr: [2, 1, 'init'] },
-						{ arr: [1, 2, 'init'] },
-						{ arr: [1, 'init', 2] },
-						{ arr: [2, 'init', 1] },
-						{ arr: ['init', 2, 1] },
-						{ arr: ['init', 1, 2] }
+					{ arr: [2, 1, 'init'] },
+					{ arr: [1, 2, 'init'] },
+					{ arr: [1, 'init', 2] },
+					{ arr: [2, 'init', 1] },
+					{ arr: ['init', 2, 1] },
+					{ arr: ['init', 1, 2] }
 				);
 			}
 		], [
@@ -611,7 +602,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan("combine array operations with other types of operations if the composition is valid", [[
+		itCan("combine array operations with other types of operations or throw an error if invalid", [[
 			{ key: 'val' },
 			() => {
 				delta.add   ('obj.arr', ['init']);
@@ -683,171 +674,309 @@ describe("Delta instance", function () {
 			expectError('delta-application') // 'obj.arr' is mandatory, but was absent
 		]]);
 
-	});
 
+	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	// TODO: function operations; the old tests are below
+	describe('function operations', () => {
 
-	//describe('function operations', () => {
+
+		/* setup */
+		var callLog;
+		function fA(...args) { callLog.push(['fA', args]) }
+		function fB(...args) { callLog.push(['fB', args]) }
+		function fC(...args) { callLog.push(['fC', args]) }
+		beforeEach(() => { callLog = [] });
+
+
+		itCan('prepend new statements to run inside an existing function', [[
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => { delta.prepend('obj.fn', function (a, b) { fB(this, b, b) }) },
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqual([ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ]);
+			}
+		], [
+			{ fn: 'not a function or an array' },
+			() => { delta.prepend('obj.fn', function () {}) },
+			expectError('delta-application')
+		], [
+			{ key: 'val' },
+			() => { delta.prepend('obj.fn', function () {}) },
+			expectError('delta-application')
+		]]);
+
+
+		itCan('insert new statements to run inside an existing function', [[
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => { delta.insert('obj.fn', function (a, b) { fB(this, b, b) }) },
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqualOneOf(
+					[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
+					[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]
+				);
+			}
+		], [
+			{ fn: 'not a function or an array' },
+			() => { delta.insert('obj.fn', function () {}) },
+			expectError('delta-application')
+		], [
+			{ key: 'val' },
+			() => { delta.insert('obj.fn', function () {}) },
+			expectError('delta-application')
+		]]);
+
+		itCan('append new statements to run inside an existing function', [[
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => { delta.append('obj.fn', function (a, b) { fB(this, b, b) }) },
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqual([ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]);
+			}
+		], [
+			{ fn: 'not a function or an array' },
+			() => { delta.append('obj.fn', function () {}) },
+			expectError('delta-application')
+		], [
+			{ key: 'val' },
+			() => { delta.append('obj.fn', function () {}) },
+			expectError('delta-application')
+		]]);
+
+
+	});
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	describe('composite function operations', () => {
+
+
+		/* setup */
+		var callLog;
+		function fA(...args) { callLog.push(['fA', args]) }
+		function fB(...args) { callLog.push(['fB', args]) }
+		function fC(...args) { callLog.push(['fC', args]) }
+		beforeEach(() => { callLog = [] });
+
+
+		itCan("combine multiple function operations", [[
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.prepend('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.prepend('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqual([ ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ]);
+			}
+		], [
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.prepend('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.insert ('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqualOneOf(
+					[ ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
+					[ ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]] ],
+					[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]] ]
+				);
+			}
+		], [
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.prepend('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.append ('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqual([ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]] ]);
+			}
+		], [
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.insert ('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.prepend('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqualOneOf(
+					[ ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
+					[ ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]
+				);
+			}
+		], [
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.insert('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.insert('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqualOneOf(
+					[ ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
+					[ ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]] ],
+					[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]] ],
+					[ ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ],
+					[ ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]] ],
+					[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]
+				);
+			}
+		], [
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.insert('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.append('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqualOneOf(
+					[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]] ],
+					[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]
+				);
+			}
+		], [
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.append ('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.prepend('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqual([ ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]);
+			}
+		], [
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.insert('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqualOneOf(
+					[ ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ],
+					[ ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]] ],
+					[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]
+				);
+			}
+		], [
+			{ fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.append('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(callLog).toEqual([ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]);
+			}
+		]]);
+
+
+		itCan("combine function operations with other types of operations or throw an error if invalid", [[
+			{ key: 'val' },
+			() => {
+				delta.add   ('obj.fn', function (a, b, c) { fA(this, a, c) });
+				delta.append('obj.fn', function (a, b)    { fB(this, b, b) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(obj.key).toBe('val');
+				expect(callLog).toEqual([ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]);
+			}
+		], [
+			{ key: 'val' },
+			() => {
+				delta.add   ('obj.fn', 'not a function or an array');
+				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
+			},
+			expectError('delta-composition') // 'obj.fn', left by the 'add' operation, has to be an array
+		], [
+			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.add   ('obj.fn', function (a, b, c) { fA(this, a, c) });
+				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
+			},
+			expectError('delta-application') // 'obj.fn' is forbidden, but was present
+		], [
+			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.replace('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.append ('obj.fn', function (a, b) { fC(this, b, a) });
+			},
+			(obj) => {
+				obj.fn(1, 2, 3);
+				expect(obj.key).toBe('val');
+				expect(callLog).toEqual([ ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]);
+			}
+		], [
+			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.replace('obj.fn', 'not a function or an array');
+				delta.append ('obj.fn', function (a, b) { fB(this, b, b) });
+			},
+			expectError('delta-composition') // 'obj.fn', left by the 'replace' operation, has to be an array
+		], [
+			{ key: 'val' },
+			() => {
+				delta.replace('obj.fn', function (a, b, c) { fA(this, a, c) });
+				delta.append ('obj.fn', function (a, b) { fB(this, b, b) });
+			},
+			expectError('delta-application') // 'obj.fn' is mandatory, but was absent
+		], [
+			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.remove('obj.fn');
+			},
+			{ key: 'val' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.remove('obj.fn');
+			},
+			expectError('delta-application') // 'obj.fn' is mandatory, but was absent
+		], [
+			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
+			() => {
+				delta.append ('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.replace('obj.fn', 'whatever');
+			},
+			{ key: 'val', fn: 'whatever' }
+		], [
+			{ key: 'val' },
+			() => {
+				delta.append ('obj.fn', function (a, b) { fB(this, b, b) });
+				delta.replace('obj.fn', 'whatever');
+			},
+			expectError('delta-application') // 'obj.fn' is mandatory, but was absent
+		]]);
+
+
+	});
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//describe('the delta model operation', () => {
 	//
-	//	var callLog;
-	//	function fA(...args) { callLog.push(['fA', args]) }
-	//	function fB(...args) { callLog.push(['fB', args]) }
-	//	function fC(...args) { callLog.push(['fC', args]) }
-	//	function fD(...args) { callLog.push(['fD', args]) }
-	//	beforeEach(() => {
-	//		callLog = [];
-	//	});
 	//
-	//	itCan('append statements to an existing function',
-	//		[
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => { delta.append('obj.fn', function (a, b) { fB(this, b, b) }) },
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog[0]).toEqual(['fA', [obj, 1, 3]]);
-	//				expect(callLog[1]).toEqual(['fB', [obj, 2, 2]]);
-	//			}
-	//		], [
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => { delta.modify('obj').append('fn', function (a, b) { fB(this, b, b) }) },
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog[0]).toEqual(['fA', [obj, 1, 3]]);
-	//				expect(callLog[1]).toEqual(['fB', [obj, 2, 2]]);
-	//			}
-	//		]);
+	//	itCan('TEST', [[
+	//		{ key: 'val' },
+	//		() => {
+	//			var d = delta.deltaModel('obj.key');
+	//			d.replace('X', {}, 'YAY');
+	//		},
+	//		{ key: 'YAY' }
+	//	]]);
 	//
-	//
-	//	itCan('prepend statements to an existing function',
-	//		[
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => { delta.prepend('obj.fn', function (a, b) { fB(this, b, b) }) },
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog[0]).toEqual(['fB', [obj, 2, 2]]);
-	//				expect(callLog[1]).toEqual(['fA', [obj, 1, 3]]);
-	//			}
-	//		], [
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => { delta.modify('obj').prepend('fn', function (a, b) { fB(this, b, b) }) },
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog[0]).toEqual(['fB', [obj, 2, 2]]);
-	//				expect(callLog[1]).toEqual(['fA', [obj, 1, 3]]);
-	//			}
-	//		]);
-	//
-	//
-	//	itCan('insert statements into an existing function',
-	//		[
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => { delta.insert('obj.fn', function (a, b) { fB(this, b, b) }) },
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog).toContainSomethingEqualTo(['fA', [obj, 1, 3]]);
-	//				expect(callLog).toContainSomethingEqualTo(['fB', [obj, 2, 2]]);
-	//			}
-	//		], [
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => { delta.modify('obj').insert('fn', function (a, b) { fB(this, b, b) }) },
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog).toContainSomethingEqualTo(['fA', [obj, 1, 3]]);
-	//				expect(callLog).toContainSomethingEqualTo(['fB', [obj, 2, 2]]);
-	//			}
-	//		]);
-	//
-	//
-	//	itCanAsync('attach statements to an existing function, to be run asynchronously after it finishes',
-	//			[
-	//				{ fn(a, b, c) { fA(this, a, c) } },
-	//				(done) => {
-	//					delta.after('obj.fn', function (a, b) {
-	//						fB(this, b, b);
-	//						expect(callLog[0]).toEqual(['fA', [this, 1, 3]]);
-	//						expect(callLog[1]).toEqual(['fB', [this, 2, 2]]);
-	//						done();
-	//					});
-	//				},
-	//				(obj) => {
-	//					obj.fn(1, 2, 3);
-	//					expect(callLog[0]).toEqual(['fA', [obj, 1, 3]]);
-	//					expect(callLog[1]).not.toBeDefined();
-	//				}
-	//			], [
-	//				{ fn(a, b, c) { fA(this, a, c) } },
-	//				(done) => {
-	//					delta.modify('obj').after('fn', function (a, b) {
-	//						fB(this, b, b);
-	//						expect(callLog[0]).toEqual(['fA', [this, 1, 3]]);
-	//						expect(callLog[1]).toEqual(['fB', [this, 2, 2]]);
-	//						done();
-	//					});
-	//				},
-	//				(obj) => {
-	//					obj.fn(1, 2, 3);
-	//					expect(callLog[0]).toEqual(['fA', [obj, 1, 3]]);
-	//					expect(callLog[1]).not.toBeDefined();
-	//				}
-	//			]);
-	//
-	//
-	//	var deferred;
-	//	beforeEach(() => {
-	//		deferred = defer();
-	//	});
-	//
-	//
-	//	itCanAsync('attach statements to an existing function, to be run after a returned promise is resolved',
-	//		[
-	//			{ fn(a, b, c) { fA(this, a, c); return deferred.promise; } },
-	//			() => {
-	//				delta.after('obj.fn', function (a, b) {
-	//					fB(this, b, b);
-	//				});
-	//			},
-	//			(obj, done) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog[0]).toEqual(['fA', [obj, 1, 3]]);
-	//				setTimeout(() => {
-	//					expect(callLog[1]).not.toBeDefined();
-	//					deferred.resolve('promised value');
-	//					expect(callLog[1]).not.toBeDefined();
-	//					setTimeout(() => {
-	//						expect(callLog[1]).toEqual(['fB', [obj, 2, 2]]);
-	//						done();
-	//					});
-	//				});
-	//			}
-	//		], [
-	//			{ fn(a, b, c) { fA(this, a, c); return deferred.promise; } },
-	//			() => {
-	//				delta.modify('obj').after('fn', function (a, b) {
-	//					fB(this, b, b);
-	//				});
-	//			},
-	//			(obj, done) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog[0]).toEqual(['fA', [obj, 1, 3]]);
-	//				setTimeout(() => {
-	//					expect(callLog[1]).not.toBeDefined();
-	//					deferred.resolve('promised value');
-	//					expect(callLog[1]).not.toBeDefined();
-	//					setTimeout(() => {
-	//						expect(callLog[1]).toEqual(['fB', [obj, 2, 2]]);
-	//						done();
-	//					});
-	//				});
-	//			}
-	//		]);
-	//
-	//
+	//  // TODO
 	//
 	//
 	//});
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 });
