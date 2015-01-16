@@ -14,6 +14,7 @@ module.exports = function (config) {
 		files: [
 			'bower_components/bluebird/js/browser/bluebird.js',
 			'bower_components/js-graph/dist/js-graph.js',
+			'test/polyfills.js',
 			'dist/**/*.js',
 			'!dist/**/*.min.js',
 			'test-dist/**/*.js'

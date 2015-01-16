@@ -71,7 +71,12 @@ define(() => {
 		isDefined(val) { return typeof val !== 'undefined' },
 
 		/* repeat a string a given number of times */
-		repeat(nr, str) { return new Array(nr+1).join(str) }
+		repeat(nr, str) { return new Array(nr+1).join(str) },
+
+		/* shift every line in a string right by a given number of spaces */
+		indent(str, amount, char = ' ') {
+			return str.replace(/^(?!\s*$)/mg, U.repeat(amount, char));
+		}
 	};
 
 	return U;

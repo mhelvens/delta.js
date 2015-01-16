@@ -39,7 +39,7 @@ describe("Delta instance", function () {
 					if (post instanceof ExpectedError && post.when === 'delta-application') {
 						expect(() => rootDelta.applyTo(target)).toThrowError();
 					} else {
-						expect(() => rootDelta.applyTo(target)).not.toThrowError();
+						rootDelta.applyTo(target);
 						if (typeof post === 'function') {
 							post(rootObj.obj);
 						} else {
@@ -337,6 +337,9 @@ describe("Delta instance", function () {
 				delta.add('obj.level1.level2.sideLevel', 'final');
 				delta.modify('obj.level1.level2').add('level3', {});
 				delta.modify('obj.level1').modify('level2.level3').add('level4', 'final');
+
+				console.log(`\n${delta.delta.toString()}\n`);
+
 			},
 			{ key: 'val', level1: { level2: { sideLevel: 'final', level3: { level4: 'final' } } } }
 		], [
@@ -960,22 +963,25 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	//describe('the delta model operation', () => {
-	//
-	//
-	//	itCan('TEST', [[
-	//		{ key: 'val' },
-	//		() => {
-	//			var d = delta.deltaModel('obj.key');
-	//			d.replace('X', {}, 'YAY');
-	//		},
-	//		{ key: 'YAY' }
-	//	]]);
-	//
-	//  // TODO
-	//
-	//
-	//});
+	describe('the delta model operation', () => {
+
+
+		itCan('TEST', [[
+			{ key: 'val' },
+			() => {
+				var d = delta.deltaModel('obj');
+				d.replace('X', 'key', 'YAY');
+
+				console.log(`\n${d.delta.toString()}\n`);
+
+			},
+			{ key: 'YAY' }
+		]]);
+
+	  // TODO
+
+
+	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

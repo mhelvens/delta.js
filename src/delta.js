@@ -48,43 +48,57 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 			composedWith(other) { return thisDeltaJs.composed(this, other) },
 
 			/** {@public}{@method}
-			 * @param indentLvl {Number?}
-			 * @param prop      {String?}
+			 * @param prop {String?}
 			 */
-			toString(indentLvl = 0, prop = '(root)') {
-				var indent = U.repeat(indentLvl, '    ');
-				var str = `${indent}${this.type}`;
+			toString(prop = '(root)') {
+				var str = this.type;
 				if (prop)                  { str += ` '${prop}'` }
 				if (U.isDefined(this.arg)) { str += `: ${JSON.stringify(this.arg)}` }
 				return str;
 			},
+		});
 
-			/* a protected Delta method to create an interface with operation methods */
-			/** {@protected}{@method}
+
+		/* InterfaceDelta **************************************************************************** InterfaceDelta */
+		var InterfaceDelta = this.operations.InterfaceDelta = U.newSubclass(Delta, (superFn) => function (arg, meta) {
+			superFn.call(this, arg, meta);
+			this._createOperationInterface();
+		}, {
+			/** {@private}{@method}
 			 * To create an 'operations' property on this delta with operation methods.
 			 * @param handleOperation {function(String, *): DeltaJs#Delta} - a function that applies a delta operation
 			 */
 			_createOperationInterface: (() => {
+
 				var operationMethods = {};
+
 				this.onNewOperationType((cls) => {
 					cls.meta.methods.forEach((method) => {
 						if (U.isUndefined(operationMethods[method])) {
 							operationMethods[method] = function (...args) {
-								var newDelta = this._applyOperationMethod(method, args);
-								return newDelta.operations || this;
+								var newDelta = this._applyOperationMethod.apply(this, [method].concat(args));
+								return (newDelta instanceof InterfaceDelta) ? newDelta.operations : this;
 							};
 						}
 					});
 				});
-				return function _createOperationInterface(handleOperation) {
+				return function _createOperationInterface() {
 					Object.defineProperty(this, 'operations', {
 						value: Object.create(operationMethods, {
-							_applyOperationMethod: { value: handleOperation },
-							delta:                 { value: this            }
+							_applyOperationMethod: { value: this.operation.bind(this) },
+							delta:                 { value: this                      }
 						})
 					});
 				};
-			})()
+			})(),
+
+			/** {@public}{@abstract}{@method}
+			 * Implement this in subclasses to prepare a specific delta operation with this delta as the base.
+			 * @return {DeltaJs#Delta} - the delta resulting from the operation
+			 */
+			operation() {
+				throw new Error(`An InterfaceDelta subclass needs to implement the 'operation' method.`);
+			}
 		});
 
 
@@ -138,14 +152,12 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 			},
 
 			/** {@public}{@method}
-			 * @param indentLvl {Number?}
-			 * @param prop      {String?}
+			 * @param prop {String?}
 			 */
-			toString(indentLvl = 0, prop = '(root)') {
-				var str = Delta.prototype.toString.call(this, indentLvl, prop);
-				str += '\n' + this.overloads
-						.map((delta) => delta.toString(indentLvl + 1, null))
-						.join('\n');
+			toString(prop = '(root)') {
+				var str = Delta.prototype.toString.call(this, prop);
+				var overloads = this.overloads.map((delta) => delta.toString(null)).join('\n');
+				str += '\n' + U.indent(overloads, 4);
 				return str;
 			}
 		});
@@ -170,15 +182,9 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 
 
 		/* Modify ******************************************************************************************** Modify */
-		var Modify = this.operations['Modify'] = U.newSubclass(this.Delta, (superFn) => function (__, meta) {
+		var Modify = this.operations['Modify'] = U.newSubclass(InterfaceDelta, (superFn) => function (__, meta) {
 			superFn.call(this, __, meta);
 			this.deltas = {};
-			this._createOperationInterface((method, [pathOrOptions, arg]) => {
-				var options = thisDeltaJs._processOptions(pathOrOptions);
-				var delta = thisDeltaJs._getDeltaByMethod(method, arg);
-				var newDelta = this._addOperation(options, delta);
-				return newDelta.operations ? newDelta : delta;
-			});
 		}, {
 			/** {@public}{@abstract}{@method}{@nosideeffects}
 			 * @return {DeltaJs#operations.Modify} - a clone of this delta
@@ -210,17 +216,28 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 			},
 
 			/** {@public}{@method}
-			 * @param indentLvl {Number?}
-			 * @param prop      {String?}
+			 * @param prop {String?}
 			 */
-			toString(indentLvl = 0, prop = '(root)') {
-				var str = Delta.prototype.toString.call(this, indentLvl, prop);
+			toString(prop = '(root)') {
+				var str = Delta.prototype.toString.call(this, prop);
 				if (Object.keys(this.deltas).length > 0) {
-					str += '\n' + Object.keys(this.deltas)
-							.map((p) => this.deltas[p].toString(indentLvl + 1, p))
-							.join('\n');
+					var deltas = Object.keys(this.deltas).map((p) => this.deltas[p].toString(p)).join('\n');
+					str += '\n' + U.indent(deltas, 4);
 				}
 				return str;
+			},
+
+			/** {@public}{@method}
+			 * Prepare a specific delta operation with this Modify delta as the base.
+			 * @param method {String}               - the type of operation (e.g., 'add', 'remove', etc.)
+			 * @param pathOrOptions {Object|String} - the options for this operation, or just the path
+			 * @param arg {*}                       - the argument to the operation
+			 * @return {DeltaJs#Delta} - the delta resulting from the operation
+			 */
+			operation(method, pathOrOptions, arg) {
+				var options = thisDeltaJs._processOptions(pathOrOptions);
+				var delta = thisDeltaJs._getDeltaByMethod(method, arg);
+				return this._addOperation(options, delta);
 			},
 
 			/** {@private}{@method}
@@ -259,7 +276,7 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 		this._defineStandardOperationTypes();
 
 
-	}, /** @lends DeltaJs.prototype */  { /* ****************************************************** DeltaJs.prototype */
+	}, /** @lends DeltaJs.prototype */ { /********************************************************* DeltaJs.prototype */
 
 		///** {@public}{@method}
 		// *
@@ -276,9 +293,7 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 			if (typeof pathOrOptions === 'string') {
 				return { path: new Path(pathOrOptions) };
 			} else if (pathOrOptions instanceof Object) {
-				if (typeof pathOrOptions.path === 'string') {
-					pathOrOptions.path = new Path(pathOrOptions.path);
-				}
+				pathOrOptions.path = new Path(pathOrOptions.path);
 				return pathOrOptions;
 			} else {
 				throw new Error(
@@ -327,10 +342,12 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 		},
 
 		/** {@public}{@method}
-		 * @param name    {String}
-		 * @param applyTo {(DeltaJs.WritableTarget) => undefined}
+		 * @param name      {String}
+		 * @param prototype {Object}
 		 */
-		newOperationType(name, prototype = {}) {
+		newOperationType(Superclass, name, prototype) {
+			if (typeof Superclass === 'string') { [Superclass, name, prototype] = [undefined, Superclass, name] }
+			prototype = prototype || {};
 
 			/* 'this' alias */
 			var thisDeltaJs = this;
@@ -340,7 +357,7 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 					`The '${name}' operation type already exists.`);
 
 			/* Delta subclass */
-			var cls = this.operations[name] = U.newSubclass(this.Delta, (superFn) => function (arg, meta) {
+			var cls = this.operations[name] = U.newSubclass(Superclass || this.Delta, (superFn) => function (arg, meta) {
 				superFn.call(this, arg, meta);
 				if (this.construct) { this.construct() }
 			}, U.extend({}, prototype, {
@@ -449,7 +466,9 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 				// https://github.com/google/traceur-compiler/issues/1631
 				thisDeltaJs.newOperationType(Type, {
 					construct()          { this.deltasToApplyToArg = []                                                      },
-					precondition(target) { return target instanceof WritableTarget && pre(target)                            },
+					precondition(target) {
+						return target instanceof WritableTarget && pre(target);
+					},
 					applyTo(target)      { target.value = this.deltasToApplyToArg.reduce((v, d) => d.appliedTo(v), this.arg) },
 					clone() {
 						var result = thisDeltaJs.Delta.prototype.clone.call(this, this.arg, this.meta); // super()
@@ -463,7 +482,20 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 								         .precondition(wt(result, 'arg')) === true,
 								`The given '${delta.type}' operation does not apply to the '${type}'ed value.`);
 						return result;
-					}
+					},
+
+					/** {@public}{@method}
+					 * @param prop {String?}
+					 */
+					toString(prop = '(root)') {
+						var str = thisDeltaJs.Delta.prototype.toString.call(this, prop);
+						if (Object.keys(this.deltasToApplyToArg).length > 0) {
+							var deltas = Object.keys(this.deltasToApplyToArg)
+								.map((p) => this.deltasToApplyToArg[p].toString(null)).join('\n');
+							str += '\n' + U.indent(deltas, 4);
+						}
+						return str;
+					},
 				});
 			});
 			this.newOperationType('Remove', {
@@ -497,11 +529,11 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 			this.newComposition( t('Forbid', 'Forbid'), d('Forbid')            );
 
 			/* composition - introducing 'Replace' **********************************************/
-			this.newComposition( t('Modify' , 'Replace'), d('Replace', ({p2}) => p2)                   );
-			this.newComposition( t('Add'    , 'Replace'), d('Add',     ({p2}) => p2)                   );
+			this.newComposition( t('Modify' , 'Replace'), d('Replace', ({p2}) => p2)      );
+			this.newComposition( t('Add'    , 'Replace'), d('Add',     ({p2}) => p2)      );
 			this.newComposition( t('Replace', 'Modify'), (d1, d2) => d1.afterApplying(d2) );
-			this.newComposition( t('Replace', 'Remove' ), d('Remove')                                  );
-			this.newComposition( t('Replace', 'Replace'), d('Replace', ({p2}) => p2)                   );
+			this.newComposition( t('Replace', 'Remove' ), d('Remove')                     );
+			this.newComposition( t('Replace', 'Replace'), d('Replace', ({p2}) => p2)      );
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -636,59 +668,86 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			///* declaring the 'DeltaModel' type */
-			//var DeltaModel = this.newOperationType('DeltaModel', {
-			//	construct() {
-			//		this.graph = new JsGraph();
-			//		this._createOperationInterface((method, [pathOrOptions, arg]) => {
-			//			var options = thisDeltaJs._processOptions(pathOrOptions);
-			//			var delta = thisDeltaJs._getDeltaByMethod(method, arg);
-			//			var newDelta = this._addOperation(options, delta);
-			//			return newDelta.operations ? newDelta : delta;
-			//		});
-			//	},
-			//	clone() {
-			//		var result = new DeltaModel();
-			//		result.graph = this.graph.clone();
-			//		result.graph.eachVertex((id, delta) => {
-			//			result.graph.setVertex(id, delta.clone());
-			//		});
-			//		return result;
-			//	},
-			//	applyTo(target) {
-			//		this.graph.topologically((name, subDelta) => {
-			//			subDelta.applyTo(target);
-			//		});
-			//	},
-			//	_addOperation(name, options, delta) {
-			//		var {path} = options;
-			//
-			//		/* if there is a 'rest' to the path, set a link in the chain */
-			//		if (path.rest) {
-			//			/* if there is a longer chain, call this method recursively */
-			//			return this.operations.modify(path.prop).delta
-			//					._addOperation(U.extend({}, options, { path: path.rest }), delta);
-			//		}
-			//
-			//		// TODO
-			//
-			//		/* add it to the delta model */
-			//		this.graph.addNewVertex(name, delta); // TODO: should be delta chain based on path
-			//
-			//		return delta;
-			//	}
-			//	// TODO: add precondition method which checks 'source' deltas
-			//});
-			//
-			///* composition - introducing 'DeltaModel' */
-			//// to compose delta models, we simply have one apply after the other
-			//// without any composability checks; in the future, this may become more clever
-			//this.newComposition((d1, d2) => (d1 instanceof DeltaModel || d2 instanceof DeltaModel), (d1, d2) => {
-			//	var result = new DeltaModel();
-			//	result.graph.addNewVertex(1, d1);
-			//	result.graph.addNewVertex(2, d2);
-			//	result.graph.addNewEdge(1, 2);
-			//	return result;
-			//});
+			var DeltaModel = this.newOperationType(this.operations.InterfaceDelta, 'DeltaModel', {
+				construct() {
+					this.graph = new JsGraph();
+					//this._createOperationInterface((method, [name, pathOrOptions, arg]) => {
+					//});
+				},
+				clone() {
+					var result = new DeltaModel();
+					result.graph = this.graph.clone();
+					result.graph.eachVertex((id, delta) => {
+						result.graph.setVertex(id, delta.clone());
+					});
+					return result;
+				},
+				applyTo(target) {
+					this.graph.topologically((name, subDelta) => {
+						subDelta.applyTo(target);
+					});
+				},
+
+				/** {@public}{@method}
+				 * Prepare a specific delta operation with this Modify delta as the base.
+				 * @param method {String}               - the type of operation (e.g., 'add', 'remove', etc.)
+				 * @param name {String}                 - the name of the delta inside the delta model
+				 * @param pathOrOptions {Object|String} - the options for this operation, or just the path
+				 * @param arg {*}                       - the argument to the operation
+				 * @return {DeltaJs#Delta} - the delta resulting from the operation
+				 */
+				operation(method, name, pathOrOptions, arg) {
+					var options = thisDeltaJs._processOptions(pathOrOptions);
+					var delta = thisDeltaJs._getDeltaByMethod(method, arg);
+					return this._addOperation(name, options, delta);
+				},
+
+				/** {@public}{@method}
+				 * @param prop {String?}
+				 */
+				toString(prop = '(root)') {
+					var str = thisDeltaJs.Delta.prototype.toString.call(this, prop);
+					if (this.graph.vertexCount() > 0) {
+						var deltas = '';
+						this.graph.topologically((name, delta) => {
+							deltas += `'${name}' ↦ ${delta.toString(null)}\n`;
+						});
+						str += '\n' + U.indent(deltas, 4);
+					}
+					return str;
+				},
+
+				_addOperation(name, options, delta) {
+					var {path} = options;
+
+					var deltaBase = delta;
+
+					/* if there is a path, create a link  */
+					if (path.prop) {
+						deltaBase = new thisDeltaJs.operations['Modify']();
+						deltaBase._addOperation(options, delta);
+					}
+
+					// TODO: options, partial order, etc...
+
+					/* add it to the delta model */
+					this.graph.addNewVertex(name, deltaBase);
+
+					return delta;
+				}
+				// TODO: add precondition method which checks 'source' deltas
+			});
+
+			/* composition - introducing 'DeltaModel' */
+			// to compose delta models, we simply have one apply after the other
+			// without any composability checks; in the future, this may become more clever
+			this.newComposition((d1, d2) => (d1 instanceof DeltaModel || d2 instanceof DeltaModel), (d1, d2) => {
+				var result = new DeltaModel();
+				result.graph.addNewVertex(1, d1);
+				result.graph.addNewVertex(2, d2);
+				result.graph.addNewEdge(1, 2);
+				return result;
+			});
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		}
@@ -706,7 +765,7 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 		if (lead === '#') {
 			// The # separator is used in the JsDoc sense, and is translated to '.(instance).'
 			this.set(new Path(`.(instance).${prop}${rest}`));
-		} else {
+		} else if (prop !== '') {
 			this._prop = prop;
 			if (rest !== '') {
 				this._rest = new Path(rest);
