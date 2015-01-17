@@ -8,7 +8,7 @@ describe("Delta instance", function () {
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
 		rootDelta = new deltaJs.operations.Modify();
-		delta = rootDelta.operations;
+		delta = rootDelta.facade();
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@ describe("Delta instance", function () {
 			it(`can ${description} (${++counter})`, () => {
 				/* creating the initial object using the given 'pre' */
 				var rootObj = { obj: (typeof pre === 'function' ? pre() : pre) };
-				var target = new DeltaJs.ReadableTarget(rootObj);
+				var target = new DeltaJs.ReadableTarget(rootObj); // because we don't allow replacing/removing the root
 
 				/* creating the delta through the given code */
 				if (post instanceof ExpectedError && post.when === 'delta-composition') {
@@ -337,9 +337,6 @@ describe("Delta instance", function () {
 				delta.add('obj.level1.level2.sideLevel', 'final');
 				delta.modify('obj.level1.level2').add('level3', {});
 				delta.modify('obj.level1').modify('level2.level3').add('level4', 'final');
-
-				console.log(`\n${delta.delta.toString()}\n`);
-
 			},
 			{ key: 'val', level1: { level2: { sideLevel: 'final', level3: { level4: 'final' } } } }
 		], [
@@ -731,6 +728,7 @@ describe("Delta instance", function () {
 			expectError('delta-application')
 		]]);
 
+
 		itCan('append new statements to run inside an existing function', [[
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => { delta.append('obj.fn', function (a, b) { fB(this, b, b) }) },
@@ -966,19 +964,176 @@ describe("Delta instance", function () {
 	describe('the delta model operation', () => {
 
 
-		itCan('TEST', [[
-			{ key: 'val' },
+		itCan('be a middle-man for a single other delta', [[
+			{},
 			() => {
-				var d = delta.deltaModel('obj');
-				d.replace('X', 'key', 'YAY');
-
-				console.log(`\n${d.delta.toString()}\n`);
-
+				var dm = delta.deltaModel('obj');
+				dm('X').add('key', { foo: 'bar' });
 			},
-			{ key: 'YAY' }
+			{ key: { foo: 'bar' } }
+		], [
+			{ key: { foo: 'bar' } },
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').remove('key');
+			},
+			{}
+		], [
+			{},
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').forbid('key');
+			},
+			{}
+		], [
+			{ key: { foo: 'bar' } },
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').replace('key', 'value');
+			},
+			{ key: 'value' }
+		], [
+			{ key: { foo: 'bar' } },
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').modify('key').replace('foo', 'bas');
+			},
+			{ key: { foo: 'bas' } }
+		], [
+			{ key: ['a'] },
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').prepend('key', 'b');
+			},
+			{ key: ['b', 'a'] }
+		], [
+			{ key: ['a'] },
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').insert('key', 'b');
+			},
+			(obj) => {
+				expect(obj).toEqualOneOf(
+					{ key: ['b', 'a'] },
+					{ key: ['a', 'b'] }
+				);
+			}
+		], [
+			{ key: ['a'] },
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').append('key', 'b');
+			},
+			{ key: ['a', 'b'] }
 		]]);
 
-	  // TODO
+
+		describe('with a function operation delta inside', () => {
+
+			/* setup */
+			var callLog;
+			function fA(...args) { callLog.push(['fA', args]) }
+			function fB(...args) { callLog.push(['fB', args]) }
+			beforeEach(() => { callLog = [] });
+
+			itCan('be a middle man for that one delta', [[
+				{ fn(a, b, c) { fA(this, a, c) } },
+				() => {
+					var dm = delta.deltaModel('obj');
+					dm('X').prepend('fn', function (a, b) { fB(this, b, b) });
+				},
+				(obj) => {
+					obj.fn(1, 2, 3);
+					expect(callLog).toEqual([ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ]);
+				}
+			], [
+				{ fn(a, b, c) { fA(this, a, c) } },
+				() => {
+					var dm = delta.deltaModel('obj');
+					dm('X').insert('fn', function (a, b) { fB(this, b, b) });
+				},
+				(obj) => {
+					obj.fn(1, 2, 3);
+					expect(callLog).toEqualOneOf(
+						[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
+						[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]
+					);
+				}
+			], [
+				{ fn(a, b, c) { fA(this, a, c) } },
+				() => {
+					var dm = delta.deltaModel('obj');
+					dm('X').append('fn', function (a, b) { fB(this, b, b) });
+				},
+				(obj) => {
+					obj.fn(1, 2, 3);
+					expect(callLog).toEqual([ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]);
+				}
+			]]);
+
+		});
+
+
+		itCan('apply deltas in a linear order (as if composed)', [[
+			{},
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').add('key', { foo: 'bar' });
+				dm('Y').remove({
+					path: 'key',
+					after: ['X']
+				});
+			},
+			{}
+		], [
+			{},
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').add('key', { foo: 'bar' });
+				dm('Y').replace({
+					path: 'key',
+					after: ['X']
+				}, 'some value');
+			},
+			{ key: 'some value' }
+		], [
+			{},
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').add('key1', { foo: 'bar' });
+				dm('Y').add({
+					path: 'key2',
+					after: ['X']
+				}, 'some value');
+				dm('Z').add({
+					path: 'key3',
+					after: ['Y']
+				}, 'some other value');
+				dm('rY').remove({
+					path: 'key2',
+					after: ['Z']
+				});
+			},
+			{ key1: { foo: 'bar' }, key3: 'some other value' }
+		]]);
+
+
+		itCan('apply unordered deltas in arbitrary order, if they do not conflict', [[
+			{ oldKey: 'old value' },
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('X').add('key1', 1);
+				dm('Y').add('key2', 'b');
+				dm('Z').add('key3', 'iii');
+				dm('r').remove('oldKey');
+			},
+			{ key1: 1, key2: 'b', key3: 'iii' }
+		]]);
+
+
+		// TODO: partial orders
+
+		// TODO: conflicts
 
 
 	});
