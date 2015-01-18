@@ -150,18 +150,11 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 				/* if none apply, throw an appropriate error */
 				if (!success) {
 					if (errors.length === 0) {
-						throw new Error(
-							`This overloaded delta has no overloads, ` +
-							`so cannot apply to the value: ${target.value}`
-						);
+						throw new NoOverloadsApplicationError(this, target.value);
 					} else if (errors.length === 1) {
 						throw errors[0];
 					} else {
-						throw new Error(
-							`None of the delta types ${this.type.join(',')} ` +
-							`apply to the value: ${target.value}\n`           +
-							errors.map(e => e.message).join('\n')
-						);
+						throw new MultipleOverloadsApplicationError(this, target.value, errors);
 					}
 				}
 			},
@@ -191,7 +184,7 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 					catch (error) { errors.push(error) }
 				});
 			});
-			if (result.overloads.length === 0) { throw new Error(errors.map(e => e.message).join('\n')) }
+			if (result.overloads.length === 0) { throw new MultipleOverloadsCompositionError(d1, d2, errors) }
 			return result;
 		});
 
@@ -221,10 +214,6 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 			 * @param target {DeltaJs.WritableTarget}
 			 */
 			applyTo(target) {
-				U.assert(U.isDefined(target.value),
-						`The 'Modify' operation expects the property to be defined.`);
-				U.assert(target.value instanceof Object,
-						`The 'Modify' operation expects the property to be an Object.`);
 				Object.keys(this.deltas).forEach((prop) => {
 					this.deltas[prop].applyTo(wt(target.value, prop));
 				});
@@ -249,24 +238,21 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 			 * @param arg {*}                       - the argument to the operation
 			 * @return {DeltaJs#Delta} - the delta resulting from the operation
 			 */
-			operation(method, pathOrOptions = {}, arg = undefined) {
-				var options = thisDeltaJs._processOptions(pathOrOptions);
+			operation(method, options, path, arg) {
+				if (typeof options === 'string') { [options, path, arg] = [{}, options, path] }
 				var delta = thisDeltaJs._getDeltaByMethod(method, arg);
-				return this._addOperation(options, delta);
+				return this._addOperation(options, new Path(path), delta);
 			},
 
 			/** {@private}{@method}
 			 * @param options {Object}
 			 * @param delta   {DeltaJs#Delta}
 			 */
-			_addOperation(options, delta) {
-				var {path} = options;
-
+			_addOperation(options, path, delta) {
 				/* if there is a 'rest' to the path, set a link in the chain */
 				if (path.rest) {
-					/* if there is a longer chain, call this method recursively */
 					return this.operation('modify', path.prop)
-							._addOperation(U.extend({}, options, { path: path.rest }), delta);
+							._addOperation(options, path.rest, delta);
 				}
 
 				/* store the new delta, possibly composed with an existing one */
@@ -302,24 +288,6 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 		//},
 
 		/** {@private}{@method}
-		 * @param pathOrOptions {String|{path: String}}
-		 * @return {Object}
-		 */
-		_processOptions(pathOrOptions) {
-			if (typeof pathOrOptions === 'string') {
-				return { path: new Path(pathOrOptions) };
-			} else if (pathOrOptions instanceof Object) {
-				pathOrOptions.path = new Path(pathOrOptions.path);
-				return pathOrOptions;
-			} else {
-				throw new Error(
-					`The options argument on a delta operation ` +
-					`a should be a path string or an options object.`
-				);
-			}
-		},
-
-		/** {@private}{@method}
 		 * @param method {String}
 		 * @param arg    {*}
 		 * @return {DeltaJs#Delta}
@@ -345,13 +313,8 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 				var judgment = delta.precondition(target);
 				if (judgment instanceof Error) {
 					return judgment;
-				} else if (typeof judgment === 'string') {
-					return new TypeError(judgment);
 				} else if (!judgment) {
-					return new TypeError(
-							`The value '${target.value}' does not satisfy ` +
-							`the precondition of the '${delta.type}' operation.`
-					);
+					return new ApplicationError(delta, target.value);
 				}
 			}
 			return true;
@@ -441,8 +404,7 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 			});
 
 			/* throw an error on failure */
-			U.assert(success,
-					`A '${d1.type}' operation cannot be followed by a '${d2.type}' operation.`);
+			if (!success) { throw new CompositionError(d1, d2) }
 
 			/* return the result on success */
 			return composeFn(d1, d2);
@@ -494,14 +456,15 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 					afterApplying(delta) {
 						var result = this.clone();
 						result.deltasToApplyToArg.push(delta);
-						U.assert(result.deltasToApplyToArg.reduce((d1, d2) => thisDeltaJs.composed(d1, d2))
-								         .precondition(wt(result, 'arg')) === true,
-								`The given '${delta.type}' operation does not apply to the '${type}'ed value.`);
+						if (result.deltasToApplyToArg.reduce((d1, d2) => thisDeltaJs.composed(d1, d2))
+								.precondition(wt(result, 'arg')) !== true) {
+							throw new DeltaArgApplicationError(delta, this);
+						}
 						return result;
 					},
 
 					/** {@public}{@method}
-					 * @param prop {String?}
+					 * @param options {Object}
 					 */
 					toString(options) {
 						var str = thisDeltaJs.Delta.prototype.toString.call(this, options);
@@ -706,16 +669,17 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 
 				/** {@public}{@method}
 				 * Prepare a specific delta operation with this Modify delta as the base.
-				 * @param method {String}               - the type of operation (e.g., 'add', 'remove', etc.)
-				 * @param name {String}                 - the name of the delta inside the delta model
-				 * @param pathOrOptions {Object|String} - the options for this operation, or just the path
-				 * @param arg {*}                       - the argument to the operation
+				 * @param method {String}  - the type of operation (e.g., 'add', 'remove', etc.)
+				 * @param name {String}    - the name of the delta inside the delta model
+				 * @param options {Object} - the (optional) options for this operation
+				 * @param path {String}    - the path to perform this operation on
+				 * @param arg {*}          - the argument to the operation
 				 * @return {DeltaJs#Delta} - the delta resulting from the operation
 				 */
-				operation(method, name, pathOrOptions, arg) {
-					var options = thisDeltaJs._processOptions(pathOrOptions);
+				operation(method, name, options, path, arg) {
+					if (typeof options === 'string') { [options, path, arg] = [{}, options, path] }
 					var delta = thisDeltaJs._getDeltaByMethod(method, arg);
-					return this._addOperation(name, options, delta);
+					return this._addOperation(name, options, new Path(path), delta);
 				},
 
 				/** {@public}{@method}
@@ -733,15 +697,15 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 					return str;
 				},
 
-				_addOperation(name, options, delta) {
-					var {path, before} = options;
+				_addOperation(name, options, path, delta) {
+					var {before} = options;
 
 					var deltaBase = delta;
 
 					/* if there is a path, create the corresponding chain of deltas */
 					if (path.prop) {
 						deltaBase = new thisDeltaJs.operations['Modify']();
-						deltaBase._addOperation(options, delta);
+						deltaBase._addOperation(options, path, delta);
 					}
 
 					/* a delta by this name cannot already be in the graph */
@@ -831,6 +795,40 @@ define(['./misc.js', 'js-graph'], function (U, JsGraph) {
 		delete() { delete this._obj[this._prop] }
 	});
 	function wt(obj, prop) { return new WritableTarget(obj, prop) }
+
+
+	/* Error subclasses */
+	var ApplicationError = DeltaJs.ApplicationError = U.newSubclass(Error, (superFn) => function ApplicationError(delta, value) {
+		superFn.call(this, `This delta of type '${delta.type}' cannot apply to this value of type '${typeof value}.`);
+		this.delta = delta;
+		this.value = value;
+	});
+	var MultipleOverloadsApplicationError = DeltaJs.MultipleOverloadsApplicationError = U.newSubclass(ApplicationError, (superFn) => function MultipleOverloadsApplicationError(delta, value, errors = []) {
+		superFn.call(this, delta, value);
+		this.errors = errors;
+		this.message = `None of these deltas of types ${delta.overloads.map(d => "'"+d.type+"'").join(',')} can apply to this value of type '${typeof value}.` +
+		               errors.map(e => `\n-- ${e.message}`).join('');
+	});
+	var NoOverloadsApplicationError = DeltaJs.NoOverloadsApplicationError = U.newSubclass(ApplicationError, (superFn) => function NoOverloadsApplicationError(delta, value) {
+		superFn.call(this, delta, value);
+		this.message = `This delta of type '${delta.type}' has no spcific deltas assigned to it, so it cannot apply to this value of type '${typeof value}.`;
+	});
+	var DeltaArgApplicationError = DeltaJs.DeltaArgApplicationError = U.newSubclass(ApplicationError, (superFn) => function DeltaArgApplicationError(delta, baseDelta) {
+		superFn.call(this, delta, baseDelta.arg);
+		this.message = `This delta of type '${delta.type}' cannot apply to the type-'${typeof baseDelta.arg}'-value of this base delta of type '${baseDelta.type}'.`;
+		this.baseDelta = baseDelta;
+	});
+	var CompositionError = DeltaJs.CompositionError = U.newSubclass(Error, (superFn) => function CompositionError(delta1, delta2) {
+		superFn.call(this, `This delta of type '${delta1.type}' cannot be composed with this other delta of type '${delta2.type}.`);
+		this.delta1 = delta1;
+		this.delta2 = delta2;
+	});
+	var MultipleOverloadsCompositionError = DeltaJs.MultipleOverloadsCompositionError = U.newSubclass(CompositionError, (superFn) => function MultipleOverloadsCompositionError(delta1, delta2, errors = []) {
+		superFn.call(this, delta1, delta2);
+		this.errors = errors;
+		this.message = `There are no overloads to compose this delta of type '${delta1.type}' with this other delta of type '${delta2.type}'.` +
+		               errors.map(e => `\n-- ${e.message}`).join('');
+	});
 
 
 	/* export the main class */

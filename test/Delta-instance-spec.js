@@ -13,13 +13,8 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function ExpectedError() {}
-
-	function expectError(when) {
-		var result = new ExpectedError();
-		result.when = when;
-		return result;
-	}
+	function ExpectedError(type, content) { this.type = type; this.content = content; }
+	function expectError(type, content) { return new ExpectedError(type, content) }
 
 	function itCan(description, triples) {
 		var counter = 0;
@@ -30,14 +25,14 @@ describe("Delta instance", function () {
 				var target = new DeltaJs.ReadableTarget(rootObj); // because we don't allow replacing/removing the root
 
 				/* creating the delta through the given code */
-				if (post instanceof ExpectedError && post.when === 'delta-composition') {
-					expect(action).toThrowError();
+				if (post instanceof ExpectedError && post.type === DeltaJs.CompositionError) {
+					expect(action).toThrowSpecific(post.type, post.content);
 				} else {
 					action();
 
 					/* applying the delta to the given 'pre' value */
-					if (post instanceof ExpectedError && post.when === 'delta-application') {
-						expect(() => rootDelta.applyTo(target)).toThrowError();
+					if (post instanceof ExpectedError && post.type === DeltaJs.ApplicationError) {
+						expect(() => rootDelta.applyTo(target)).toThrowSpecific(post.type, post.content);
 					} else {
 						rootDelta.applyTo(target);
 						if (typeof post === 'function') {
@@ -74,11 +69,11 @@ describe("Delta instance", function () {
 		], [
 			{ key: 'val' },
 			() => { delta.add('obj.key', 'bar') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ key: 'val' },
 			() => { delta.modify('obj').add('key', 'bar') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 		itCan('remove an existing field from an object', [[
@@ -100,11 +95,11 @@ describe("Delta instance", function () {
 		], [
 			{ foo: 'bar' },
 			() => { delta.remove('obj.key') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ foo: 'bar' },
 			() => { delta.modify('obj').remove('key') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 		itCan('forbid a field from being in an object', [[
@@ -118,11 +113,11 @@ describe("Delta instance", function () {
 		], [
 			{ key: 'val', foo: 'bar' },
 			() => { delta.forbid('obj.key') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ key: 'val', foo: 'bar' },
 			() => { delta.modify('obj').forbid('key') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 		itCan('replace an existing field in an object', [[
@@ -144,11 +139,11 @@ describe("Delta instance", function () {
 		], [
 			{ foo: 'bar' },
 			() => { delta.replace('obj.key', 'BAS') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ foo: 'bar' },
 			() => { delta.modify('obj').replace('key', 'BAS') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 	});
@@ -199,7 +194,7 @@ describe("Delta instance", function () {
 				delta.add('obj.foo', {});
 				delta.modify('obj.foo').add('bar', 'bas');
 			},
-			expectError('delta-application') // 'obj.foo' is forbidden, but was present
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is forbidden, but was present
 		], [
 			{ key: 'val' },
 			() => {
@@ -230,7 +225,7 @@ describe("Delta instance", function () {
 				delta.add('obj.foo', 'bar');
 				delta.remove('obj.foo');
 			},
-			expectError('delta-application') // 'obj.foo' is forbidden, but was present
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is forbidden, but was present
 		], [
 			{ key: 'val', foo: 'whatever' },
 			() => {
@@ -244,7 +239,7 @@ describe("Delta instance", function () {
 				delta.remove('obj.foo');
 				delta.add('obj.foo', 'bar');
 			},
-			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is mandatory, but was absent
 		], [
 			{ key: 'val', foo: 'whatever' },
 			() => {
@@ -258,7 +253,7 @@ describe("Delta instance", function () {
 				delta.remove('obj.foo');
 				delta.forbid('obj.foo');
 			},
-			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is mandatory, but was absent
 		], [
 			{ key: 'val' },
 			() => {
@@ -272,7 +267,7 @@ describe("Delta instance", function () {
 				delta.forbid('obj.foo');
 				delta.add('obj.foo', 'bar');
 			},
-			expectError('delta-application') // 'obj.foo' is forbidden, but was present
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is forbidden, but was present
 		], [
 			{ key: 'val' },
 			() => {
@@ -286,7 +281,7 @@ describe("Delta instance", function () {
 				delta.forbid('obj.foo');
 				delta.forbid('obj.foo');
 			},
-			expectError('delta-application') // 'obj.foo' is forbidden (twice), but was present
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is forbidden (twice), but was present
 		], [
 			{ key: 'val', foo: { bar: 'bas' } },
 			() => {
@@ -300,7 +295,7 @@ describe("Delta instance", function () {
 				delta.modify('obj.foo');
 				delta.replace('obj.foo', 'newValue');
 			},
-			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is mandatory, but was absent
 		], [
 			{ key: 'val' },
 			() => {
@@ -314,7 +309,7 @@ describe("Delta instance", function () {
 				delta.add('obj.foo', 'oldValue');
 				delta.replace('obj.foo', 'newValue');
 			},
-			expectError('delta-application') // 'obj.foo' is forbidden, but was present
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is forbidden, but was present
 		], [
 			{ key: 'val', foo: 'bar' },
 			() => {
@@ -328,7 +323,7 @@ describe("Delta instance", function () {
 				delta.replace('obj.foo', {});
 				delta.modify('obj.foo').add('bar', 'bas');
 			},
-			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is mandatory, but was absent
 		], [
 			{ key: 'val', level1: 'oldValue' },
 			() => {
@@ -352,7 +347,7 @@ describe("Delta instance", function () {
 				delta.replace('obj.foo', 'newValue');
 				delta.remove('obj.foo');
 			},
-			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is mandatory, but was absent
 		], [
 			{ key: 'val', foo: { bar: 'bas' } },
 			() => {
@@ -366,7 +361,7 @@ describe("Delta instance", function () {
 				delta.replace('obj.foo', 'oldValue');
 				delta.replace('obj.foo', 'newValue');
 			},
-			expectError('delta-application') // 'obj.foo' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.foo' is mandatory, but was absent
 		]]);
 
 
@@ -408,7 +403,7 @@ describe("Delta instance", function () {
 				delta.replace('obj.foo', 'bar');
 				delta.forbid('obj.foo');
 			}
-		].map((action) => [null, action, expectError('delta-composition')]));
+		].map((action) => [null, action, expectError(DeltaJs.CompositionError)]));
 
 
 	});
@@ -433,11 +428,11 @@ describe("Delta instance", function () {
 		], [
 			{ arr: 'not an array or a function' },
 			() => { delta.prepend('obj.arr', 'val') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ key: 'val' },
 			() => { delta.prepend('obj.arr', 'val') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 
@@ -467,11 +462,11 @@ describe("Delta instance", function () {
 		], [
 			{ arr: 'not an array or a function' },
 			() => { delta.insert('obj.arr', 'val') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ key: 'val' },
 			() => { delta.insert('obj.arr', 'val') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 
@@ -490,11 +485,11 @@ describe("Delta instance", function () {
 		], [
 			{ arr: 'not an array or a function' },
 			() => { delta.append('obj.arr', 'val') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ key: 'val' },
 			() => { delta.append('obj.arr', 'val') },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 
@@ -615,14 +610,14 @@ describe("Delta instance", function () {
 				delta.add   ('obj.arr', 'not an array');
 				delta.append('obj.arr', 'val');
 			},
-			expectError('delta-composition') // 'obj.arr', left by the 'add' operation, has to be an array
+			expectError(DeltaJs.CompositionError) // 'obj.arr', left by the 'add' operation, has to be an array
 		], [
 			{ key: 'val', arr: 'whatever' },
 			() => {
 				delta.add   ('obj.arr', ['init']);
 				delta.append('obj.arr', 'val');
 			},
-			expectError('delta-application') // 'obj.arr' is forbidden, but was present
+			expectError(DeltaJs.ApplicationError) // 'obj.arr' is forbidden, but was present
 		], [
 			{ key: 'val', arr: 'whatever' },
 			() => {
@@ -636,14 +631,14 @@ describe("Delta instance", function () {
 				delta.replace('obj.arr', 'not an array');
 				delta.append ('obj.arr', 'val');
 			},
-			expectError('delta-composition') // 'obj.arr', left by the 'replace' operation, has to be an array
+			expectError(DeltaJs.CompositionError) // 'obj.arr', left by the 'replace' operation, has to be an array
 		], [
 			{ key: 'val' },
 			() => {
 				delta.replace('obj.arr', ['init']);
 				delta.append ('obj.arr', 'val');
 			},
-			expectError('delta-application') // 'obj.arr' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.arr' is mandatory, but was absent
 		], [
 			{ key: 'val', arr: ['init'] },
 			() => {
@@ -657,7 +652,7 @@ describe("Delta instance", function () {
 				delta.append('obj.arr', 'val');
 				delta.remove('obj.arr');
 			},
-			expectError('delta-application') // 'obj.arr' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.arr' is mandatory, but was absent
 		], [
 			{ key: 'val', arr: ['init'] },
 			() => {
@@ -671,7 +666,7 @@ describe("Delta instance", function () {
 				delta.append ('obj.arr', 'val');
 				delta.replace('obj.arr', 'whatever');
 			},
-			expectError('delta-application') // 'obj.arr' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.arr' is mandatory, but was absent
 		]]);
 
 
@@ -700,11 +695,11 @@ describe("Delta instance", function () {
 		], [
 			{ fn: 'not a function or an array' },
 			() => { delta.prepend('obj.fn', function () {}) },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ key: 'val' },
 			() => { delta.prepend('obj.fn', function () {}) },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 
@@ -721,11 +716,11 @@ describe("Delta instance", function () {
 		], [
 			{ fn: 'not a function or an array' },
 			() => { delta.insert('obj.fn', function () {}) },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ key: 'val' },
 			() => { delta.insert('obj.fn', function () {}) },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 
@@ -739,11 +734,11 @@ describe("Delta instance", function () {
 		], [
 			{ fn: 'not a function or an array' },
 			() => { delta.append('obj.fn', function () {}) },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		], [
 			{ key: 'val' },
 			() => { delta.append('obj.fn', function () {}) },
-			expectError('delta-application')
+			expectError(DeltaJs.ApplicationError)
 		]]);
 
 
@@ -893,14 +888,14 @@ describe("Delta instance", function () {
 				delta.add   ('obj.fn', 'not a function or an array');
 				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
 			},
-			expectError('delta-composition') // 'obj.fn', left by the 'add' operation, has to be an array
+			expectError(DeltaJs.CompositionError) // 'obj.fn', left by the 'add' operation, has to be an array
 		], [
 			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
 			() => {
 				delta.add   ('obj.fn', function (a, b, c) { fA(this, a, c) });
 				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
 			},
-			expectError('delta-application') // 'obj.fn' is forbidden, but was present
+			expectError(DeltaJs.ApplicationError) // 'obj.fn' is forbidden, but was present
 		], [
 			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
 			() => {
@@ -918,14 +913,14 @@ describe("Delta instance", function () {
 				delta.replace('obj.fn', 'not a function or an array');
 				delta.append ('obj.fn', function (a, b) { fB(this, b, b) });
 			},
-			expectError('delta-composition') // 'obj.fn', left by the 'replace' operation, has to be an array
+			expectError(DeltaJs.CompositionError) // 'obj.fn', left by the 'replace' operation, has to be an array
 		], [
 			{ key: 'val' },
 			() => {
 				delta.replace('obj.fn', function (a, b, c) { fA(this, a, c) });
 				delta.append ('obj.fn', function (a, b) { fB(this, b, b) });
 			},
-			expectError('delta-application') // 'obj.fn' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.fn' is mandatory, but was absent
 		], [
 			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
 			() => {
@@ -939,7 +934,7 @@ describe("Delta instance", function () {
 				delta.append('obj.fn', function (a, b) { fB(this, b, b) });
 				delta.remove('obj.fn');
 			},
-			expectError('delta-application') // 'obj.fn' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.fn' is mandatory, but was absent
 		], [
 			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
 			() => {
@@ -953,7 +948,7 @@ describe("Delta instance", function () {
 				delta.append ('obj.fn', function (a, b) { fB(this, b, b) });
 				delta.replace('obj.fn', 'whatever');
 			},
-			expectError('delta-application') // 'obj.fn' is mandatory, but was absent
+			expectError(DeltaJs.ApplicationError) // 'obj.fn' is mandatory, but was absent
 		]]);
 
 
@@ -1079,10 +1074,7 @@ describe("Delta instance", function () {
 			() => {
 				var dm = delta.deltaModel('obj');
 				dm('X').add('key', { foo: 'bar' });
-				dm('Y').remove({
-					path: 'key',
-					after: ['X']
-				});
+				dm('Y').remove({ after: ['X'] }, 'key');
 			},
 			{}
 		], [
@@ -1090,29 +1082,17 @@ describe("Delta instance", function () {
 			() => {
 				var dm = delta.deltaModel('obj');
 				dm('X').add('key', { foo: 'bar' });
-				dm('Y').replace({
-					path: 'key',
-					after: ['X']
-				}, 'some value');
+				dm('Y').replace({ after: ['X'] }, 'key', 'some value');
 			},
 			{ key: 'some value' }
 		], [
 			{},
 			() => {
 				var dm = delta.deltaModel('obj');
-				dm('X').add('key1', { foo: 'bar' });
-				dm('Y').add({
-					path: 'key2',
-					after: ['X']
-				}, 'some value');
-				dm('Z').add({
-					path: 'key3',
-					after: ['Y']
-				}, 'some other value');
-				dm('rY').remove({
-					path: 'key2',
-					after: ['Z']
-				});
+				dm('X'                   ).add('key1', { foo: 'bar' });
+				dm('Y',  { after: ['X'] }).add('key2', 'some value');
+				dm('Z',  { after: ['Y'] }).add('key3', 'some other value');
+				dm('rY', { after: ['Z'] }).remove('key2');
 			},
 			{ key1: { foo: 'bar' }, key3: 'some other value' }
 		]]);
@@ -1122,8 +1102,8 @@ describe("Delta instance", function () {
 			{ oldKey: 'old value' },
 			() => {
 				var dm = delta.deltaModel('obj');
-				dm('X').add('key1', 1);
-				dm('Y').add('key2', 'b');
+				dm('X').add('key1', 1    );
+				dm('Y').add('key2', 'b'  );
 				dm('Z').add('key3', 'iii');
 				dm('r').remove('oldKey');
 			},
@@ -1131,7 +1111,17 @@ describe("Delta instance", function () {
 		]]);
 
 
-		// TODO: partial orders
+		itCan('apply partially ordered deltas in topological order, if unordered deltas do not conflict', [[
+			{ oldKey: 'old value' },
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('W'                  ).add('key', { foo: 'bar' });
+				dm('X', { after: ['W'] }).add('key.x', 1           );
+				dm('Y', { after: ['W'] }).add('key.y', 2           );
+				dm('Z', { after: ['W'] }).add('key.z', 3           );
+			},
+			{ oldKey: 'old value', key: { foo: 'bar', x: 1, y: 2, z: 3 } }
+		]]);
 
 		// TODO: conflicts
 
