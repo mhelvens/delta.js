@@ -1111,7 +1111,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan('apply partially ordered deltas in topological order, if unordered deltas do not conflict', [[
+		itCan('apply a partially ordered set of `deltas in topological order, if unordered deltas do not conflict', [[
 			{ oldKey: 'old value' },
 			() => {
 				var dm = delta.deltaModel('obj');
@@ -1122,6 +1122,8 @@ describe("Delta instance", function () {
 			},
 			{ oldKey: 'old value', key: { foo: 'bar', x: 1, y: 2, z: 3 } }
 		]]);
+
+
 
 		// TODO: conflicts
 

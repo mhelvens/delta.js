@@ -12,6 +12,7 @@ var rename = require('gulp-rename');
 var karma = require('gulp-karma');
 var bump = require('gulp-bump');
 var traceur = require('gulp-traceur');
+var replace = require('gulp-replace');
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,7 +21,7 @@ var traceur = require('gulp-traceur');
 function externalModule(modName, varName) {
 	if (!varName) { return modName }
 	var obj = {};
-	obj[modName] = {root: varName, commonjs2: modName, commonjs: modName, amd: modName};
+	obj[modName] = { root: varName, commonjs2: modName, commonjs: modName, amd: modName };
 	return obj;
 }
 
@@ -31,20 +32,34 @@ function externalModule(modName, varName) {
 var INTERNAL_LIBRARIES = [];
 var EXTERNAL_LIBRARIES = [];
 var APPLICATIONS = [];
+fs.readdirSync('./build-config/modules')
+	.filter(function (filename) { return filename !== '.gitignore' })
+	.map(function (filename) { return fs.readFileSync('./build-config/modules/'+filename) })
+	.map(JSON.parse)
+	.forEach(function (mod) {
+		if (mod.type === 'external-library') {
+			mod.webpackExternal = externalModule(mod.name, mod.var);
+			EXTERNAL_LIBRARIES.push(mod);
+		} else if (mod.type === 'internal-library') {
+			INTERNAL_LIBRARIES.push(mod);
+		} else if (mod.type === 'application') {
+			APPLICATIONS.push(mod);
+		}
+	});
 
-fs.readdirSync('./modules')
-		.map(function (filename) { return fs.readFileSync('./modules/' + filename) })
-		.map(JSON.parse)
-		.forEach(function (mod) {
-			if (mod.type === 'external-library') {
-				mod.webpackExternal = externalModule(mod.name, mod.var);
-				EXTERNAL_LIBRARIES.push(mod);
-			} else if (mod.type === 'internal-library') {
-				INTERNAL_LIBRARIES.push(mod);
-			} else if (mod.type === 'application') {
-				APPLICATIONS.push(mod);
-			}
-		});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+var AUTO_LOADERS = [];
+fs.readdirSync('./build-config/auto-loaders')
+	.filter(function (filename) { return filename !== '.gitignore' })
+	.map(function (filename) { return fs.readFileSync('./build-config/auto-loaders/'+filename) })
+	.map(JSON.parse)
+	.forEach(function (loader) {
+		loader.test = new RegExp(loader.test);
+		AUTO_LOADERS.push(loader);
+	});
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,106 +71,90 @@ EXTERNAL_LIBRARIES.forEach(function (mod) {
 	WEBPACK_ALIAS[mod.name] = mod.dir + '/' + mod.file;
 });
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-/* Webpack configuration shared for both apps and libraries */
-var WEBPACK_COMMON = {
-	devtool: 'inline-source-map',
-	module : {
-		loaders: [
-			{test: /\.scss$/, loader: "style!css!autoprefixer!sass"},
-			{test: /\.css$/, loader: "style!css!autoprefixer"},
-			{test: /\.js/, loader: "traceur?script"}
-		]
-	}
-};
+/* if the external module file is not enough, overwriting aliases can be set up */
+fs.readdirSync('./build-config/aliases')
+	.filter(function (filename) { return filename !== '.gitignore' })
+	.map(function (filename) { return fs.readFileSync('./build-config/aliases/'+filename) })
+	.map(JSON.parse)
+	.forEach(function (alias) {
+		WEBPACK_ALIAS[alias.from] = alias.to;
+	});
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/* JS-linter (which is actually JS-hint) */
 gulp.task('lint', function () {
 	return gulp.src('src/**/*.js')
-			.pipe(jshint())
-			.pipe(jshint.reporter('jshint-stylish'))
-			.pipe(jshint.reporter('fail'));
+		.pipe(jshint())
+		.pipe(jshint.reporter('jshint-stylish'))
+		.pipe(jshint.reporter('fail'));
 });
 
 INTERNAL_LIBRARIES.concat(APPLICATIONS).forEach(function (m) {
 
+	/* Webpack configuration shared for both apps and libraries */
+	var commonConfig = {
+		devtool: 'inline-source-map',
+		module: { loaders: AUTO_LOADERS },
+		plugins: [
+			new webpack.optimize.DedupePlugin()
+		]
+	};
+
 	/* the webpack task for the internal module */
 	gulp.task('webpack:' + m.name, function (callback) {
-
-		var config = (m.type === 'internal-library') ? {
-			entry    : './src/' + m.file,
-			externals: EXTERNAL_LIBRARIES.map(function (lib) { return lib.webpackExternal }),
-			output   : {
-				path             : './dist',
-				filename         : m.file,
-				library          : m.var,
-				libraryTarget    : 'umd',
-				sourceMapFilename: m.file + '.map'
-			}
-		} : { // 'application'
-			entry  : './src/' + m.dir + '/' + m.file,
-			output : {
-				path             : './dist/' + m.dir,
-				filename         : m.file,
-				sourceMapFilename: m.file + '.map'
-			},
-			resolve: {
-				modulesDirectories: ['node_modules', 'bower_components'],
-				alias             : WEBPACK_ALIAS
-			},
-			target : 'web'
-		};
-
+		// output after Webpack does its thing
+		function webpackCallback(err, stats) {
+			if (err) { throw new gutil.PluginError('webpack', err) }
+			gutil.log(stats.toString({ colors: true }));
+			callback();
+		}
 
 		if (m.type === 'internal-library') {
-			config = {
-				entry    : './src/' + m.file,
+			webpack(_.defaults({
+				entry: './src/' + m.file,
 				externals: EXTERNAL_LIBRARIES.map(function (lib) { return lib.webpackExternal }),
-				output   : {
-					path             : './dist',
-					filename         : m.file,
-					library          : m.var,
-					libraryTarget    : 'umd',
-					sourceMapFilename: m.file + '.map'
+				output: {
+					path: './dist',
+					filename: m.file,
+					library: m.var,
+					libraryTarget: 'umd',
+					sourceMapFilename: m.file+'.map'
 				}
-			};
+			}, commonConfig), webpackCallback);
 		} else if (m.type === 'application') {
-			config = {
-				entry  : './src/' + m.dir + '/' + m.file,
-				output : {
-					path             : './dist/' + m.dir,
-					filename         : m.file,
-					sourceMapFilename: m.file + '.map'
+			webpack(_.defaults({
+				entry: './src/' + m.dir + '/' + m.file,
+				output: {
+					path: './dist/' + m.dir,
+					filename: m.file,
+					sourceMapFilename: m.file+'.map'
 				},
 				resolve: {
 					modulesDirectories: ['node_modules', 'bower_components'],
-					alias             : WEBPACK_ALIAS
+					alias: WEBPACK_ALIAS
 				},
-				target : 'web'
-			};
+				target: 'web'
+			}, commonConfig), webpackCallback);
 		}
-
-		webpack(_.defaults(config, WEBPACK_COMMON), function (err, stats) {
-			if (err) { throw new gutil.PluginError('webpack', err) }
-			gutil.log(stats.toString({colors: true}));
-			callback();
-		});
-
 	});
 
 	/* the build-task for internal libraries */
 	if (m.type === 'internal-library') {
-		gulp.task('uglify:' + m.name, ['webpack:' + m.name], function () {
+		gulp.task('webpack-fixed:' + m.name, ['webpack:' + m.name], function () {
 			return gulp.src('dist/**/' + m.file)
-					.pipe(uglify())
-					.pipe(rename({suffix: '.min'}))
-					.pipe(gulp.dest('dist'));
+				.pipe(replace(
+					'return __webpack_require__(0)',
+					'return __webpack_require__(0).default'))
+				.pipe(gulp.dest('dist'));
+		});
+		gulp.task('uglify:' + m.name, ['webpack-fixed:' + m.name], function () {
+			return gulp.src('dist/**/' + m.file)
+				.pipe(uglify())
+				.pipe(rename({suffix: '.min'}))
+				.pipe(gulp.dest('dist'));
 		});
 		gulp.task('build:' + m.name, ['webpack:' + m.name, 'uglify:' + m.name]);
 	}
@@ -164,7 +163,7 @@ INTERNAL_LIBRARIES.concat(APPLICATIONS).forEach(function (m) {
 	if (m.type === 'application') {
 		gulp.task('copy-html:' + m.name, function () {
 			return gulp.src(['src/' + m.dir + '/*.html'])
-					.pipe(gulp.dest('dist/' + m.dir));
+				.pipe(gulp.dest('dist/' + m.dir));
 		});
 		gulp.task('build:' + m.name, ['webpack:' + m.name, 'copy-html:' + m.name]);
 	}
@@ -173,24 +172,20 @@ INTERNAL_LIBRARIES.concat(APPLICATIONS).forEach(function (m) {
 
 /* 'build everything' task */
 gulp.task('build',
-		INTERNAL_LIBRARIES.concat(APPLICATIONS).map(function (mod) {
-			return 'build:' + mod.name
-		})
-);
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	INTERNAL_LIBRARIES.concat(APPLICATIONS).map(function (mod) {
+		return 'build:'+mod.name
+	}));
 
 /* build tests with traceur */
 gulp.task('build-tests', function () {
 	return gulp.src('test/**/*.js')
-			.pipe(traceur({script: true}))
-			.pipe(gulp.dest('test-dist'));
+		.pipe(traceur({script: true}))
+		.pipe(gulp.dest('test-dist'));
 });
 
 /* run tests */
-gulp.task('test', ['build-tests'], function () {
+gulp.task('test', function () {
+//gulp.task('test', ['build', 'build-tests'], function () {
 	return gulp.src(EXTERNAL_LIBRARIES.map(function (lib) {
 		return lib.dir + '/' + lib.file;
 	}).concat([
@@ -210,22 +205,17 @@ gulp.task('watch', function () {
 		'src/**/*.scss',
 		'src/**/*.css',
 		'src/**/*.html'
-	], ['lint', 'build']);
-	gulp.watch([
-		'dist/**/*.js',
-		'test/**/*.js'
-	], ['test']);
+	], ['lint', 'build', 'test']);
 });
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-['major', 'minor', 'patch', 'prerelease'].forEach(function (type) {
-	gulp.task('bump:' + type, function () {
-		return gulp.src(['package.json', 'bower.json'])
-				.pipe(bump({type: type}))
-				.pipe(gulp.dest('./'));
+APPLICATIONS.forEach(function (m) {
+	gulp.task('watch:' + m.name, function () {
+		gulp.watch([
+			'src/**/*.js',
+			'src/**/*.scss',
+			'src/**/*.css',
+			'src/**/*.html'
+		], ['lint', 'build:' + m.name]);
 	});
 });
 
@@ -233,4 +223,16 @@ gulp.task('watch', function () {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-gulp.task('default', ['lint', 'build', 'watch', 'test']);
+['major', 'minor', 'patch', 'prerelease'].forEach(function (type) {
+	gulp.task('bump:'+type, function () {
+		return gulp.src(['package.json', 'bower.json'])
+			.pipe(bump({ type: type }))
+			.pipe(gulp.dest('./'));
+	});
+});
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+gulp.task('default', ['lint', 'build', 'test', 'watch']);
