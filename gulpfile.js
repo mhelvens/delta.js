@@ -205,7 +205,7 @@ gulp.task('watch', function () {
 		'src/**/*.scss',
 		'src/**/*.css',
 		'src/**/*.html'
-	], ['lint', 'build', 'test']);
+	], ['lint', 'build', 'build-tests', 'test']);
 });
 
 APPLICATIONS.forEach(function (m) {
@@ -235,4 +235,4 @@ APPLICATIONS.forEach(function (m) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-gulp.task('default', ['lint', 'build', 'test', 'watch']);
+gulp.task('default', ['lint', 'build', 'build-tests', 'test', 'watch']);

@@ -1132,4 +1132,64 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+	describe('DeltaJs features', () => {
+
+		it('have a class to represent them', () => {
+			expect(typeof deltaJs.Feature).toBe('function');
+		});
+
+		it('have a function to create new ones', () => {
+			expect(typeof deltaJs.newFeature).toBe('function');
+		});
+
+		it('have an array where they can be stored', () => {
+			expect(deltaJs.features instanceof Object).toBeTruthy();
+		});
+
+		it('can be instantiated', () => {
+			var feature = deltaJs.newFeature('f');
+			expect(feature).toBe(deltaJs.features['f']);
+			expect(feature instanceof deltaJs.Feature).toBeTruthy();
+		});
+
+		describe('that are instantiated', () => {
+			var f, g, h;
+			beforeEach(() => {
+				f = deltaJs.newFeature('f');
+				g = deltaJs.newFeature('g');
+				h = deltaJs.newFeature('h');
+			});
+
+			it('know their name', () => {
+				expect(f.name).toBe('f');
+				expect(g.name).toBe('g');
+				expect(h.name).toBe('h');
+			});
+
+			it('know when they are not selected', () => {
+				expect(f.selected).toBeFalsy();
+				expect(g.selected).toBeFalsy();
+				expect(h.selected).toBeFalsy();
+			});
+
+			it('can be selected', () => {
+				expect(f.selected).toBeFalsy();
+				expect(g.selected).toBeFalsy();
+				expect(h.selected).toBeFalsy();
+				f.select();
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeFalsy();
+			});
+		});
+
+
+	});
+
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 });

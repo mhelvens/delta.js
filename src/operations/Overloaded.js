@@ -11,14 +11,11 @@ export default (deltaJs) => {
 
 	defineDelta(deltaJs);
 
-	deltaJs.overloads = {}; // method -> [delta-classes]
+	deltaJs.newOperationType(deltaJs.Delta, 'Overloaded', {
+		construct() { this.overloads = [] },
 
-	deltaJs.Delta.Overloaded = U.newSubclass(deltaJs.Delta, (superFn) => function Overloaded(arg, meta) {
-		superFn.call(this, arg, meta);
-		this.overloads = [];
-	}, {
 		/** {@public}{@abstract}{@method}{@nosideeffects}
-		 * @return {Overloaded} - a clone of this delta
+		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
 		 */
 		clone() {
 			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.meta); // super()
@@ -27,7 +24,7 @@ export default (deltaJs) => {
 		},
 
 		/** {@public}{@method}
-		 * @param target {WritableTarget}
+		 * @param target {DeltaJs.WritableTarget}
 		 */
 		applyTo(target) {
 			/* apply the first overload that applies to the target; gather any errors */
@@ -64,9 +61,6 @@ export default (deltaJs) => {
 			return str;
 		}
 	});
-
-	deltaJs.Delta.Overloaded.type = deltaJs.Delta.Overloaded.prototype.type = 'Overloaded';
-	deltaJs.Delta.Overloaded.meta = deltaJs.Delta.Overloaded.prototype.meta = { methods: [] };
 
 	deltaJs.newComposition((d1, d2) => (d1 instanceof deltaJs.Delta.Overloaded || d2 instanceof deltaJs.Delta.Overloaded), (d1, d2) => {
 		var D1 = d1 instanceof deltaJs.Delta.Overloaded ? d1.overloads : [d1];

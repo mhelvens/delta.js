@@ -10,12 +10,11 @@ export default (deltaJs) => {
 
 	defineComposite(deltaJs);
 
-	deltaJs.Delta.Modify = U.newSubclass(deltaJs.Delta.Composite, (superFn) => function Modify(__, meta) {
-		superFn.call(this, __, meta);
-		this.deltas = {};
-	}, {
+	deltaJs.newOperationType(deltaJs.Delta.Composite, 'Modify', {
+		construct() { this.deltas = {} },
+
 		/** {@public}{@abstract}{@method}{@nosideeffects}
-		 * @return {Modify} - a clone of this delta
+		 * @return {DeltaJs#Delta.Modify} - a clone of this delta
 		 */
 		clone() {
 			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.meta); // super()
@@ -31,7 +30,7 @@ export default (deltaJs) => {
 		precondition(target) { return target.value instanceof Object },
 
 		/** {@public}{@method}
-		 * @param target {WritableTarget}
+		 * @param target {Delta.WritableTarget}
 		 */
 		applyTo(target) {
 			Object.keys(this.deltas).forEach((prop) => {
@@ -86,13 +85,5 @@ export default (deltaJs) => {
 			return (this.deltas[path.prop] instanceof deltaJs.Delta.Composite) ? this.deltas[path.prop] : delta;
 		}
 	});
-	deltaJs.Delta.Modify.type = deltaJs.Delta.Modify.prototype.type = 'Modify';
-	deltaJs.Delta.Modify.meta = deltaJs.Delta.Modify.prototype.meta = { methods: ['modify'] };
-	deltaJs._onNewOperationTypeListeners.forEach((fn) => { fn(deltaJs.Delta.Modify) });
-
-	/* add this new type to the list of types associated with each method */
-	if (!Array.isArray(deltaJs.overloads['modify'])) { deltaJs.overloads['modify'] = [] }
-	deltaJs.overloads['modify'].push('Modify');
-
 
 };

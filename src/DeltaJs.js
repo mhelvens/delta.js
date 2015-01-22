@@ -9,14 +9,15 @@ import {ReadableTarget, WritableTarget, rt, wt} from './Target.js';
 import {ApplicationError, MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError, DeltaArgApplicationError,
 		CompositionError, MultipleOverloadsCompositionError} from './Error.js';
-import defineDelta           from './classes/Delta.js';
-import defineComposite       from './classes/Composite.js';
-import defineOverloaded      from './classes/Overloaded.js';
-import defineModify          from './classes/Modify.js';
-import defineBasicOperations from './classes/basicOperations.js';
-import definePutIntoArray    from './classes/PutIntoArray.js';
-import definePutIntoFunction from './classes/PutIntoFunction.js';
-import defineDeltaModel      from './classes/DeltaModel.js';
+import defineDelta           from './operations/Delta.js';
+import defineComposite       from './operations/Composite.js';
+import defineOverloaded      from './operations/Overloaded.js';
+import defineModify          from './operations/Modify.js';
+import defineBasicOperations from './operations/basicOperations.js';
+import definePutIntoArray    from './operations/PutIntoArray.js';
+import definePutIntoFunction from './operations/PutIntoFunction.js';
+import defineDeltaModel      from './operations/DeltaModel.js';
+import defineFeatures        from './features.js';
 
 
 /** {@class}
@@ -27,6 +28,7 @@ import defineDeltaModel      from './classes/DeltaModel.js';
 export default U.newClass(function DeltaJs() {
 
 	this.compositions = []; // [{precondition, composeFn}]
+	this.overloads = {}; // method -> [delta-classes]
 	this._onNewOperationTypeListeners = [];
 
 	defineDelta          (this);
@@ -37,15 +39,9 @@ export default U.newClass(function DeltaJs() {
 	definePutIntoArray   (this);
 	definePutIntoFunction(this);
 	defineDeltaModel     (this);
+	defineFeatures       (this);
 
 }, /** @lends DeltaJs.prototype */ { /********************************************************* DeltaJs.prototype */
-
-	///** {@public}{@method}
-	// *
-	// */
-	//vp(vpName, val) {
-	//	// TODO
-	//},
 
 	/** {@private}{@method}
 	 * @param delta  {DeltaJs#Delta}

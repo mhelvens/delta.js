@@ -21,5 +21,5 @@
   "forin":     true,
   "evil":      true,
 
-  "predef": [ "requirejs", "define", "jasmine", "describe", "beforeEach", "it", "expect", "spyOn", "DeltaJs", "P" ]
+  "predef": [ "requirejs", "define", "jasmine", "describe", "beforeEach", "afterEach", "it", "expect", "spyOn", "DeltaJs", "P" ]
 }

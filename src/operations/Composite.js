@@ -7,14 +7,12 @@ export default (deltaJs) => {
 
 	defineDelta(deltaJs);
 
-
-
-	/** {@protected}{@method}
-	 * @param method {String}
-	 * @param arg    {*}
-	 * @return {DeltaJs#Delta}
-	 */
 	U.extend(deltaJs.constructor.prototype, {
+		/** {@protected}{@method}
+		 * @param method {String}
+		 * @param arg    {*}
+		 * @return {DeltaJs#Delta}
+		 */
 		_getDeltaByMethod(method, arg) {
 			var newDeltas = this.overloads[method]
 					.map(type => new this.Delta[type](arg, { method }));
