@@ -7,7 +7,7 @@ describe("Delta instance", function () {
 	var deltaJs, rootDelta, delta;
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
-		rootDelta = new deltaJs.operations.Modify();
+		rootDelta = new deltaJs.Delta.Modify();
 		delta = rootDelta.facade();
 	});
 

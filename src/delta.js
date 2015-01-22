@@ -6,31 +6,24 @@ import U from './misc.js';
 import DeltaJs from './DeltaJs.js';
 
 
-/* import the other stuff */
-import { ReadableTarget, WritableTarget } from './Target.js';
+/* make Target classes available under the DeltaJs symbol */
+import {ReadableTarget, WritableTarget} from './Target.js';
+U.extend(DeltaJs, { ReadableTarget, WritableTarget });
+
+
+/* make Path classes available under the DeltaJs symbol */
 import Path from './Path.js';
-import {
-	ApplicationError,
-	MultipleOverloadsApplicationError,
-	NoOverloadsApplicationError,
-	DeltaArgApplicationError,
-	CompositionError,
-	MultipleOverloadsCompositionError } from './Error.js';
+U.extend(DeltaJs, { Path });
 
 
-/* make these available under the DeltaJs symbol */
-U.extend(DeltaJs, {
-	WritableTarget,
-	ReadableTarget,
-	Path,
-	ApplicationError,
-	MultipleOverloadsApplicationError,
-	NoOverloadsApplicationError,
-	DeltaArgApplicationError,
-	CompositionError,
-	MultipleOverloadsCompositionError
-});
+/* make Error classes available under the DeltaJs symbol */
+import {ApplicationError, MultipleOverloadsApplicationError,
+		NoOverloadsApplicationError, DeltaArgApplicationError,
+		CompositionError, MultipleOverloadsCompositionError} from './Error.js';
+U.extend(DeltaJs, { ApplicationError, MultipleOverloadsApplicationError,
+                    NoOverloadsApplicationError, DeltaArgApplicationError,
+                    CompositionError, MultipleOverloadsCompositionError });
 
 
-/* export the main class */
+/* export the DeltaJs class */
 export default DeltaJs;
