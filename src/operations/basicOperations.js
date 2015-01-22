@@ -32,9 +32,7 @@ export default (deltaJs) => {
 		// https://github.com/google/traceur-compiler/issues/1631
 		deltaJs.newOperationType(Type, {
 			construct()          { this.deltasToApplyToArg = []                                                      },
-			precondition(target) {
-				return target instanceof WritableTarget && pre(target);
-			},
+			precondition(target) { return target instanceof WritableTarget && pre(target)                            },
 			applyTo(target)      { target.value = this.deltasToApplyToArg.reduce((v, d) => d.appliedTo(v), this.arg) },
 			clone() {
 				var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.meta); // super()

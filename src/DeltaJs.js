@@ -27,8 +27,8 @@ import defineFeatures        from './features.js';
  */
 export default U.newClass(function DeltaJs() {
 
-	this.compositions = []; // [{precondition, composeFn}]
-	this.overloads = {}; // method -> [delta-classes]
+	this._compositions = []; // [{precondition, composeFn}]
+	this._overloads = {}; // method -> [delta-classes]
 	this._onNewOperationTypeListeners = [];
 
 	defineDelta          (this);
@@ -96,10 +96,7 @@ export default U.newClass(function DeltaJs() {
 		};
 
 		/* add this new type to the list of types associated with each method */
-		cls.meta.methods.forEach((method) => {
-			if (!Array.isArray(this.overloads[method])) { this.overloads[method] = [] }
-			this.overloads[method].push(name);
-		});
+		cls.meta.methods.forEach((method) => { U.a(this._overloads, method).push(name) });
 
 		/* notify listeners */
 		this._onNewOperationTypeListeners.forEach((fn) => { fn(cls) });
@@ -126,7 +123,7 @@ export default U.newClass(function DeltaJs() {
 	 * @param compose      {(DeltaJs#Delta, DeltaJs#Delta) => DeltaJs#Delta} - should be side-effect free
 	 */
 	newComposition(precondition, compose) {
-		this.compositions.push({precondition, compose});
+		this._compositions.push({precondition, compose});
 	},
 
 	/** {@public}{@method}
@@ -141,7 +138,7 @@ export default U.newClass(function DeltaJs() {
 
 		/* use the first composition function for which these deltas satisfy the precondition */
 		var composeFn = ()=>{};
-		var success = this.compositions.some(({precondition, compose: fn}) => {
+		var success = this._compositions.some(({precondition, compose: fn}) => {
 			if (precondition(d1, d2)) {
 				composeFn = fn;
 				return true; // success; break the loop

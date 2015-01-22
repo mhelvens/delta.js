@@ -49,6 +49,25 @@ var U = {
 		return obj1;
 	},
 
+	default(object, ...rest) {
+		var keys = rest.slice(0, -1);
+		var def = rest[rest.length-1];
+		if (keys.length === 0) { return object }
+		var last = U.o.apply(null, [object].concat(keys.slice(0, -1)));
+		if (U.isUndefined(last[keys[keys.length-1]])) {
+			last[keys[keys.length-1]] = def;
+		}
+		return last[keys[keys.length-1]];
+	},
+
+	o(object, ...keys) {
+		return U.default.apply(null, [object].concat(keys).concat([ {} ]));
+	},
+
+	a(object, ...keys) {
+		return U.default.apply(null, [object].concat(keys).concat([ [] ]));
+	},
+
 	/* allows the Function constructor to be used with an array of formal parameters */
 	applyConstructor(ConstructorFn, args) {
 		var new_obj = Object.create(ConstructorFn.prototype);

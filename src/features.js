@@ -19,8 +19,7 @@ export default (deltaJs) => {
 		} else if (disjunct === false) {
 			// change nothing
 		} else if (_conditions[feature] !== true) {
-			if (U.isUndefined(_conditions[feature])) { _conditions[feature] = [] }
-			_conditions[feature].push(disjunct);
+			U.a(_conditions, feature).push(disjunct);
 		}
 	}
 	function _settleConditions() {

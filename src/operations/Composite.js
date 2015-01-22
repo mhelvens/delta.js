@@ -14,7 +14,7 @@ export default (deltaJs) => {
 		 * @return {DeltaJs#Delta}
 		 */
 		_getDeltaByMethod(method, arg) {
-			var newDeltas = this.overloads[method]
+			var newDeltas = this._overloads[method]
 					.map(type => new this.Delta[type](arg, { method }));
 			if (newDeltas.length === 1) {
 				return newDeltas[0];
