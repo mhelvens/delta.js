@@ -18,9 +18,10 @@ import definePutIntoArray    from './operations/PutIntoArray.js';
 import definePutIntoFunction from './operations/PutIntoFunction.js';
 import defineDeltaModel      from './operations/DeltaModel.js';
 import defineFeatures        from './features.js';
+import defineVariationPoints from './variationPoints.js';
 
 
-/** {@class}
+/** {@public}{@class DeltaJs}
  * This class offers every functionality you need from delta modeling.
  * Each instance offers its own operation types and variation points.
  * You will usually need only one instance per application.
@@ -40,6 +41,7 @@ export default U.newClass(function DeltaJs() {
 	definePutIntoFunction(this);
 	defineDeltaModel     (this);
 	defineFeatures       (this);
+	defineVariationPoints(this);
 
 }, /** @lends DeltaJs.prototype */ { /********************************************************* DeltaJs.prototype */
 
@@ -62,8 +64,8 @@ export default U.newClass(function DeltaJs() {
 	},
 
 	/** {@public}{@method}
-	 * @param name      {String}
-	 * @param prototype {Object}
+	 * @param name      {string}
+	 * @param prototype {object}
 	 */
 	newOperationType(Superclass, name, prototype) {
 		if (typeof Superclass === 'string') { [Superclass, name, prototype] = [undefined, Superclass, name] }
@@ -83,10 +85,18 @@ export default U.newClass(function DeltaJs() {
 			superFn.call(this, arg, meta);
 			if (this.construct) { this.construct() }
 		}, U.extend({}, prototype, {
-			applyTo(target) {
-				var judgment = thisDeltaJs._evaluatePrecondition(this, target);
-				if (judgment !== true) { throw judgment }
-				if (U.isDefined(prototype.applyTo)) { prototype.applyTo.call(this, target) }
+			applyTo(target, options = {}) {
+				if (!options.restrictToProperty || !this.meta.targetProp || options.restrictToProperty === this.meta.targetProp) {
+					var judgment = thisDeltaJs._evaluatePrecondition(this, target);
+					if (judgment !== true) { throw judgment }
+					if (U.isDefined(prototype.applyTo)) {
+						prototype.applyTo.call(this, target, (
+								!!this.meta.targetProp ?
+								U.extend({}, options, { restrictToProperty: null }) :
+								options
+						));
+					}
+				}
 			}
 		}));
 		cls.type = cls.prototype.type = name;

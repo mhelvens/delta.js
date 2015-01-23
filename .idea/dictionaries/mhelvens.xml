@@ -2,6 +2,7 @@
   <dictionary name="mhelvens">
     <words>
       <w>composability</w>
+      <w>disj</w>
       <w>nosideeffects</w>
       <w>validthis</w>
     </words>

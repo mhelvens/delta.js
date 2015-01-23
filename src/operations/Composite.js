@@ -9,7 +9,7 @@ export default (deltaJs) => {
 
 	U.extend(deltaJs.constructor.prototype, {
 		/** {@protected}{@method}
-		 * @param method {String}
+		 * @param method {string}
 		 * @param arg    {*}
 		 * @return {DeltaJs#Delta}
 		 */
@@ -33,17 +33,36 @@ export default (deltaJs) => {
 		superFn.apply(this, args);
 	}, {
 		/** {@public}{@abstract}{@method}
-		 * Implement this in subclasses to prepare a specific delta operation with this delta as the base.
+		 * Implement this method in subclasses to prepare a specific delta operation with this delta as the base.
 		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
 		operation() {
 			throw new Error(`A Delta.Composite subclass needs to implement the 'operation' method.`);
 		},
 
-		/** {@public}{@method}{@nosideeffects}
-		 * @return {Function} - the facade to this delta, for easily adding operations
+		/** {@public}{@property}
+		 * Returns an object that allows new delta operations to be added more easily.
+		 * @return {function} - the facade to this delta, for easily adding operations
 		 */
-		facade() { return deltaJs.facade(this) },
+		get facade() {
+			var thisDelta = this;
+			// The facade object exposes operations methods directly, but arguments to
+			// those operations can partly be given through function-call notation.
+			// Therefore, a facade is a function, storing arguments that are already given.
+			var fcd = function (...args) {
+				var result = thisDelta.facade;
+				result._args = fcd._args.concat(args);
+				return result;
+			};
+			fcd._args = [];
+			U.extend(fcd, operationMethods, {
+				_applyOperationMethod(method, ...finalArgs) {
+					return thisDelta.operation.apply(thisDelta, [method].concat(fcd._args).concat(finalArgs));
+				},
+				delta: thisDelta
+			});
+			return fcd;
+		},
 	});
 
 	var operationMethods = {};
@@ -52,36 +71,34 @@ export default (deltaJs) => {
 			if (U.isUndefined(operationMethods[method])) {
 				operationMethods[method] = function (...args) {
 					var newDelta = this._applyOperationMethod.apply(this, [method].concat(args));
-					return deltaJs.facade(
-						(newDelta instanceof deltaJs.Delta.Composite) ? newDelta : this.delta
-					);
+					return (newDelta instanceof deltaJs.Delta.Composite ? newDelta : this.delta).facade;
 				};
 			}
 		});
 	});
 
-	/** {@public}{@method}{@nosideeffects}
-	 * @param delta {Composite} - the other delta to compose with
-	 * @return {Composite} - the composed delta
-	 */
-	deltaJs.facade = function facade(delta) {
-		/* the facade itself */
-		// The facade object exposes operations methods directly, but arguments to
-		// those operations can partly be given through function-call notation.
-		// Therefore, a facade is a function, storing arguments that are already given.
-		var fcd = function (...args) {
-			var result = facade(delta);
-			result._args = fcd._args.concat(args);
-			return result;
-		};
-		fcd._args = [];
-		U.extend(fcd, operationMethods, {
-			_applyOperationMethod(method, ...finalArgs) {
-				return delta.operation.apply(delta, [method].concat(fcd._args).concat(finalArgs));
-			},
-			delta
-		});
-		return fcd;
-	};
+	///** {@public}{@method}{@nosideeffects}
+	// * @param delta {Composite} - the other delta to compose with
+	// * @return {Composite} - the composed delta
+	// */
+	//deltaJs.facade = function facade(delta) {
+	//	/* the facade itself */
+	//	// The facade object exposes operations methods directly, but arguments to
+	//	// those operations can partly be given through function-call notation.
+	//	// Therefore, a facade is a function, storing arguments that are already given.
+	//	var fcd = function (...args) {
+	//		var result = facade(delta);
+	//		result._args = fcd._args.concat(args);
+	//		return result;
+	//	};
+	//	fcd._args = [];
+	//	U.extend(fcd, operationMethods, {
+	//		_applyOperationMethod(method, ...finalArgs) {
+	//			return delta.operation.apply(delta, [method].concat(fcd._args).concat(finalArgs));
+	//		},
+	//		delta
+	//	});
+	//	return fcd;
+	//};
 
 };

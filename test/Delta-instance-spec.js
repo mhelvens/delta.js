@@ -1,6 +1,6 @@
 'use strict';
 
-describe("Delta instance", function () {
+describe("DeltaJs instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -8,7 +8,7 @@ describe("Delta instance", function () {
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
 		rootDelta = new deltaJs.Delta.Modify();
-		delta = rootDelta.facade();
+		delta = rootDelta.facade;
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ describe("Delta instance", function () {
 
 					/* applying the delta to the given 'pre' value */
 					if (post instanceof ExpectedError && post.type === DeltaJs.ApplicationError) {
-						expect(() => rootDelta.applyTo(target)).toThrowSpecific(post.type, post.content);
+						expect(() => { rootDelta.applyTo(target) }).toThrowSpecific(post.type, post.content);
 					} else {
 						rootDelta.applyTo(target);
 						if (typeof post === 'function') {
@@ -48,9 +48,9 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	describe('object operations', () => {
+	describe("object operations", () => {
 
-		itCan('add a new field to an object', [[
+		itCan("add a new field to an object", [[
 			{},
 			() => { delta.add('obj.foo', 'bar') },
 			{ foo: 'bar' }
@@ -76,7 +76,7 @@ describe("Delta instance", function () {
 			expectError(DeltaJs.ApplicationError)
 		]]);
 
-		itCan('remove an existing field from an object', [[
+		itCan("remove an existing field from an object", [[
 			{ foo: 'bar' },
 			() => { delta.remove('obj.foo') },
 			{}
@@ -102,7 +102,7 @@ describe("Delta instance", function () {
 			expectError(DeltaJs.ApplicationError)
 		]]);
 
-		itCan('forbid a field from being in an object', [[
+		itCan("forbid a field from being in an object", [[
 			{ foo: 'bar' },
 			() => { delta.forbid('obj.key') },
 			{ foo: 'bar' }
@@ -120,7 +120,7 @@ describe("Delta instance", function () {
 			expectError(DeltaJs.ApplicationError)
 		]]);
 
-		itCan('replace an existing field in an object', [[
+		itCan("replace an existing field in an object", [[
 			{ foo: 'bar' },
 			() => { delta.replace('obj.foo', 'BAS') },
 			{ foo: 'BAS' }
@@ -150,10 +150,10 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	describe('composite object operations', () => {
+	describe("composite object operations", () => {
 
 
-		itCan('correctly modify objects when the composition is valid', [[
+		itCan("correctly modify objects when the composition is valid", [[
 			{ key: 'val' },
 			() => {
 				delta.add('obj.foo1', 'bar1');
@@ -365,7 +365,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan('throw an error when the composition is detectably invalid', [
+		itCan("throw an error when the composition is detectably invalid", [
 			() => {
 				delta.modify('obj.foo');
 				delta.add('obj.foo', 'bar');
@@ -410,10 +410,10 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	describe('array operations', () => {
+	describe("array operations", () => {
 
 
-		itCan('prepend a new value to an array', [[
+		itCan("prepend a new value to an array", [[
 			{ arr: [] },
 			() => { delta.prepend('obj.arr', 'val') },
 			{ arr: ['val'] }
@@ -436,7 +436,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan('insert a new value into an array', [[
+		itCan("insert a new value into an array", [[
 			{ arr: [] },
 			() => { delta.insert('obj.arr', 'val') },
 			{ arr: ['val'] }
@@ -470,7 +470,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan('append a new value to an array', [[
+		itCan("append a new value to an array", [[
 			{ arr: [] },
 			() => { delta.append('obj.arr', 'val') },
 			{ arr: ['val'] }
@@ -497,7 +497,7 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	describe('composite array operations', () => {
+	describe("composite array operations", () => {
 
 
 		itCan("combine multiple array operations", [[
@@ -674,7 +674,7 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	describe('function operations', () => {
+	describe("function operations", () => {
 
 
 		/* setup */
@@ -685,7 +685,7 @@ describe("Delta instance", function () {
 		beforeEach(() => { callLog = [] });
 
 
-		itCan('prepend new statements to run inside an existing function', [[
+		itCan("prepend new statements to run inside an existing function", [[
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => { delta.prepend('obj.fn', function (a, b) { fB(this, b, b) }) },
 			(obj) => {
@@ -703,7 +703,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan('insert new statements to run inside an existing function', [[
+		itCan("insert new statements to run inside an existing function", [[
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => { delta.insert('obj.fn', function (a, b) { fB(this, b, b) }) },
 			(obj) => {
@@ -724,7 +724,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan('append new statements to run inside an existing function', [[
+		itCan("append new statements to run inside an existing function", [[
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => { delta.append('obj.fn', function (a, b) { fB(this, b, b) }) },
 			(obj) => {
@@ -746,7 +746,7 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	describe('composite function operations', () => {
+	describe("composite function operations", () => {
 
 
 		/* setup */
@@ -956,10 +956,10 @@ describe("Delta instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	describe('the delta model operation', () => {
+	describe("the delta model operation", () => {
 
 
-		itCan('be a middle-man for a single other delta', [[
+		itCan("be a middle-man for a single other delta", [[
 			{},
 			() => {
 				var dm = delta.deltaModel('obj');
@@ -1023,7 +1023,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		describe('with a function operation delta inside', () => {
+		describe("with a function operation delta inside", () => {
 
 			/* setup */
 			var callLog;
@@ -1031,7 +1031,7 @@ describe("Delta instance", function () {
 			function fB(...args) { callLog.push(['fB', args]) }
 			beforeEach(() => { callLog = [] });
 
-			itCan('be a middle man for that one delta', [[
+			itCan("be a middle man for that one delta", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
 					var dm = delta.deltaModel('obj');
@@ -1069,7 +1069,7 @@ describe("Delta instance", function () {
 		});
 
 
-		itCan('apply deltas in a linear order (as if composed)', [[
+		itCan("apply deltas in a linear order (as if composed)", [[
 			{},
 			() => {
 				var dm = delta.deltaModel('obj');
@@ -1098,7 +1098,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan('apply unordered deltas in arbitrary order, if they do not conflict', [[
+		itCan("apply unordered deltas in arbitrary order, if they do not conflict", [[
 			{ oldKey: 'old value' },
 			() => {
 				var dm = delta.deltaModel('obj');
@@ -1111,7 +1111,7 @@ describe("Delta instance", function () {
 		]]);
 
 
-		itCan('apply a partially ordered set of `deltas in topological order, if unordered deltas do not conflict', [[
+		itCan("apply a partially ordered set of `deltas in topological order, if unordered deltas do not conflict", [[
 			{ oldKey: 'old value' },
 			() => {
 				var dm = delta.deltaModel('obj');
@@ -1130,66 +1130,190 @@ describe("Delta instance", function () {
 
 	});
 
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	describe('DeltaJs features', () => {
+	describe("features", () => {
 
-		it('have a class to represent them', () => {
+		it("have a class to represent them", () => {
 			expect(typeof deltaJs.Feature).toBe('function');
 		});
 
-		it('have a function to create new ones', () => {
+		it("have a DeltaJs method to declare them", () => {
 			expect(typeof deltaJs.newFeature).toBe('function');
 		});
 
-		it('have an array where they can be stored', () => {
+		it("have a DeltaJs object in which they are stored", () => {
 			expect(deltaJs.features instanceof Object).toBeTruthy();
+			expect(deltaJs.features['f']).toBeUndefined();
+			var f = deltaJs.newFeature('f');
+			expect(f instanceof deltaJs.Feature).toBeTruthy();
+			expect(deltaJs.features['f']).toBe(f);
 		});
 
-		it('can be instantiated', () => {
+		it("can be instantiated", () => {
 			var feature = deltaJs.newFeature('f');
 			expect(feature).toBe(deltaJs.features['f']);
 			expect(feature instanceof deltaJs.Feature).toBeTruthy();
 		});
 
-		describe('that are instantiated', () => {
-			var f, g, h;
+		describe("that are instantiated", () => {
+			var e, f, g, h;
 			beforeEach(() => {
+				e = deltaJs.newFeature('e');
 				f = deltaJs.newFeature('f');
 				g = deltaJs.newFeature('g');
 				h = deltaJs.newFeature('h');
 			});
+			function expectAllUnselected() {
+				expect(e.selected).toBeFalsy();
+				expect(f.selected).toBeFalsy();
+				expect(g.selected).toBeFalsy();
+				expect(h.selected).toBeFalsy();
+			}
 
-			it('know their name', () => {
+			it("know their name", () => {
+				expect(e.name).toBe('e');
 				expect(f.name).toBe('f');
 				expect(g.name).toBe('g');
 				expect(h.name).toBe('h');
 			});
 
-			it('know when they are not selected', () => {
+			it("start out not selected", () => {
+				expectAllUnselected();
+			});
+
+			it("can be selected: 'select'", () => {
+				g.select();
+				expect(e.selected).toBeFalsy();
 				expect(f.selected).toBeFalsy();
-				expect(g.selected).toBeFalsy();
+				expect(g.selected).toBeTruthy();
 				expect(h.selected).toBeFalsy();
 			});
 
-			it('can be selected', () => {
+			it("can be selected: 'if(true)'", () => {
+				g.if(true);
+				expect(e.selected).toBeFalsy();
 				expect(f.selected).toBeFalsy();
-				expect(g.selected).toBeFalsy();
+				expect(g.selected).toBeTruthy();
 				expect(h.selected).toBeFalsy();
+			});
+
+			it("can automatically select other features when selected: 'selects' by reference", () => {
+				e.selects(e);
+				f.selects(g);
+				g.selects(h);
+				expectAllUnselected();
 				f.select();
+				expect(e.selected).toBeFalsy();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeTruthy();
+			});
+
+			it("can automatically select other features when selected: 'selects' by name", () => {
+				e.selects('e');
+				f.selects('g');
+				g.selects('h');
+				expectAllUnselected();
+				f.select();
+				expect(e.selected).toBeFalsy();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeTruthy();
+			});
+
+			it("can automatically select other features when selected: 'if' by reference", () => {
+				e.if(f);
+				f.if(g);
+				g.if(h);
+				expectAllUnselected();
 				g.select();
+				expect(e.selected).toBeTruthy();
 				expect(f.selected).toBeTruthy();
 				expect(g.selected).toBeTruthy();
 				expect(h.selected).toBeFalsy();
 			});
+
+			it("can automatically select other features when selected: 'if' by name", () => {
+				e.if('f');
+				f.if('g');
+				g.if('h');
+				expectAllUnselected();
+				g.select();
+				expect(e.selected).toBeTruthy();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeFalsy();
+			});
+
+			it("can throw an error when constraints on other features are not met: 'onlyIf' by reference", () => {
+				f.onlyIf(g);
+				expectAllUnselected();
+				f.select();
+				expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+			it("can throw an error when constraints on other features are not met: 'onlyIf' by name", () => {
+				f.onlyIf('g');
+				expectAllUnselected();
+				f.select();
+				expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+
+
 		});
 
 
 	});
 
 
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	describe("variation points", () => {
+
+
+		it("have a DeltaJs method to indicate them in the domain-specific code: 'vp'", () => {
+			expect(typeof deltaJs.vp).toBe('function');
+		});
+
+		it("have a DeltaJs method to operate on them: 'operation'", () => {
+			expect(typeof deltaJs.operation).toBe('function');
+		});
+
+		it("have a DeltaJs facade to operate on them: 'facade'", () => {
+			expect(typeof deltaJs.facade).toBe('function');
+		});
+
+		it("pass a value through unchanged if no operations are prepared for them", () => {
+			var x = deltaJs.vp('x', 'old value');
+			expect(x).toBe('old value');
+		});
+
+		it("apply deltas to a value for which deltas are prepared", () => {
+			deltaJs.facade('delta-name').replace('x', 'new x value');
+			var x = deltaJs.vp('x', 'old x value');
+			var y = deltaJs.vp('y', 'old y value');
+			expect(x).toBe('new x value');
+			expect(y).toBe('old y value');
+		});
+
+		// TODO: some tests of slightly more complicated cases
+
+
+	});
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 });

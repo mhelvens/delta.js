@@ -206,6 +206,7 @@ gulp.task('watch', function () {
 		'src/**/*.css',
 		'src/**/*.html'
 	], ['lint', 'build', 'build-tests', 'test']);
+	gulp.watch('test/**/*.js', ['build-tests', 'test']);
 });
 
 APPLICATIONS.forEach(function (m) {

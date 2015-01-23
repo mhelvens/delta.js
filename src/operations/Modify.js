@@ -30,17 +30,22 @@ export default (deltaJs) => {
 		precondition(target) { return target.value instanceof Object },
 
 		/** {@public}{@method}
-		 * @param target {Delta.WritableTarget}
+		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
+		 * @param options {object?}              - the (optional) options for this delta application
 		 */
-		applyTo(target) {
+		applyTo(target, options = {}) {
 			Object.keys(this.deltas).forEach((prop) => {
-				this.deltas[prop].applyTo(wt(target.value, prop));
+				//if (!options.restrictToProperty || options.restrictToProperty === prop) {
+				//	this.deltas[prop].applyTo(wt(target.value, prop),
+				//			U.extend({}, options, { restrictToProperty: null }));
+				//}
+				this.deltas[prop].applyTo(wt(target.value, prop), options);
 			});
 		},
 
 		/** {@public}{@method}
-		 * @param options {Object?}
-		 * @return {String}
+		 * @param options {object?}
+		 * @return {string}
 		 */
 		toString(options) {
 			var str = deltaJs.Delta.prototype.toString.call(this, options);
@@ -53,11 +58,11 @@ export default (deltaJs) => {
 
 		/** {@public}{@method}
 		 * Prepare a specific delta operation with this Modify delta as the base.
-		 * @param method {String}  - the type of operation (e.g., 'add', 'remove', etc.)
-		 * @param options {Object} - the options for this operation
-		 * @param path {String}    - the path to which to apply this operation
-		 * @param arg {*}          - the argument to the operation
-		 * @return {DeltaJs#Delta} - the delta resulting from the operation
+		 * @param method {string}   - the type of operation (e.g., 'add', 'remove', etc.)
+		 * @param options {object?} - the (optional) options for this operation
+		 * @param path {string}     - the relative path to which to apply this operation
+		 * @param arg {*}           - the argument to the operation
+		 * @return {DeltaJs#Delta}  - the delta resulting from the operation
 		 */
 		operation(method, options, path, arg) {
 			if (typeof options === 'string') { [options, path, arg] = [{}, options, path] }
@@ -66,8 +71,8 @@ export default (deltaJs) => {
 		},
 
 		/** {@private}{@method}
-		 * @param options {Object}
-		 * @param path    {String}
+		 * @param options {object}
+		 * @param path    {string}
 		 * @param delta   {DeltaJs#Delta}
 		 */
 		_addOperation(options, path, delta) {

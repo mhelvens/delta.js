@@ -22,14 +22,15 @@ export default (deltaJs) => {
 		clone() { return new this.constructor(this.arg, this.meta) },
 
 		/** {@public}{@method}{@nosideeffects}
-		 * @param  value {*} - any given value
+		 * @param  value   {*}       - any given value
+		 * @param  options {object?} - the (optional) options for this delta application
 		 * @return {*} - the value resulting in this delta being applied to the given `value`
 		 */
-		appliedTo(value) {
+		appliedTo(value, options = {}) {
 			if (value instanceof ReadableTarget)   { value = value.value   }
 			if (typeof value.clone === 'function') { value = value.clone() }
 			var obj = { value };
-			this.applyTo(wt(obj, 'value'));
+			this.applyTo(wt(obj, 'value'), options);
 			return obj.value;
 		},
 
@@ -40,8 +41,8 @@ export default (deltaJs) => {
 		composedWith(other) { return deltaJs.composed(this, other) },
 
 		/** {@public}{@method}
-		 * @param options {Object?}
-		 * @return {String}
+		 * @param options {object?}
+		 * @return {string}
 		 */
 		toString(options = {}) {
 			var str = this.type;

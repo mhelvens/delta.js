@@ -50,8 +50,8 @@ export default (deltaJs) => {
 			},
 
 			/** {@public}{@method}
-			 * @param options {Object?}
-			 * @return {String}
+			 * @param options {object?}
+			 * @return {string}
 			 */
 			toString(options) {
 				var str = deltaJs.Delta.prototype.toString.call(this, options);

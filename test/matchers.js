@@ -21,6 +21,7 @@ beforeEach(() => {
 					try {
 						actual();
 						result.pass = false;
+						messageEnd = "However, no exception was thrown.";
 					} catch (exception) {
 						result.pass = exception instanceof expectedType;
 						if (result.pass) {
@@ -33,7 +34,7 @@ beforeEach(() => {
 
 					result.message = `Expected the function to throw a new ${expectedType.name}`;
 					if (expectedContent) {
-						result.message += `with the following properties:\n${JSON.stringify(expectedContent, null, ' ')}\n`;
+						result.message += ` with the following properties:\n${JSON.stringify(expectedContent, null, ' ')}\n`;
 					} else {
 						result.message += ".\n";
 					}

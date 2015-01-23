@@ -24,9 +24,10 @@ export default (deltaJs) => {
 		},
 
 		/** {@public}{@method}
-		 * @param target {DeltaJs.WritableTarget}
+		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
+		 * @param options {object?}              - the (optional) options for this delta application
 		 */
-		applyTo(target) {
+		applyTo(target, options = {}) {
 			/* apply the first overload that applies to the target; gather any errors */
 			var errors = [];
 			var success = this.overloads.some((delta) => {
@@ -35,7 +36,7 @@ export default (deltaJs) => {
 					errors.push(judgment);
 					return false;
 				}
-				delta.applyTo(target);
+				delta.applyTo(target, options);
 				return true;
 			});
 			/* if none apply, throw an appropriate error */
@@ -51,8 +52,8 @@ export default (deltaJs) => {
 		},
 
 		/** {@public}{@method}
-		 * @param options {Object?}
-		 * @return {String}
+		 * @param options {object?}
+		 * @return {string}
 		 */
 		toString(options) {
 			var str = deltaJs.Delta.prototype.toString.call(this, options);

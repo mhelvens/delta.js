@@ -25,20 +25,20 @@ export default (deltaJs) => {
 			});
 			return result;
 		},
-		applyTo(target) {
+		applyTo(target, options = {}) {
 			this.graph.topologically((name, subDelta) => {
-				subDelta.applyTo(target);
+				subDelta.applyTo(target, options);
 			});
 		},
 
 		/** {@public}{@method}
 		 * Prepare a specific delta operation with this Modify delta as the base.
-		 * @param method {String}  - the type of operation (e.g., 'add', 'remove', etc.)
-		 * @param name {String}    - the name of the delta inside the delta model
-		 * @param options {Object} - the (optional) options for this operation
-		 * @param path {String}    - the path to perform this operation on
-		 * @param arg {*}          - the argument to the operation
-		 * @return {DeltaJs#Delta} - the delta resulting from the operation
+		 * @param method {string}   - the type of operation (e.g., 'add', 'remove', etc.)
+		 * @param name {string}     - the name of the delta inside the delta model
+		 * @param options {object?} - the (optional) options for this operation
+		 * @param path {string}     - the relative path to perform this operation on
+		 * @param arg {*}           - the argument to the operation
+		 * @return {DeltaJs#Delta}  - the delta resulting from the operation
 		 */
 		operation(method, name, options, path, arg) {
 			if (typeof options === 'string') { [options, path, arg] = [{}, options, path] }
@@ -47,8 +47,8 @@ export default (deltaJs) => {
 		},
 
 		/** {@public}{@method}
-		 * @param options {Object?}
-		 * @return {String}
+		 * @param options {object?}
+		 * @return {string}
 		 */
 		toString(options) {
 			var str = deltaJs.Delta.prototype.toString.call(this, options);
@@ -81,7 +81,6 @@ export default (deltaJs) => {
 			this.graph.addVertex(name, deltaBase);
 
 			/* connect it to the partial order */
-			// TODO: options, partial order, etc...
 			(before || []).forEach((subordinateName) => {
 				this.graph.createEdge(subordinateName, name);
 			});

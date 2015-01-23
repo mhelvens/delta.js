@@ -1,6 +1,6 @@
 /* import internal stuff */
 import U from './misc.js';
-
+import {ConstraintFailure} from './Error.js';
 
 export default (deltaJs) => {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -8,36 +8,73 @@ export default (deltaJs) => {
 	deltaJs._featuresImplemented = true;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/* code for the interaction between features and their auto-select conditions */
-	var _conditions = {}; // feature -> (arrays of arrays; disjunctive normal form)
-	var _settledConditions = {}; // feature -> Boolean
-	var _conditionsUnsettled = false;
-	function _registerDisjunct(feature, disjunct) {
+	/* given a 'user input' clause, normalize it */
+	function _normalizeClause(input) {
+		input = Array.isArray(input) ? input : [input];
+		input = input.map(conj => conj instanceof deltaJs.Feature ? conj.name : conj);
+		return input;
+	}
+
+	/* code for the mutual selection of features */
+	var _if = {}; // feature -> (arrays of arrays; disjunctive normal form)
+	var _selected = {}; // feature -> Boolean
+	function _addIf(feature, disjunct = []) {
 		_conditionsUnsettled = true;
 		if (disjunct === true) {
-			_settledConditions[feature] = true;
+			_selected[feature] = true;
 		} else if (disjunct === false) {
 			// change nothing
-		} else if (_conditions[feature] !== true) {
-			U.a(_conditions, feature).push(disjunct);
+		} else if (_if[feature] !== true) {
+			U.a(_if, feature).push(_normalizeClause(disjunct));
 		}
 	}
+	function _addSelects(feature, otherFeatures) {
+		_normalizeClause(otherFeatures).forEach((other) => {
+			_addIf(other, feature);
+		});
+	}
+
+	/* code for constraints between features (enforced by errors) */
+	var _onlyIf = {}; // feature -> (arrays of arrays; conjunctive normal form)
+	var _allowed = {}; // feature -> Boolean
+	function _addOnlyIf(feature, conjunct = []) {
+		_conditionsUnsettled = true;
+		if (conjunct === false) {
+			_allowed[feature] = false;
+		} else if (conjunct === true) {
+			// change nothing
+		} else if (_onlyIf[feature] !== false) {
+			U.a(_onlyIf, feature).push(_normalizeClause(conjunct));
+		}
+	}
+
+	/* code for settling relations between features */
+	var _conditionsUnsettled = false;
 	function _settleConditions() {
-		if (_conditionsUnsettled) {
-			_conditionsUnsettled = false;
-			var somethingChanged;
-			do {
-				somethingChanged = false;
-				Object.keys(deltaJs.features).forEach((featureName) => {
-					if (_settledConditions[featureName]) { return }
-					if (U.isUndefined(_conditions[featureName])) { return }
-					if (_conditions[featureName].some((disjunct) => disjunct.every((conjunct) => _settledConditions[conjunct]))) {
-						_settledConditions[featureName] = true;
+		if (!_conditionsUnsettled) { return }
+		_conditionsUnsettled = false;
+
+		/* fixed point computation of selected features (i.e., propagate them until there is no change) */
+		var somethingChanged;
+		do {
+			somethingChanged = false;
+			Object.keys(deltaJs.features).forEach((featureName) => {
+				if (!_selected[featureName]) {
+					/* if there are 'if' disjuncts that are selected, this feature is selected */
+					if (U.isUndefined(_selected[featureName])) { _selected[featureName] = false }
+					if ((_if[featureName] || []).some(disj => disj.every(conj => _selected[conj]))) {
+						_selected[featureName] = true;
 						somethingChanged = true;
 					}
-				});
-			} while (somethingChanged);
-		}
+				}
+			});
+		} while (somethingChanged);
+
+		/* computation of allowed features */
+		Object.keys(deltaJs.features).forEach((featureName) => {
+			/* if there are 'onlyIf' conjuncts that are excluded, this feature is excluded */
+			_allowed[featureName] = (_onlyIf[featureName] || []).every(conj => conj.some(disj => _selected[disj]));
+		});
 	}
 
 	/** {@public}{@class DeltaJs#Feature}
@@ -50,81 +87,47 @@ export default (deltaJs) => {
 		this.options = options;
 
 		/* update conditions */
-		_registerDisjunct(name, this.if);
-		this.selects.forEach((other) => {
-			_registerDisjunct(other, [name]);
+		Object.keys(this.options).forEach((option) => {
+			_addIf(option, options[option]);
 		});
 
 	}, {
-		select() { _registerDisjunct(this.name, true) },
 		get selected() {
 			_settleConditions();
-			return _settledConditions[this.name];
+			if (_selected[this.name] && !_allowed[this.name]) {
+				throw new ConstraintFailure(this);
+			}
+			return _selected[this.name];
 		},
-		get if() {
-			/* fix strange behavior in PhantomJS */
-			if (!this.options) { return }
-
-			/* return the result */
-			if (this.options['if'] === true || this.options['if'] === false) { // literal 'true' or 'false'
-				return this.options['if'];
-			} else if (this.options['if'] || this.options['iff']) { // array of names
-				return [].concat(
-					this.options['if']  || [],
-					this.options['iff'] || []
-				);
-			} else { // default: false
-				return false;
+		addOption(name, value) {
+			switch (name) {
+			case 'if':       { _addIf(this.name, value);                                    } break;
+			case 'onlyIf':   { _addOnlyIf(this.name, value);                                } break;
+			case 'iff':      { _addOnlyIf(this.name, value); _addIf(this.name, value);      } break;
+			case 'selects':  { _addSelects(this.name, value);                               } break;
+			case 'requires': { _addSelects(this.name, value); _addOnlyIf(this.name, value); } break;
 			}
 		},
-		get onlyIf() {
-			/* fix strange behavior in PhantomJS */
-			if (!this.options) { return }
-
-			/* return the result */
-			if (this.options['onlyIf'] === true || this.options['onlyIf'] === false) { // literal 'true' or 'false'
-				return this.options['onlyIf'];
-			} else if (this.options['onlyIf'] || this.options['iff'] || this.options['expects']) { // array of names
-				return [].concat(
-					this.options['onlyIf']  || [],
-					this.options['iff']     || [],
-					this.options['expects'] || []
-				);
-			} else { // default: true
-				return true;
-			}
-		},
-		get selects() {
-			/* fix strange behavior in PhantomJS */
-			if (!this.options) { return }
-
-			/* return the result */
-			return this.options['selects'] || [];
-		},
+		if      (disjunct) { this.addOption('if',       disjunct) },
+		onlyIf  (conjunct) { this.addOption('onlyIf',   conjunct) },
+		iff     (features) { this.addOption('iff',      features) },
+		selects (features) { this.addOption('selects',  features) },
+		requires(features) { this.addOption('requires', features) },
+		select() { this.if(true) },
 	});
-
 
 	/* the features belonging to this DeltaJs instance */
 	deltaJs.features = {}; // name -> Feature
-
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (U.isDefined(deltaJs.constructor._featuresImplemented)) { return }
 	deltaJs.constructor._featuresImplemented = true;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 	U.extend(deltaJs.constructor.prototype, {
-		///** {@public}{@method}
-		// *
-		// */
-		//vp(name, val) {
-		//	// TODO
-		//},
-
 		/** {@public}{@method}
-		 * @param name    {string} - the name of the new feature
-		 * @param options {Object} - the options for the new feature
+		 * @param name    {string}  - the name of the new feature
+		 * @param options {object?} - the (optional) options for the new feature
 		 * @return {DeltaJs#Feature} - the object representing the new feature
 		 */
 		newFeature(name, options = {}) {
@@ -134,8 +137,8 @@ export default (deltaJs) => {
 
 			/* create the new feature */
 			return this.features[name] = new this.Feature(name, options);
-		},
-
+		}
 	});
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };
