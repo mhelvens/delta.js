@@ -63,7 +63,7 @@ export default (deltaJs) => {
 		},
 
 		_addOperation(name, options, path, delta) {
-			var {before} = options;
+			var {after} = options;
 
 			var deltaBase = delta;
 
@@ -81,7 +81,7 @@ export default (deltaJs) => {
 			this.graph.addVertex(name, deltaBase);
 
 			/* connect it to the partial order */
-			(before || []).forEach((subordinateName) => {
+			(after || []).forEach((subordinateName) => {
 				this.graph.createEdge(subordinateName, name);
 			});
 
