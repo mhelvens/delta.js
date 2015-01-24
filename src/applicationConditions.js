@@ -11,7 +11,7 @@ export default (deltaJs) => {
 
 
 
-
+	deltaJs._selectedFeatures = {};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (U.isDefined(deltaJs.constructor._applicationConditionsImplemented)) { return }
@@ -21,7 +21,11 @@ export default (deltaJs) => {
 
 	U.extend(deltaJs.constructor.prototype, {
 
-
+		select(features) {
+			features.forEach((feature) => {
+				this._selectedFeatures[feature] = true;
+			});
+		}
 
 	});
 

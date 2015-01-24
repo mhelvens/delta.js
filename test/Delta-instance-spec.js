@@ -1324,7 +1324,57 @@ describe("DeltaJs instance", function () {
 	});
 
 
+	describe("application conditions", () => {
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		var F, G, H;
+		var w, x, y, z;
+
+		beforeEach(() => {
+			F = deltaJs.newFeature('f');
+			G = deltaJs.newFeature('g');
+			H = deltaJs.newFeature('h');
+			w = deltaJs.facade('w');
+			x = deltaJs.facade('x');
+			y = deltaJs.facade('y');
+			z = deltaJs.facade('z');
+		});
+
+		it("can apply or not apply a delta based on which features are selected", () => {
+
+			/* deltas, normally declared independently */
+			w({ if: ['F']      }).add('obj.w', 'w-value');
+			x({ if: ['F', 'G'] }).add('obj.x', 'x-value');
+			y({ if: ['F', 'H'] }).add('obj.y', 'y-value');
+			z                    .add('obj.z', 'z-value');
+
+			/* the desired features, selected in a central location */
+			deltaJs.select(['F', 'H']);
+
+			/* a variation point, indicated throughout the domain specific code */
+			var obj = deltaJs.vp('obj', {});
+
+			/* as a consequence of the the above, 'obj' is expected to be as follows */
+			expect(obj).toEqual({
+				w: 'w-value',
+				// not x, because 'G' was not selected
+				y: 'y-value',
+				z: 'z-value'
+			});
+
+		});
+
+
+
+
+
+
+
+
+
+	});
+
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 });

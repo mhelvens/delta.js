@@ -9,16 +9,17 @@ import {ReadableTarget, WritableTarget, rt, wt} from './Target.js';
 import {ApplicationError, MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError, DeltaArgApplicationError,
 		CompositionError, MultipleOverloadsCompositionError} from './Error.js';
-import defineDelta           from './operations/Delta.js';
-import defineComposite       from './operations/Composite.js';
-import defineOverloaded      from './operations/Overloaded.js';
-import defineModify          from './operations/Modify.js';
-import defineBasicOperations from './operations/basicOperations.js';
-import definePutIntoArray    from './operations/PutIntoArray.js';
-import definePutIntoFunction from './operations/PutIntoFunction.js';
-import defineDeltaModel      from './operations/DeltaModel.js';
-import defineFeatures        from './features.js';
-import defineVariationPoints from './variationPoints.js';
+import defineDelta                 from './operations/Delta.js';
+import defineComposite             from './operations/Composite.js';
+import defineOverloaded            from './operations/Overloaded.js';
+import defineModify                from './operations/Modify.js';
+import defineBasicOperations       from './operations/basicOperations.js';
+import definePutIntoArray          from './operations/PutIntoArray.js';
+import definePutIntoFunction       from './operations/PutIntoFunction.js';
+import defineDeltaModel            from './operations/DeltaModel.js';
+import defineFeatures              from './features.js';
+import defineVariationPoints       from './variationPoints.js';
+import defineApplicationConditions from './applicationConditions.js';
 
 
 /** {@public}{@class DeltaJs}
@@ -32,16 +33,17 @@ export default U.newClass(function DeltaJs() {
 	this._overloads = {}; // method -> [delta-classes]
 	this._onNewOperationTypeListeners = [];
 
-	defineDelta          (this);
-	defineComposite      (this);
-	defineOverloaded     (this);
-	defineModify         (this);
-	defineBasicOperations(this);
-	definePutIntoArray   (this);
-	definePutIntoFunction(this);
-	defineDeltaModel     (this);
-	defineFeatures       (this);
-	defineVariationPoints(this);
+	defineDelta                (this);
+	defineComposite            (this);
+	defineOverloaded           (this);
+	defineModify               (this);
+	defineBasicOperations      (this);
+	definePutIntoArray         (this);
+	definePutIntoFunction      (this);
+	defineDeltaModel           (this);
+	defineFeatures             (this);
+	defineVariationPoints      (this);
+	defineApplicationConditions(this);
 
 }, /** @lends DeltaJs.prototype */ { /********************************************************* DeltaJs.prototype */
 
