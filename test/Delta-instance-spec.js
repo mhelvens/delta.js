@@ -1281,7 +1281,6 @@ describe("DeltaJs instance", function () {
 
 	describe("variation points", () => {
 
-
 		it("have a DeltaJs method to indicate them in the domain-specific code: 'vp'", () => {
 			expect(typeof deltaJs.vp).toBe('function');
 		});
@@ -1307,8 +1306,20 @@ describe("DeltaJs instance", function () {
 			expect(y).toBe('old y value');
 		});
 
-		// TODO: some tests of slightly more complicated cases
-
+		it("apply deltas to a value for which deltas are prepared", () => {
+			deltaJs.facade('w'                       ).add('obj', { keyW: 'valW' });
+			deltaJs.facade('x', { after: ['w']      }).add('obj.keyX', 'valX');
+			deltaJs.facade('y', { after: ['w']      }).add('obj.keyY', 'valY');
+			deltaJs.facade('z', { after: ['x', 'y'] }).modify('obj')
+				.replace('keyX', 'valXZ')
+				.replace('keyY', 'valYZ');
+			var obj = deltaJs.vp('obj');
+			expect(obj).toEqual({
+				keyW: 'valW',
+				keyX: 'valXZ',
+				keyY: 'valYZ'
+			});
+		});
 
 	});
 
