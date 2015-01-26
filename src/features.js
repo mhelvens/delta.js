@@ -87,8 +87,8 @@ export default (deltaJs) => {
 		this.options = options;
 
 		/* update conditions */
-		Object.keys(this.options).forEach((option) => {
-			_addIf(option, options[option]);
+		Object.keys(options).forEach((option) => {
+			this.addOption(option, options[option]);
 		});
 
 	}, {
@@ -99,6 +99,9 @@ export default (deltaJs) => {
 			}
 			return _selected[this.name];
 		},
+		get conditional() { return U.a(_if    , this.name).length > 0 },
+		get condition()   { return _if[this.name] },
+		get restricted()  { return U.a(_onlyIf, this.name).length > 0 },
 		addOption(name, value) {
 			switch (name) {
 			case 'if':       { _addIf(this.name, value);                                    } break;
@@ -113,7 +116,7 @@ export default (deltaJs) => {
 		iff     (features) { this.addOption('iff',      features) },
 		selects (features) { this.addOption('selects',  features) },
 		requires(features) { this.addOption('requires', features) },
-		select() { this.if(true) },
+		select() { this.if(true) }
 	});
 
 	/* the features belonging to this DeltaJs instance */

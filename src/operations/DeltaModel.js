@@ -63,7 +63,7 @@ export default (deltaJs) => {
 		},
 
 		_addOperation(name, options, path, delta) {
-			var {after} = options;
+			var {after, feature} = options;
 
 			var deltaBase = delta;
 
@@ -78,6 +78,7 @@ export default (deltaJs) => {
 					`A delta by the name “${name}” is already in this delta model.`);
 
 			/* add the new delta to the delta model */
+			deltaBase.meta.name = name;
 			this.graph.addVertex(name, deltaBase);
 
 			/* connect it to the partial order */
@@ -85,9 +86,19 @@ export default (deltaJs) => {
 				this.graph.createEdge(subordinateName, name);
 			});
 
+			/* check if there should be an eponymous, linked feature */
+			var deltaFeature;
+			if (feature) { deltaFeature = deltaJs.newFeature(  name           , options                             ) }
+			else         { deltaFeature = deltaJs.newFeature( `delta__${name}`, U.extend({ hidden: true }, options) ) }
+			if (feature || deltaFeature.conditional) {
+				deltaBase.applicationCondition = deltaFeature;
+			}
+
 			return delta;
 		}
+
 		// TODO: add precondition method which checks 'source' deltas
+
 	});
 
 	/* composition - introducing 'DeltaModel' */

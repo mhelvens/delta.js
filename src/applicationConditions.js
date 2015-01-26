@@ -1,17 +1,34 @@
 /* import internal stuff */
 import U from './misc.js';
 
-// TODO: implement; and call in DeltaJs.js
 
-export default (deltaJs) => {
+export default (deltaJs, delta) => {
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if (delta._applicationConditionsImplemented) { return }
+	delta._applicationConditionsImplemented = true;
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	//delta._applicationCondition = [];
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (deltaJs._applicationConditionsImplemented) { return }
 	deltaJs._applicationConditionsImplemented = true;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+	U.extend(deltaJs.Delta.prototype, {
 
-	deltaJs._selectedFeatures = {};
+		get applicationCondition() { return this._applicationCondition },
+		set applicationCondition(ac) { this._applicationCondition = ac },
+
+		get selected() {
+			return U.isUndefined(this.applicationCondition) || this.applicationCondition.selected;
+		}
+
+	});
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (U.isDefined(deltaJs.constructor._applicationConditionsImplemented)) { return }
@@ -23,7 +40,7 @@ export default (deltaJs) => {
 
 		select(features) {
 			features.forEach((feature) => {
-				this._selectedFeatures[feature] = true;
+				this.features[feature].select();
 			});
 		}
 

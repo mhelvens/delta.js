@@ -19,7 +19,6 @@ import definePutIntoFunction       from './operations/PutIntoFunction.js';
 import defineDeltaModel            from './operations/DeltaModel.js';
 import defineFeatures              from './features.js';
 import defineVariationPoints       from './variationPoints.js';
-import defineApplicationConditions from './applicationConditions.js';
 
 
 /** {@public}{@class DeltaJs}
@@ -43,7 +42,6 @@ export default U.newClass(function DeltaJs() {
 	defineDeltaModel           (this);
 	defineFeatures             (this);
 	defineVariationPoints      (this);
-	defineApplicationConditions(this);
 
 }, /** @lends DeltaJs.prototype */ { /********************************************************* DeltaJs.prototype */
 
@@ -88,17 +86,28 @@ export default U.newClass(function DeltaJs() {
 			if (this.construct) { this.construct() }
 		}, U.extend({}, prototype, {
 			applyTo(target, options = {}) {
-				if (!options.restrictToProperty || !this.meta.targetProp || options.restrictToProperty === this.meta.targetProp) {
-					var judgment = thisDeltaJs._evaluatePrecondition(this, target);
-					if (judgment !== true) { throw judgment }
-					if (U.isDefined(prototype.applyTo)) {
-						prototype.applyTo.call(this, target, (
-								!!this.meta.targetProp ?
-								U.extend({}, options, { restrictToProperty: null }) :
-								options
-						));
-					}
+
+				/* should this delta only be applied for a specific property on the target object? */
+				if (options.restrictToProperty &&
+					this.meta.targetProp &&
+					options.restrictToProperty !== this.meta.targetProp) { return }
+
+				/* should this delta only be applied for a specific feature selection? */
+				if (!this.selected) { return }
+
+				/* does the target satisfy the precondition of the delta? */
+				var judgment = thisDeltaJs._evaluatePrecondition(this, target);
+				if (judgment !== true) { throw judgment }
+
+				/* OK, then apply it if a method to do so was included in the operation */
+				if (U.isDefined(prototype.applyTo)) {
+					prototype.applyTo.call(this, target, (
+							!!this.meta.targetProp ?
+							U.extend({}, options, { restrictToProperty: null }) :
+							options
+					));
 				}
+
 			}
 		}));
 		cls.type = cls.prototype.type = name;

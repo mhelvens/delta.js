@@ -31,7 +31,9 @@ export default (deltaJs) => {
 		 */
 		vp(name, val) {
 			var root = { [name]: val };
-			this._deltaModel.applyTo(rt(root), { restrictToProperty: name });
+			this._deltaModel.applyTo(rt(root), {
+				restrictToProperty: name
+			});
 			return root[name];
 		},
 

@@ -1,6 +1,7 @@
 /* import internal stuff */
-import U                    from '../misc.js';
-import {ReadableTarget, wt} from '../Target.js';
+import U                           from '../misc.js';
+import {ReadableTarget, wt}        from '../Target.js';
+import defineApplicationConditions from '../applicationConditions.js';
 
 
 export default (deltaJs) => {
@@ -14,6 +15,7 @@ export default (deltaJs) => {
 	deltaJs.Delta = U.newClass(function Delta(arg, meta) {
 		this.arg = arg;
 		this.meta = U.extend({}, meta || {}, { uuid: deltaJs._nextDeltaUUID++ });
+		defineApplicationConditions(deltaJs, this);
 	}, {
 		/** {@public}{@abstract}{@method}{@nosideeffects}
 		 * This method should be overwritten by subclasses to make a clone of 'this' delta.
@@ -46,9 +48,9 @@ export default (deltaJs) => {
 		 */
 		toString(options = {}) {
 			var str = this.type;
-			if (this.meta.targetProp)  { str += ` ‹${this.meta.targetProp}›` }
+			if (this.meta.targetProp)  { str += ` ‹${this.meta.targetProp}›`    }
 			if (U.isDefined(this.arg)) { str += `: ${JSON.stringify(this.arg)}` }
-			if (options.debug)         { str += ` (${this.meta.uuid})` }
+			if (options.debug)         { str += ` (${this.meta.uuid})`          }
 			return str;
 		},
 	});

@@ -1268,6 +1268,8 @@ describe("DeltaJs instance", function () {
 				expect(g.selected).toBeTruthy();
 			});
 
+			// TODO: tests for combination properties 'iff' and friends
+
 
 
 		});
@@ -1298,7 +1300,7 @@ describe("DeltaJs instance", function () {
 			expect(x).toBe('old value');
 		});
 
-		it("apply deltas to a value for which deltas are prepared", () => {
+		it("apply deltas to a value for which deltas are prepared (1)", () => {
 			deltaJs.facade('delta-name').replace('x', 'new x value');
 			var x = deltaJs.vp('x', 'old x value');
 			var y = deltaJs.vp('y', 'old y value');
@@ -1306,7 +1308,7 @@ describe("DeltaJs instance", function () {
 			expect(y).toBe('old y value');
 		});
 
-		it("apply deltas to a value for which deltas are prepared", () => {
+		it("apply deltas to a value for which deltas are prepared (2)", () => {
 			deltaJs.facade('w'                       ).add('obj', { keyW: 'valW' });
 			deltaJs.facade('x', { after: ['w']      }).add('obj.keyX', 'valX');
 			deltaJs.facade('y', { after: ['w']      }).add('obj.keyY', 'valY');
@@ -1330,9 +1332,9 @@ describe("DeltaJs instance", function () {
 		var w, x, y, z;
 
 		beforeEach(() => {
-			F = deltaJs.newFeature('f');
-			G = deltaJs.newFeature('g');
-			H = deltaJs.newFeature('h');
+			F = deltaJs.newFeature('F');
+			G = deltaJs.newFeature('G');
+			H = deltaJs.newFeature('H');
 			w = deltaJs.facade('w');
 			x = deltaJs.facade('x');
 			y = deltaJs.facade('y');
@@ -1342,10 +1344,10 @@ describe("DeltaJs instance", function () {
 		it("can apply or not apply a delta based on which features are selected", () => {
 
 			/* deltas, normally declared independently */
-			w({ if: ['F']      }).add('obj.w', 'w-value');
-			x({ if: ['F', 'G'] }).add('obj.x', 'x-value');
-			y({ if: ['F', 'H'] }).add('obj.y', 'y-value');
-			z                    .add('obj.z', 'z-value');
+			w({ iff: ['F']      }).add('obj.w', 'w-value');
+			x({ iff: ['F', 'G'] }).add('obj.x', 'x-value');
+			y({ iff: ['F', 'H'] }).add('obj.y', 'y-value');
+			z                     .add('obj.z', 'z-value');
 
 			/* the desired features, selected in a central location */
 			deltaJs.select(['F', 'H']);
@@ -1363,13 +1365,43 @@ describe("DeltaJs instance", function () {
 
 		});
 
+	});
 
 
+	describe("deltas and features", () => {
+
+		var w, x, y;
+
+		beforeEach(() => {
+			w = deltaJs.facade('w');
+			x = deltaJs.facade('x');
+			y = deltaJs.facade('y');
+		});
+
+		it("can be declared together in one shot to share the same name and a one-to-one relationship", () => {
+
+			/* deltas, normally declared independently */
+			w({ feature: true }).add('obj.w', 'w-value');
+			x({ feature: true }).add('obj.x', 'x-value');
+			y({ feature: true }).add('obj.y', 'y-value');
 
 
+			/* the desired features, selected in a central location */
+			deltaJs.select(['w', 'x']);
 
 
+			/* a variation point, indicated throughout the domain specific code */
+			var obj = deltaJs.vp('obj', {});
 
+
+			/* as a consequence of the the above, 'obj' is expected to be as follows */
+			expect(obj).toEqual({
+				w: 'w-value',
+				x: 'x-value',
+				// not y, because it was not selected
+			});
+
+		});
 
 	});
 
