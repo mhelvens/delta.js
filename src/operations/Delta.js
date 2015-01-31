@@ -9,19 +9,19 @@ export default (deltaJs) => {
 
 	deltaJs._nextDeltaUUID = 0;
 
-	/** {@class}
+	/** {@class Delta}
 	 *
 	 */
-	deltaJs.Delta = U.newClass(function Delta(arg, meta) {
-		this.arg = arg;
-		this.meta = U.extend({}, meta || {}, { uuid: deltaJs._nextDeltaUUID++ });
-		defineApplicationConditions(deltaJs, this);
+	deltaJs.Delta = U.newClass(function Delta(arg, options = {}) {
+		this.arg  = arg;
+		this.uuid = deltaJs._nextDeltaUUID++;
+		this.options = options;
 	}, {
 		/** {@public}{@abstract}{@method}{@nosideeffects}
 		 * This method should be overwritten by subclasses to make a clone of 'this' delta.
 		 * @return {DeltaJs#Delta} - a clone of this delta
 		 */
-		clone() { return new this.constructor(this.arg, this.meta) },
+		clone() { return new this.constructor(this.arg, this.options) },
 
 		/** {@public}{@method}{@nosideeffects}
 		 * @param  value   {*}       - any given value
@@ -48,9 +48,9 @@ export default (deltaJs) => {
 		 */
 		toString(options = {}) {
 			var str = this.type;
-			if (this.meta.targetProp)  { str += ` ‹${this.meta.targetProp}›`    }
+			if (this.options.targetProp)  { str += ` ‹${this.options.targetProp}›`    }
 			if (U.isDefined(this.arg)) { str += `: ${JSON.stringify(this.arg)}` }
-			if (options.debug)         { str += ` (${this.meta.uuid})`          }
+			if (options.debug)         { str += ` (${this.options.uuid})`          }
 			return str;
 		},
 	});

@@ -78,7 +78,7 @@ export default (deltaJs) => {
 					`A delta by the name “${name}” is already in this delta model.`);
 
 			/* add the new delta to the delta model */
-			deltaBase.meta.name = name;
+			deltaBase.options.name = name; // TODO: put directly on the delta
 			this.graph.addVertex(name, deltaBase);
 
 			/* connect it to the partial order */

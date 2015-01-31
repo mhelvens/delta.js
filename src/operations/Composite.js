@@ -67,7 +67,8 @@ export default (deltaJs) => {
 
 	var operationMethods = {};
 	deltaJs.onNewOperationType((cls) => {
-		(cls.meta && cls.meta.methods || []).forEach((method) => {
+		if (cls === deltaJs.Delta.Composite) { return }
+		(cls.options.methods || []).forEach((method) => {
 			if (U.isUndefined(operationMethods[method])) {
 				operationMethods[method] = function (...args) {
 					var newDelta = this._applyOperationMethod.apply(this, [method].concat(args));

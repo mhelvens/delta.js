@@ -1341,7 +1341,7 @@ describe("DeltaJs instance", function () {
 			z = deltaJs.facade('z');
 		});
 
-		it("can apply or not apply a delta based on which features are selected", () => {
+		it("can, based on which features are selected, apply or not apply a delta", () => {
 
 			/* deltas, normally declared independently */
 			w({ iff: ['F']      }).add('obj.w', 'w-value');

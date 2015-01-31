@@ -104,11 +104,14 @@ export default (deltaJs) => {
 		get restricted()  { return U.a(_onlyIf, this.name).length > 0 },
 		addOption(name, value) {
 			switch (name) {
-			case 'if':       { _addIf(this.name, value);                                    } break;
-			case 'onlyIf':   { _addOnlyIf(this.name, value);                                } break;
-			case 'iff':      { _addOnlyIf(this.name, value); _addIf(this.name, value);      } break;
-			case 'selects':  { _addSelects(this.name, value);                               } break;
-			case 'requires': { _addSelects(this.name, value); _addOnlyIf(this.name, value); } break;
+
+				case 'if':       { _addIf     (this.name, value) } break;
+				case 'onlyIf':   { _addOnlyIf (this.name, value) } break;
+				case 'selects':  { _addSelects(this.name, value) } break;
+
+				case 'iff':      { this.if     (value); this.onlyIf(value); } break;
+				case 'requires': { this.selects(value); this.onlyIf(value); } break;
+
 			}
 		},
 		if      (disjunct) { this.addOption('if',       disjunct) },

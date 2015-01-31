@@ -17,7 +17,7 @@ export default (deltaJs) => {
 		 * @return {DeltaJs#Delta.Modify} - a clone of this delta
 		 */
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.meta); // super()
+			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super()
 			Object.keys(this.deltas).forEach((prop) => {
 				result.deltas[prop] = this.deltas[prop].clone();
 			});
@@ -84,7 +84,7 @@ export default (deltaJs) => {
 
 			/* store the new delta, possibly composed with an existing one */
 			this.deltas[path.prop] = this.deltas[path.prop] ? this.deltas[path.prop].composedWith(delta) : delta;
-			this.deltas[path.prop].meta.targetProp = path.prop;
+			this.deltas[path.prop].options.targetProp = path.prop;
 
 			/* return the composed delta if it has an operations interface; otherwise, return the given delta */
 			return (this.deltas[path.prop] instanceof deltaJs.Delta.Composite) ? this.deltas[path.prop] : delta;

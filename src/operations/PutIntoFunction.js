@@ -19,9 +19,9 @@ export default (deltaJs) => {
 	/* declaring the function operation type */
 	deltaJs.newOperationType('PutIntoFunction', {
 		construct() {
-			if (this.meta.method) {
+			if (this.options.method) {
 				this.values = [{
-	               method: this.meta.method,
+	               method: this.options.method,
 	               value: this.arg
                }];
 			} else {
@@ -29,7 +29,7 @@ export default (deltaJs) => {
 			}
 		},
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.meta); // super()
+			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super()
 			result.values = [];
 			this.values.forEach((v) => { result.values.push(v) });
 			return result;

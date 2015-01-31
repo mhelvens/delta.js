@@ -19,6 +19,7 @@ import definePutIntoFunction       from './operations/PutIntoFunction.js';
 import defineDeltaModel            from './operations/DeltaModel.js';
 import defineFeatures              from './features.js';
 import defineVariationPoints       from './variationPoints.js';
+import defineApplicationConditions from './applicationConditions.js';
 
 
 /** {@public}{@class DeltaJs}
@@ -42,8 +43,9 @@ export default U.newClass(function DeltaJs() {
 	defineDeltaModel           (this);
 	defineFeatures             (this);
 	defineVariationPoints      (this);
+	defineApplicationConditions(this);
 
-}, /** @lends DeltaJs.prototype */ { /********************************************************* DeltaJs.prototype */
+}, /** @lends DeltaJs.prototype */ {
 
 	/** {@private}{@method}
 	 * @param delta  {DeltaJs#Delta}
@@ -81,16 +83,15 @@ export default U.newClass(function DeltaJs() {
 			`The '${name}' operation type already exists.`);
 
 		/* Delta subclass */
-		var cls = this.Delta[name] = U.newSubclass(Superclass || this.Delta, (superFn) => function (arg, meta) {
-			superFn.call(this, arg, meta);
+		var cls = this.Delta[name] = U.newSubclass(Superclass || this.Delta, (superFn) => function (arg, options) {
+			superFn.call(this, arg, options);
 			if (this.construct) { this.construct() }
 		}, U.extend({}, prototype, {
 			applyTo(target, options = {}) {
 
 				/* should this delta only be applied for a specific property on the target object? */
-				if (options.restrictToProperty &&
-					this.meta.targetProp &&
-					options.restrictToProperty !== this.meta.targetProp) { return }
+				if (options.restrictToProperty &&  this.options.targetProp &&
+					options.restrictToProperty !== this.options.targetProp) { return }
 
 				/* should this delta only be applied for a specific feature selection? */
 				if (!this.selected) { return }
@@ -102,7 +103,7 @@ export default U.newClass(function DeltaJs() {
 				/* OK, then apply it if a method to do so was included in the operation */
 				if (U.isDefined(prototype.applyTo)) {
 					prototype.applyTo.call(this, target, (
-							!!this.meta.targetProp ?
+							!!this.options.targetProp ?
 							U.extend({}, options, { restrictToProperty: null }) :
 							options
 					));
@@ -111,13 +112,13 @@ export default U.newClass(function DeltaJs() {
 			}
 		}));
 		cls.type = cls.prototype.type = name;
-		cls.meta = cls.prototype.meta = {
+		cls.options = cls.prototype.options = { // TODO: don't put this in prototype anymore
 			// if no methods are provided, use the operation name starting with a lowercase letter
 			methods: prototype.methods || [ name[0].toLowerCase()+name.slice(1) ]
 		};
 
 		/* add this new type to the list of types associated with each method */
-		cls.meta.methods.forEach((method) => { U.a(this._overloads, method).push(name) });
+		cls.options.methods.forEach((method) => { U.a(this._overloads, method).push(name) });
 
 		/* notify listeners */
 		this._onNewOperationTypeListeners.forEach((fn) => { fn(cls) });

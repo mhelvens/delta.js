@@ -18,7 +18,7 @@ export default (deltaJs) => {
 		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
 		 */
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.meta); // super()
+			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super()
 			result.overloads = this.overloads.map(delta => delta.clone());
 			return result;
 		},
