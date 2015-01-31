@@ -8,12 +8,14 @@ export default (deltaJs) => {
 	deltaJs._featuresImplemented = true;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 	/* given a 'user input' clause, normalize it */
 	function _normalizeClause(input) {
 		input = Array.isArray(input) ? input : [input];
 		input = input.map(conj => conj instanceof deltaJs.Feature ? conj.name : conj);
 		return input;
 	}
+
 
 	/* code for the mutual selection of features */
 	var _if = {}; // feature -> (arrays of arrays; disjunctive normal form)
@@ -34,6 +36,7 @@ export default (deltaJs) => {
 		});
 	}
 
+
 	/* code for constraints between features (enforced by errors) */
 	var _onlyIf = {}; // feature -> (arrays of arrays; conjunctive normal form)
 	var _allowed = {}; // feature -> Boolean
@@ -47,6 +50,12 @@ export default (deltaJs) => {
 			U.a(_onlyIf, feature).push(_normalizeClause(conjunct));
 		}
 	}
+	function _addRequiredBy(feature, otherFeatures) {
+		_normalizeClause(otherFeatures).forEach((other) => {
+			_addOnlyIf(other, feature);
+		});
+	}
+
 
 	/* code for settling relations between features */
 	var _conditionsUnsettled = false;
@@ -77,6 +86,7 @@ export default (deltaJs) => {
 		});
 	}
 
+
 	/** {@public}{@class DeltaJs#Feature}
 	 *
 	 */
@@ -99,36 +109,44 @@ export default (deltaJs) => {
 			}
 			return _selected[this.name];
 		},
-		get conditional() { return U.a(_if    , this.name).length > 0 },
-		get condition()   { return _if[this.name] },
+		get condition()   { return _if[this.name]                     },
+		get conditional() { return U.a(_if,     this.name).length > 0 },
 		get restricted()  { return U.a(_onlyIf, this.name).length > 0 },
-		addOption(name, value) {
-			switch (name) {
-
-				case 'if':       { _addIf     (this.name, value) } break;
-				case 'onlyIf':   { _addOnlyIf (this.name, value) } break;
-				case 'selects':  { _addSelects(this.name, value) } break;
-
-				case 'iff':      { this.if     (value); this.onlyIf(value); } break;
-				case 'requires': { this.selects(value); this.onlyIf(value); } break;
-
-			}
-		},
-		if      (disjunct) { this.addOption('if',       disjunct) },
-		onlyIf  (conjunct) { this.addOption('onlyIf',   conjunct) },
-		iff     (features) { this.addOption('iff',      features) },
-		selects (features) { this.addOption('selects',  features) },
-		requires(features) { this.addOption('requires', features) },
 		select() { this.if(true) }
 	});
 
+
+	/* restrictions and connections */
+	const FEATURE_CONNECTIONS = [
+		[ 'if',         [_addIf, _addRequiredBy]             ], // this selected by other
+		[ 'onlyIf',     [_addOnlyIf]                         ], // error if this but not other
+		[ 'selects',    [_addSelects, _addOnlyIf]            ], // other selected by this
+		[ 'requiredBy', [_addRequiredBy]                     ], // error if other but not this
+		[ 'iff',        [_addIf, _addRequiredBy, _addOnlyIf] ]  // if and onlyIf
+	];
+	deltaJs.Feature.prototype.addOption = function (name, value) {
+		FEATURE_CONNECTIONS.forEach(([n, methods]) => {
+			if (name === n) {
+				methods.forEach((method) => { method(this.name, value) });
+			}
+		});
+	};
+	FEATURE_CONNECTIONS.forEach(([name]) => {
+		deltaJs.Feature.prototype[name] = function (value) {
+			this.addOption(name, value);
+		};
+	});
+
+
 	/* the features belonging to this DeltaJs instance */
 	deltaJs.features = {}; // name -> Feature
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (U.isDefined(deltaJs.constructor._featuresImplemented)) { return }
 	deltaJs.constructor._featuresImplemented = true;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	U.extend(deltaJs.constructor.prototype, {
 		/** {@public}{@method}
@@ -145,6 +163,7 @@ export default (deltaJs) => {
 			return this.features[name] = new this.Feature(name, options);
 		}
 	});
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };

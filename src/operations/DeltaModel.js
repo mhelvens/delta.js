@@ -42,7 +42,7 @@ export default (deltaJs) => {
 		 */
 		operation(method, name, options, path, arg) {
 			if (typeof options === 'string') { [options, path, arg] = [{}, options, path] }
-			var delta = deltaJs._getDeltaByMethod(method, arg);
+			var delta = deltaJs._newDeltaByMethod(method, arg, options);
 			return this._addOperation(name, options, new Path(path), delta);
 		},
 
@@ -63,8 +63,15 @@ export default (deltaJs) => {
 		},
 
 		_addOperation(name, options, path, delta) {
-			var {after, feature} = options;
 
+			///* a delta by this name cannot already be in the graph */
+			//U.assert(!this.graph.vertexValue(name),
+			//	`A delta by the name “${name}” is already in this delta model.`);
+
+			/* check if a delta with this name already exists */
+			var alreadyExists = this.graph.hasVertex(name);
+
+			/* starting to define the delta that goes directly in the graph */
 			var deltaBase = delta;
 
 			/* if there is a path, create the corresponding chain of deltas */
@@ -73,28 +80,39 @@ export default (deltaJs) => {
 				deltaBase._addOperation(options, path, delta);
 			}
 
-			/* a delta by this name cannot already be in the graph */
-			U.assert(!this.graph.vertexValue(name),
-					`A delta by the name “${name}” is already in this delta model.`);
+			/* if there is already a delta with this name, compose them and return `delta` early */
+			if (alreadyExists) {
+				var existingDelta = this.graph.vertexValue(name);
+				deltaBase = existingDelta.composedWith(deltaBase);
+				deltaBase.name = existingDelta.name;
+				deltaBase.applicationCondition = existingDelta.applicationCondition;
+				this.graph.setVertex(name, deltaBase);
+			} else {
+				/* add the new delta to the delta model */
+				deltaBase.name = name;
+				this.graph.addVertex(name, deltaBase);
 
-			/* add the new delta to the delta model */
-			deltaBase.options.name = name; // TODO: put directly on the delta
-			this.graph.addVertex(name, deltaBase);
+				/* connect it to the partial order */
+				(options['combines'] || []).concat(options['after'] || []).forEach((subordinateName) => {
+					this.graph.createEdge(subordinateName, name);
+				});
 
-			/* connect it to the partial order */
-			(after || []).forEach((subordinateName) => {
-				this.graph.createEdge(subordinateName, name);
-			});
+				/* application condition and optionally, an eponymous, linked feature */
+				var deltaFeature;
+				if (options.feature) { deltaFeature = deltaJs.newFeature(  name,            options                             ) }
+				else                 { deltaFeature = deltaJs.newFeature( `delta__${name}`, U.extend({ hidden: true }, options) ) }
+				if (options.feature || deltaFeature.conditional) {
+					deltaBase.applicationCondition = deltaFeature;
+				}
 
-			/* check if there should be an eponymous, linked feature */
-			var deltaFeature;
-			if (feature) { deltaFeature = deltaJs.newFeature(  name           , options                             ) }
-			else         { deltaFeature = deltaJs.newFeature( `delta__${name}`, U.extend({ hidden: true }, options) ) }
-			if (feature || deltaFeature.conditional) {
-				deltaBase.applicationCondition = deltaFeature;
+				/* extract 'if' from compound options */
+				if (U.isDefined(options['combines'])) {
+					deltaFeature.if(options['combines']);
+				}
 			}
 
 			return delta;
+
 		}
 
 		// TODO: add precondition method which checks 'source' deltas

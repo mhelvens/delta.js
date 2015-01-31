@@ -66,7 +66,7 @@ export default (deltaJs) => {
 		 */
 		operation(method, options, path, arg) {
 			if (typeof options === 'string') { [options, path, arg] = [{}, options, path] }
-			var delta = deltaJs._getDeltaByMethod(method, arg);
+			var delta = deltaJs._newDeltaByMethod(method, arg, options);
 			return this._addOperation(options, new Path(path), delta);
 		},
 

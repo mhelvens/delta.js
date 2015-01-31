@@ -13,13 +13,13 @@ export default (deltaJs) => {
 		 * @param arg    {*}
 		 * @return {DeltaJs#Delta}
 		 */
-		_getDeltaByMethod(method, arg) {
+		_newDeltaByMethod(method, arg, options) {
 			var newDeltas = this._overloads[method]
-					.map(type => new this.Delta[type](arg, { method }));
+					.map(type => new this.Delta[type](arg, U.extend({ method }, options)));
 			if (newDeltas.length === 1) {
 				return newDeltas[0];
 			} else { // newDeltas.length > 1
-				var delta = new this.Delta.Overloaded(arg, { method });
+				var delta = new this.Delta.Overloaded(arg, U.extend({ method }, options));
 				delta.overloads = newDeltas;
 				return delta;
 			}
@@ -57,7 +57,10 @@ export default (deltaJs) => {
 			fcd._args = [];
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {
-					return thisDelta.operation.apply(thisDelta, [method].concat(fcd._args).concat(finalArgs));
+					return {
+						newDelta: thisDelta.operation.apply(thisDelta, [method].concat(fcd._args).concat(finalArgs)),
+						fcdArgs:  fcd._args
+					};
 				},
 				delta: thisDelta
 			});
@@ -71,8 +74,12 @@ export default (deltaJs) => {
 		(cls.options.methods || []).forEach((method) => {
 			if (U.isUndefined(operationMethods[method])) {
 				operationMethods[method] = function (...args) {
-					var newDelta = this._applyOperationMethod.apply(this, [method].concat(args));
-					return (newDelta instanceof deltaJs.Delta.Composite ? newDelta : this.delta).facade;
+					var {newDelta, fcdArgs} = this._applyOperationMethod.apply(this, [method].concat(args));
+					if (newDelta instanceof deltaJs.Delta.Composite) {
+						return newDelta.facade;
+					} else {
+						return this.delta.facade.apply(this.delta, fcdArgs);
+					}
 				};
 			}
 		});
