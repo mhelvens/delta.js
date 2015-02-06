@@ -48,7 +48,7 @@ This library depends only on
 
 ### Install using Bower
 
-`delta.js` is available as a [Bower](http://bower.io/) package, installed as follows:
+`delta.js` is available as a [Bower](http://bower.io/) package:
 
 ```shell
 bower install delta.js
@@ -56,7 +56,7 @@ bower install delta.js
 
 ### Install using NPM
 
-`delta.js` is available as an [NPM](https://www.npmjs.org) package, installed as follows:
+`delta.js` is available as an [NPM](https://www.npmjs.org) package:
 
 ```shell
 npm install delta.js
