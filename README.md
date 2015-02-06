@@ -400,9 +400,10 @@ deltaJs.delta('my-delta').modify('my-vp')
 
 Here is an incomplete list of future plans for this library:
 
-* more useful error messages based on delta model structure
+* useful error messages based on delta model structure
 * explicit support for changing HTML and CSS with deltas
 
+<div style="clear: both"></div>
 
 ## License
 
