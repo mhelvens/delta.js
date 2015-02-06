@@ -8,7 +8,7 @@ describe("DeltaJs instance", function () {
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
 		rootDelta = new deltaJs.Delta.Modify();
-		delta = rootDelta.facade;
+		delta = rootDelta.facade();
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1345,6 +1345,7 @@ describe("DeltaJs instance", function () {
 
 		it("have a DeltaJs facade to operate on them: 'facade'", () => {
 			expect(typeof deltaJs.facade).toBe('function');
+			expect(typeof deltaJs.facade()).toBe('function');
 		});
 
 		it("pass a value through unchanged if no operations are prepared for them", () => {

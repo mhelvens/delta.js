@@ -44,17 +44,15 @@ export default (deltaJs) => {
 		 * Returns an object that allows new delta operations to be added more easily.
 		 * @return {function} - the facade to this delta, for easily adding operations
 		 */
-		get facade() {
+		facade(...firstArgs) {
 			var thisDelta = this;
 			// The facade object exposes operations methods directly, but arguments to
 			// those operations can partly be given through function-call notation.
 			// Therefore, a facade is a function, storing arguments that are already given.
 			var fcd = function (...args) {
-				var result = thisDelta.facade;
-				result._args = fcd._args.concat(args);
-				return result;
+				return thisDelta.facade.apply(thisDelta, fcd._args.concat(args));
 			};
-			fcd._args = [];
+			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {
 					return {
@@ -76,7 +74,7 @@ export default (deltaJs) => {
 				operationMethods[method] = function (...args) {
 					var {newDelta, fcdArgs} = this._applyOperationMethod.apply(this, [method].concat(args));
 					if (newDelta instanceof deltaJs.Delta.Composite) {
-						return newDelta.facade;
+						return newDelta.facade();
 					} else {
 						return this.delta.facade.apply(this.delta, fcdArgs);
 					}
@@ -84,29 +82,5 @@ export default (deltaJs) => {
 			}
 		});
 	});
-
-	///** {@public}{@method}{@nosideeffects}
-	// * @param delta {Composite} - the other delta to compose with
-	// * @return {Composite} - the composed delta
-	// */
-	//deltaJs.facade = function facade(delta) {
-	//	/* the facade itself */
-	//	// The facade object exposes operations methods directly, but arguments to
-	//	// those operations can partly be given through function-call notation.
-	//	// Therefore, a facade is a function, storing arguments that are already given.
-	//	var fcd = function (...args) {
-	//		var result = facade(delta);
-	//		result._args = fcd._args.concat(args);
-	//		return result;
-	//	};
-	//	fcd._args = [];
-	//	U.extend(fcd, operationMethods, {
-	//		_applyOperationMethod(method, ...finalArgs) {
-	//			return delta.operation.apply(delta, [method].concat(fcd._args).concat(finalArgs));
-	//		},
-	//		delta
-	//	});
-	//	return fcd;
-	//};
 
 };

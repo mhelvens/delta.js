@@ -23,6 +23,7 @@ export default (deltaJs) => {
 
 
 	U.extend(deltaJs.constructor.prototype, {
+
 		/** {@public}{@method}
 		 * This method indicates a variation point.
 		 * @param name {string} - a hook by which operations from the core delta model can be applied
@@ -59,10 +60,9 @@ export default (deltaJs) => {
 		 * to be added more easily.
 		 * @return {function} - the facade to this delta, for easily adding operations
 		 */
-		get facade() {
-			return this._deltaModel.facade;
+		facade(...args) {
+			return this._deltaModel.facade.apply(this._deltaModel, args);
 		},
-
 
 	});
 
