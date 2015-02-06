@@ -1,5 +1,30 @@
 'use strict';
 
+
+describe("DeltaJs constructor", function () {
+
+
+	it("is present", function () {
+		expect(DeltaJs).toEqual(any(Function));
+	});
+
+
+	it("never throws any exception", function () {
+		expect(function () {
+			var deltaJs = new DeltaJs();
+		}).not.toThrow();
+	});
+
+
+	it("returns an object of type DeltaJs", function () {
+		var deltaJs = new DeltaJs();
+		expect(deltaJs).toEqual(any(DeltaJs));
+	});
+
+
+});
+
+
 describe("DeltaJs instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1145,17 +1170,17 @@ describe("DeltaJs instance", function () {
 		});
 
 		it("have a DeltaJs object in which they are stored", () => {
-			expect(deltaJs.features instanceof Object).toBeTruthy();
+			expect(deltaJs.features).toEqual(any(Object));
 			expect(deltaJs.features['f']).toBeUndefined();
 			var f = deltaJs.newFeature('f');
-			expect(f instanceof deltaJs.Feature).toBeTruthy();
+			expect(f).toEqual(any(deltaJs.Feature));
 			expect(deltaJs.features['f']).toBe(f);
 		});
 
 		it("can be instantiated", () => {
-			var feature = deltaJs.newFeature('f');
-			expect(feature).toBe(deltaJs.features['f']);
-			expect(feature instanceof deltaJs.Feature).toBeTruthy();
+			var f = deltaJs.newFeature('f');
+			expect(f).toBe(deltaJs.features['f']);
+			expect(f).toEqual(any(deltaJs.Feature));
 		});
 
 		describe("that are instantiated", () => {

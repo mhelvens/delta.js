@@ -1,5 +1,7 @@
 'use strict';
 
+window.any = jasmine.any;
+
 beforeEach(() => {
 	jasmine.addMatchers({
 		toBeReachable() {
