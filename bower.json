@@ -1,6 +1,6 @@
 {
 	"name": "delta.js",
-	"version": "1.0.0-alpha.1",
+	"version": "1.0.1-alpha.1",
 	"description": "achieve modularity and separation of concerns through feature-oriented development",
 	"authors": [
 		{
