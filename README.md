@@ -407,4 +407,7 @@ Here is an incomplete list of future plans for this library:
 
 ## License
 
-MIT
+Delta.js is released under the terms of the [MIT license](http://en.wikipedia.org/wiki/MIT_License).
+It permits reuse within both open and proprietary software, provided
+all copies of the licensed software include a copy of the MIT License
+terms and the copyright notice.
