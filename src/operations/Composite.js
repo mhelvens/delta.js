@@ -44,13 +44,13 @@ export default (deltaJs) => {
 		 * Returns an object that allows new delta operations to be added more easily.
 		 * @return {function} - the facade to this delta, for easily adding operations
 		 */
-		facade(...firstArgs) {
+		do(...firstArgs) {
 			var thisDelta = this;
 			// The facade object exposes operations methods directly, but arguments to
 			// those operations can partly be given through function-call notation.
 			// Therefore, a facade is a function, storing arguments that are already given.
 			var fcd = function (...args) {
-				return thisDelta.facade.apply(thisDelta, fcd._args.concat(args));
+				return thisDelta.do.apply(thisDelta, fcd._args.concat(args));
 			};
 			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
@@ -74,9 +74,9 @@ export default (deltaJs) => {
 				operationMethods[method] = function (...args) {
 					var {newDelta, fcdArgs} = this._applyOperationMethod.apply(this, [method].concat(args));
 					if (newDelta instanceof deltaJs.Delta.Composite) {
-						return newDelta.facade();
+						return newDelta.do();
 					} else {
-						return this.delta.facade.apply(this.delta, fcdArgs);
+						return this.delta.do.apply(this.delta, fcdArgs);
 					}
 				};
 			}

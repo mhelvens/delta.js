@@ -8,7 +8,7 @@ describe("DeltaJs instance", function () {
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
 		rootDelta = new deltaJs.Delta.Modify();
-		delta = rootDelta.facade();
+		delta = rootDelta.do();
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1343,9 +1343,9 @@ describe("DeltaJs instance", function () {
 			expect(typeof deltaJs.operation).toBe('function');
 		});
 
-		it("have a DeltaJs facade to operate on them: 'facade'", () => {
-			expect(typeof deltaJs.facade).toBe('function');
-			expect(typeof deltaJs.facade()).toBe('function');
+		it("have a DeltaJs facade to operate on them: 'do'", () => {
+			expect(typeof deltaJs.do).toBe('function');
+			expect(typeof deltaJs.do()).toBe('function');
 		});
 
 		it("pass a value through unchanged if no operations are prepared for them", () => {
@@ -1354,7 +1354,7 @@ describe("DeltaJs instance", function () {
 		});
 
 		it("apply deltas to a value for which deltas are prepared (1)", () => {
-			deltaJs.facade('delta-name').replace('x', 'new x value');
+			deltaJs.do('delta-name').replace('x', 'new x value');
 			var x = deltaJs.vp('x', 'old x value');
 			var y = deltaJs.vp('y', 'old y value');
 			expect(x).toBe('new x value');
@@ -1362,10 +1362,10 @@ describe("DeltaJs instance", function () {
 		});
 
 		it("apply deltas to a value for which deltas are prepared (2)", () => {
-			deltaJs.facade('w'                       ).add('obj', { keyW: 'valW' });
-			deltaJs.facade('x', { after: ['w']      }).add('obj.keyX', 'valX');
-			deltaJs.facade('y', { after: ['w']      }).add('obj.keyY', 'valY');
-			deltaJs.facade('z', { after: ['x', 'y'] }).modify('obj')
+			deltaJs.do('w'                       ).add('obj', { keyW: 'valW' });
+			deltaJs.do('x', { after: ['w']      }).add('obj.keyX', 'valX');
+			deltaJs.do('y', { after: ['w']      }).add('obj.keyY', 'valY');
+			deltaJs.do('z', { after: ['x', 'y'] }).modify('obj')
 				.replace('keyX', 'valXZ')
 				.replace('keyY', 'valYZ');
 			var obj = deltaJs.vp('obj');
@@ -1388,10 +1388,10 @@ describe("DeltaJs instance", function () {
 			F = deltaJs.newFeature('F');
 			G = deltaJs.newFeature('G');
 			H = deltaJs.newFeature('H');
-			w = deltaJs.facade('w');
-			x = deltaJs.facade('x');
-			y = deltaJs.facade('y');
-			z = deltaJs.facade('z');
+			w = deltaJs.do('w');
+			x = deltaJs.do('x');
+			y = deltaJs.do('y');
+			z = deltaJs.do('z');
 		});
 
 		it("can, based on which features are selected, apply or not apply a delta", () => {
@@ -1426,10 +1426,10 @@ describe("DeltaJs instance", function () {
 		var w, x, y, z;
 
 		beforeEach(() => {
-			w = deltaJs.facade('w');
-			x = deltaJs.facade('x');
-			y = deltaJs.facade('y');
-			z = deltaJs.facade('z');
+			w = deltaJs.do('w');
+			x = deltaJs.do('x');
+			y = deltaJs.do('y');
+			z = deltaJs.do('z');
 		});
 
 		it("can be declared eponymous: together in one shot to share the same name and a one-to-one relationship", () => {

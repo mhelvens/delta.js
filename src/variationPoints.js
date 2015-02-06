@@ -60,8 +60,8 @@ export default (deltaJs) => {
 		 * to be added more easily.
 		 * @return {function} - the facade to this delta, for easily adding operations
 		 */
-		facade(...args) {
-			return this._deltaModel.facade.apply(this._deltaModel, args);
+		do(...args) {
+			return this._deltaModel.do.apply(this._deltaModel, args);
 		},
 
 	});
