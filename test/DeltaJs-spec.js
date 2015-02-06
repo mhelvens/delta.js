@@ -11,7 +11,7 @@ describe("DeltaJs constructor", function () {
 
 	it("never throws any exception", function () {
 		expect(function () {
-			var deltaJs = new DeltaJs();
+			return new DeltaJs();
 		}).not.toThrow();
 	});
 
