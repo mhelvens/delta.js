@@ -4,7 +4,7 @@ achieve modularity and separation of concerns through feature-oriented programmi
 
 ## Description
 
-<img align="right" width="350px" src="./docs/sculptor.jpg" />
+<img align="right" width="300px" margin="10px" src="./docs/sculptor.jpg" />
 
 Programming is an activity very prone to human error, especially if you have
 multiple developers changing the same code-base at the same time.
@@ -40,7 +40,7 @@ applied by a preprocessor. This will be supported by a future version.
 
 ## Installation
 
-<img align="right" width="350px" src="./docs/foundation.jpg" />
+<img align="right" width="300px" margin="10px" src="./docs/foundation.jpg" />
 
 This library depends only on
 [js-graph](https://github.com/mhelvens/js-graph).
@@ -85,7 +85,7 @@ var DeltaJs = require('lib/delta.js/dist/delta.js')
 
 ## Using `DeltaJs`
 
-<img align="right" width="350px" src="./docs/selection.jpg" />
+<img align="right" width="300px" margin="10px" src="./docs/selection.jpg" />
 
 `DeltaJs` is a class that can be instantiated:
 
@@ -392,7 +392,7 @@ deltaJs.delta('my-delta').modify('my-vp')
 
 ## Future Plans
 
-<img align="right" width="350px" src="./docs/factory.jpg" />
+<img align="right" width="300px" margin="10px" src="./docs/factory.jpg" />
 
 Here is an incomplete list of future plans for this library:
 
