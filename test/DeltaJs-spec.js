@@ -50,7 +50,7 @@ describe("DeltaJs instance", function () {
 				var target = new DeltaJs.ReadableTarget(rootObj); // because we don't allow replacing/removing the root
 
 				/* creating the delta through the given code */
-				if (post instanceof ExpectedError && post.type === DeltaJs.CompositionError) {
+				if (post instanceof ExpectedError && post.type !== DeltaJs.ApplicationError) {
 					expect(action).toThrowSpecific(post.type, post.content);
 				} else {
 					action();
@@ -1137,17 +1137,47 @@ describe("DeltaJs instance", function () {
 
 
 		itCan("apply a partially ordered set of `deltas in topological order, if unordered deltas do not conflict", [[
+             { oldKey: 'old value' },
+             () => {
+                 var dm = delta.deltaModel('obj');
+                 dm('W'                  ).add('key', { foo: 'bar' });
+                 dm('X', { after: ['W'] }).add('key.x', 1           );
+                 dm('Y', { after: ['W'] }).add('key.y', 2           );
+                 dm('Z', { after: ['W'] }).add('key.z', 3           );
+             },
+             { oldKey: 'old value', key: { foo: 'bar', x: 1, y: 2, z: 3 } }
+         ], [
 			{ oldKey: 'old value' },
 			() => {
 				var dm = delta.deltaModel('obj');
-				dm('W'                  ).add('key', { foo: 'bar' });
 				dm('X', { after: ['W'] }).add('key.x', 1           );
 				dm('Y', { after: ['W'] }).add('key.y', 2           );
 				dm('Z', { after: ['W'] }).add('key.z', 3           );
+				dm('W'                  ).add('key', { foo: 'bar' }); // the order doesn't matter
 			},
 			{ oldKey: 'old value', key: { foo: 'bar', x: 1, y: 2, z: 3 } }
 		]]);
 
+
+		itCan("throw an error if there is an application order cycle", [[
+            {},
+            () => {
+                var dm = delta.deltaModel('obj');
+                dm('X',  { after: ['Y'] }).add('key1', 'value 1');
+                dm('Y',  { after: ['X'] }).add('key2', 'value 2');
+            },
+            expectError(DeltaJs.ApplicationOrderCycle, { from: 'X', to: 'Y' })
+        ], [
+			{},
+			() => {
+				var dm = delta.deltaModel('obj');
+				dm('W'                        ).add('keyW', 'value W');
+				dm('X',  { after: ['W', 'Z'] }).add('keyX', 'value X');
+				dm('Y',  { after: ['X']      }).add('keyY', 'value Y');
+				dm('Z',  { after: ['Y']      }).add('keyZ', 'value Z');
+			},
+			expectError(DeltaJs.ApplicationOrderCycle, { from: 'Y', to: 'Z' })
+		]]);
 
 
 		// TODO: conflicts

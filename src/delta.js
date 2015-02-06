@@ -20,11 +20,11 @@ U.extend(DeltaJs, { Path });
 import {ApplicationError, MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError, DeltaArgApplicationError,
 		CompositionError, MultipleOverloadsCompositionError,
-		ConstraintFailure} from './Error.js';
+		ConstraintFailure, ApplicationOrderCycle} from './Error.js';
 U.extend(DeltaJs, { ApplicationError, MultipleOverloadsApplicationError,
                     NoOverloadsApplicationError, DeltaArgApplicationError,
                     CompositionError, MultipleOverloadsCompositionError,
-                    ConstraintFailure });
+                    ConstraintFailure, ApplicationOrderCycle });
 
 
 /* export the DeltaJs class */

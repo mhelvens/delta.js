@@ -51,3 +51,11 @@ export var ConstraintFailure = U.newSubclass(Error, (superFn) => function Constr
 	this.message = `The feature '${feature.name}' is both selected and excluded by its constraints.`;
 	this.feature = feature;
 });
+
+export var ApplicationOrderCycle = U.newSubclass(Error, (superFn) => function ApplicationOrderCycle(from, to) {
+	superFn.call(this);
+	this.name = 'ApplicationOrderCycle';
+	this.message = `The new application order between ${from} and ${to} created a cycle.`;
+	this.from = from;
+	this.to   = to;
+});

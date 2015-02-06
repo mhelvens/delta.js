@@ -1,6 +1,6 @@
 /* import external libraries */
 import JsGraph from 'js-graph';
-
+import {ApplicationOrderCycle} from '../Error.js';
 
 /* import internal stuff */
 import U               from '../misc.js';
@@ -73,12 +73,8 @@ export default (deltaJs) => {
 
 		_addOperation(name, options, path, delta) {
 
-			///* a delta by this name cannot already be in the graph */
-			//U.assert(!this.graph.vertexValue(name),
-			//	`A delta by the name “${name}” is already in this delta model.`);
-
 			/* check if a delta with this name already exists */
-			var alreadyExists = this.graph.hasVertex(name);
+			var alreadyExists = U.isDefined(this.graph.vertexValue(name));
 
 			/* starting to define the delta that goes directly in the graph */
 			var deltaBase = delta;
@@ -104,6 +100,10 @@ export default (deltaJs) => {
 				/* connect it to the partial order */
 				(options['combines'] || []).concat(options['after'] || []).forEach((subordinateName) => {
 					this.graph.createEdge(subordinateName, name);
+					if (this.graph.hasCycle()) {
+						this.graph.removeExistingEdge(subordinateName, name);
+						throw new ApplicationOrderCycle(subordinateName, name);
+					}
 				});
 
 				/* application condition and optionally, an eponymous, linked feature */

@@ -184,8 +184,8 @@ gulp.task('build-tests', function () {
 });
 
 /* run tests */
-gulp.task('test', function () {
-//gulp.task('test', ['build', 'build-tests'], function () {
+//gulp.task('test', function () {
+gulp.task('test', ['build', 'build-tests'], function () {
 	return gulp.src(EXTERNAL_LIBRARIES.map(function (lib) {
 		return lib.dir + '/' + lib.file;
 	}).concat([
@@ -204,9 +204,9 @@ gulp.task('watch', function () {
 		'src/**/*.js',
 		'src/**/*.scss',
 		'src/**/*.css',
-		'src/**/*.html'
+		'src/**/*.html',
+		'test/**/*.js'
 	], ['lint', 'build', 'build-tests', 'test']);
-	gulp.watch('test/**/*.js', ['build-tests', 'test']);
 });
 
 APPLICATIONS.forEach(function (m) {
