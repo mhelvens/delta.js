@@ -102,6 +102,8 @@ the same project that work independently from each other. But you'll usually nee
 
 ## The `DeltaJs` API
 
+<img align="right" width="300px" margin="15px" src="./docs/coder-generic.jpg" />
+
 Given a `DeltaJs` instance, the following methods are available:
 
 ### `.vp(name, initialValue)`
