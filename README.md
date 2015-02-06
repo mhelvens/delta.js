@@ -102,7 +102,7 @@ the same project that work independently from each other. But you'll usually nee
 
 ## The `DeltaJs` API
 
-<img align="right" width="300px" margin="5px" src="./docs/coder-generic.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/coder-generic.jpg" />
 
 Given a `DeltaJs` instance, the following methods are available:
 
@@ -225,6 +225,8 @@ something you want to do very early in your application.
 
 
 ## The `Facade` API
+
+<img align="right" width="300px" margin="15px" src="./docs/coder-generic.jpg" />
 
 Deltas can modify values in any number of ways, from completely
 replacing them with other values, to making fine-grained modifications in a deeply nested
