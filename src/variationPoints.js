@@ -42,27 +42,30 @@ export default (deltaJs) => {
 		 * A {DeltaJs} instance has one fundamental {DeltaJs#DeltaModel} instance, which is applied
 		 * to any variation points that are encountered. This method is an alias to the eponymous
 		 * method on that 'root' delta model. It adds a new operation to it.
-		 * @param method {string}   - the type of operation (e.g., 'add', 'remove', etc.)
-		 * @param name {string}     - the name of the delta inside the delta model
-		 * @param options {object?} - the (optional) options for this operation
-		 * @param path {string}     - the relative path to perform this operation on
-		 * @param arg {*}           - the argument to the operation
-		 * @return {DeltaJs#Delta}  - the delta resulting from the operation
+		 * @param options1 {object?} - any (optional) options; there may be any number of these before the `name` argument
+		 * @param name {string}      - the name of the delta inside the delta model
+		 * @param options2 {object?} - any (optional) options; there may be any number of these before the `path` argument
+		 * @param path {string}      - the relative path to perform this operation on
+		 * @param arg {*}            - the argument to the operation
+		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
-		operation(method, name, options, path, arg) {
-			return this._deltaModel.operation(method, name, options, path, arg);
+		operation(options1, name, options2, path, arg) {
+			return this._deltaModel.operation.apply(this._deltaModel, arguments);
 		},
 
-		/** {@public}{@property}
+		/** {@public}{@method}
 		 * A {DeltaJs} instance has one fundamental {DeltaJs#DeltaModel} instance, which is applied
-		 * to any variation points that are encountered. This property is an alias to the eponymous
-		 * property on that 'root' delta model. It returns the object that allows new delta operations
-		 * to be added more easily.
+		 * to any variation points that are encountered. This method is an alias to the eponymous
+		 * method on that 'root' delta model. It returns the facade that allows new delta operations
+		 * to be added more easily. It presets the 'feature' option to 'true', but this can be
+		 * overwritten manually.
 		 * @return {function} - the facade to this delta, for easily adding operations
 		 */
 		do(...args) {
-			return this._deltaModel.do.apply(this._deltaModel, args);
-		},
+			return this._deltaModel.do.apply(this._deltaModel,
+					[{ feature: true }] // from the core delta model, deltas are features by default
+							.concat(args));
+		}
 
 	});
 

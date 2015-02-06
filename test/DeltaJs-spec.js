@@ -1379,7 +1379,7 @@ describe("DeltaJs instance", function () {
 		});
 
 		it("apply deltas to a value for which deltas are prepared (1)", () => {
-			deltaJs.do('delta-name').replace('x', 'new x value');
+			deltaJs.do('delta-name', { feature: false }).replace('x', 'new x value');
 			var x = deltaJs.vp('x', 'old x value');
 			var y = deltaJs.vp('y', 'old y value');
 			expect(x).toBe('new x value');
@@ -1387,10 +1387,10 @@ describe("DeltaJs instance", function () {
 		});
 
 		it("apply deltas to a value for which deltas are prepared (2)", () => {
-			deltaJs.do('w'                       ).add('obj', { keyW: 'valW' });
-			deltaJs.do('x', { after: ['w']      }).add('obj.keyX', 'valX');
-			deltaJs.do('y', { after: ['w']      }).add('obj.keyY', 'valY');
-			deltaJs.do('z', { after: ['x', 'y'] }).modify('obj')
+			deltaJs.do('w', { feature: false                    }).add('obj', { keyW: 'valW' });
+			deltaJs.do('x', { feature: false, after: ['w']      }).add('obj.keyX', 'valX');
+			deltaJs.do('y', { feature: false, after: ['w']      }).add('obj.keyY', 'valY');
+			deltaJs.do('z', { feature: false, after: ['x', 'y'] }).modify('obj')
 				.replace('keyX', 'valXZ')
 				.replace('keyY', 'valYZ');
 			var obj = deltaJs.vp('obj');
@@ -1425,7 +1425,7 @@ describe("DeltaJs instance", function () {
 			w({ iff: ['F']      }).add('obj.w', 'w-value');
 			x({ iff: ['F', 'G'] }).add('obj.x', 'x-value');
 			y({ iff: ['F', 'H'] }).add('obj.y', 'y-value');
-			z                     .add('obj.z', 'z-value');
+			z({ feature: false  }).add('obj.z', 'z-value');
 
 			/* the desired features, selected in a central location */
 			deltaJs.select(['F', 'H']);
@@ -1460,9 +1460,9 @@ describe("DeltaJs instance", function () {
 		it("can be declared eponymous: together in one shot to share the same name and a one-to-one relationship", () => {
 
 			/* deltas, normally declared independently */
-			w({ feature: true }).add('obj.w', 'w-value');
-			x({ feature: true }).add('obj.x', 'x-value');
-			y({ feature: true }).add('obj.y', 'y-value');
+			w.add('obj.w', 'w-value');
+			x.add('obj.x', 'x-value');
+			y.add('obj.y', 'y-value');
 
 
 			/* the desired features, selected in a central location */
@@ -1485,8 +1485,8 @@ describe("DeltaJs instance", function () {
 		it("--if they are eponymous-- are both effected by the 'combines' option", () => {
 
 			/* deltas, normally declared independently */
-			x({ feature: true }).add('obj.x', 'x-value');
-			y({ feature: true }).add('obj.y', 'y-value');
+			x.add('obj.x', 'x-value');
+			y.add('obj.y', 'y-value');
 			z({ combines: ['x', 'y'] })
 				.replace('obj.x', 'z-value')
 				.replace('obj.y', 'z-value');

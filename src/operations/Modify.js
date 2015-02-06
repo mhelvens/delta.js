@@ -58,16 +58,20 @@ export default (deltaJs) => {
 
 		/** {@public}{@method}
 		 * Prepare a specific delta operation with this Modify delta as the base.
-		 * @param method {string}   - the type of operation (e.g., 'add', 'remove', etc.)
-		 * @param options {object?} - the (optional) options for this operation
-		 * @param path {string}     - the relative path to which to apply this operation
-		 * @param arg {*}           - the argument to the operation
-		 * @return {DeltaJs#Delta}  - the delta resulting from the operation
+		 * @param options {object} - any options; there may be any number of these before the `path` argument
+		 * @param path {string}    - the relative path to which to apply this operation
+		 * @param arg {*}          - the argument to the operation
+		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
-		operation(method, options, path, arg) {
-			if (typeof options === 'string') { [options, path, arg] = [{}, options, path] }
-			var delta = deltaJs._newDeltaByMethod(method, arg, options);
-			return this._addOperation(options, new Path(path), delta);
+		operation(options, path, arg) {
+			var args = [].slice.call(arguments, 0);
+			var allOptions = {};
+			while (typeof args[0] === 'object') {
+				U.extend(allOptions, args.shift());
+			}
+			[path, arg] = args;
+			var delta = deltaJs._newDeltaByMethod(allOptions, arg);
+			return this._addOperation(allOptions, new Path(path), delta);
 		},
 
 		/** {@private}{@method}
@@ -78,7 +82,7 @@ export default (deltaJs) => {
 		_addOperation(options, path, delta) {
 			/* if there is a 'rest' to the path, set a link in the chain */
 			if (path.rest) {
-				return this.operation('modify', path.prop)
+				return this.operation({ method: 'modify' }, path.prop)
 						._addOperation(options, path.rest, delta);
 			}
 

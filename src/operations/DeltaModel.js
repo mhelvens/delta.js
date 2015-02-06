@@ -33,17 +33,26 @@ export default (deltaJs) => {
 
 		/** {@public}{@method}
 		 * Prepare a specific delta operation with this Modify delta as the base.
-		 * @param method {string}   - the type of operation (e.g., 'add', 'remove', etc.)
-		 * @param name {string}     - the name of the delta inside the delta model
-		 * @param options {object?} - the (optional) options for this operation
-		 * @param path {string}     - the relative path to perform this operation on
-		 * @param arg {*}           - the argument to the operation
-		 * @return {DeltaJs#Delta}  - the delta resulting from the operation
+		 * @param options1 {object?} - any (optional) options; there may be any number of these before the `name` argument
+		 * @param name {string}      - the name of the delta inside the delta model
+		 * @param options2 {object?} - any (optional) options; there may be any number of these before the `path` argument
+		 * @param path {string}      - the relative path to perform this operation on
+		 * @param arg {*}            - the argument to the operation
+		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
-		operation(method, name, options, path, arg) {
-			if (typeof options === 'string') { [options, path, arg] = [{}, options, path] }
-			var delta = deltaJs._newDeltaByMethod(method, arg, options);
-			return this._addOperation(name, options, new Path(path), delta);
+		operation(options1, name, options2, path, arg) {
+			var args = [].slice.call(arguments);
+			var allOptions = {};
+			while (typeof args[0] === 'object') {
+				U.extend(allOptions, args.shift());
+			}
+			name = args.shift();
+			while (typeof args[0] === 'object') {
+				U.extend(allOptions, args.shift());
+			}
+			[path, arg] = args;
+			var delta = deltaJs._newDeltaByMethod(allOptions, arg);
+			return this._addOperation(name, allOptions, new Path(path), delta);
 		},
 
 		/** {@public}{@method}
