@@ -40,7 +40,7 @@ applied by a preprocessor. This will be supported by a future version.
 
 ## Installation
 
-<img align="right" src="./docs/foundation.jpg" />
+<img align="right" width="100px" src="./docs/foundation.jpg" />
 
 This library depends only on
 [js-graph](https://github.com/mhelvens/js-graph).
