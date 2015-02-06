@@ -29,9 +29,13 @@ export default (deltaJs) => {
 
 	U.extend(deltaJs.constructor.prototype, {
 
-		select(features) {
+		select(...features) {
 			features.forEach((feature) => {
-				this.features[feature].select();
+				if (Array.isArray(feature)) {
+					this.select.apply(this, feature);
+				} else {
+					this.features[feature].select();
+				}
 			});
 		}
 
