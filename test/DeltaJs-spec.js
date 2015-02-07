@@ -1512,7 +1512,7 @@ describe("DeltaJs instance", function () {
 
 		});
 
-		it("--if they are eponymous-- are both effected by the 'combines' option", () => {
+		it("–if they are eponymous– are both effected by the 'combines' option", () => {
 
 			/* deltas, normally declared independently */
 			x.add('obj.x', 'x-value');
