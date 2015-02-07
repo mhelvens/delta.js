@@ -983,53 +983,50 @@ describe("DeltaJs instance", function () {
 
 	describe("the delta model operation", () => {
 
+		var dm;
+		beforeEach(() => {
+			dm = d.deltaModel('obj');
+		});
 
 		itCan("be a middle-man for a single other delta", [[
 			{},
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').add('key', { foo: 'bar' });
 			},
 			{ key: { foo: 'bar' } }
 		], [
 			{ key: { foo: 'bar' } },
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').remove('key');
 			},
 			{}
 		], [
 			{},
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').forbid('key');
 			},
 			{}
 		], [
 			{ key: { foo: 'bar' } },
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').replace('key', 'value');
 			},
 			{ key: 'value' }
 		], [
 			{ key: { foo: 'bar' } },
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').modify('key').replace('foo', 'bas');
 			},
 			{ key: { foo: 'bas' } }
 		], [
 			{ key: ['a'] },
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').prepend('key', 'b');
 			},
 			{ key: ['b', 'a'] }
 		], [
 			{ key: ['a'] },
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').insert('key', 'b');
 			},
 			(obj) => {
@@ -1041,7 +1038,6 @@ describe("DeltaJs instance", function () {
 		], [
 			{ key: ['a'] },
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').append('key', 'b');
 			},
 			{ key: ['a', 'b'] }
@@ -1059,7 +1055,6 @@ describe("DeltaJs instance", function () {
 			itCan("be a middle man for that one delta", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					var dm = d.deltaModel('obj');
 					dm('X').prepend('fn', function (a, b) { fB(this, b, b) });
 				},
 				(obj) => {
@@ -1069,7 +1064,6 @@ describe("DeltaJs instance", function () {
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					var dm = d.deltaModel('obj');
 					dm('X').insert('fn', function (a, b) { fB(this, b, b) });
 				},
 				(obj) => {
@@ -1082,7 +1076,6 @@ describe("DeltaJs instance", function () {
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					var dm = d.deltaModel('obj');
 					dm('X').append('fn', function (a, b) { fB(this, b, b) });
 				},
 				(obj) => {
@@ -1097,7 +1090,6 @@ describe("DeltaJs instance", function () {
 		itCan("apply deltas in a linear order (as if composed)", [[
 			{},
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').add('key', { foo: 'bar' });
 				dm('Y').remove({ after: ['X'] }, 'key');
 			},
@@ -1105,7 +1097,6 @@ describe("DeltaJs instance", function () {
 		], [
 			{},
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').add('key', { foo: 'bar' });
 				dm('Y').replace({ after: ['X'] }, 'key', 'some value');
 			},
@@ -1113,7 +1104,6 @@ describe("DeltaJs instance", function () {
 		], [
 			{},
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X'                   ).add('key1', { foo: 'bar' });
 				dm('Y',  { after: ['X'] }).add('key2', 'some value');
 				dm('Z',  { after: ['Y'] }).add('key3', 'some other value');
@@ -1126,7 +1116,6 @@ describe("DeltaJs instance", function () {
 		itCan("apply unordered deltas in arbitrary order, if they do not conflict", [[
 			{ oldKey: 'old value' },
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X').add('key1', 1    );
 				dm('Y').add('key2', 'b'  );
 				dm('Z').add('key3', 'iii');
@@ -1139,7 +1128,6 @@ describe("DeltaJs instance", function () {
 		itCan("apply a partially ordered set of `deltas in topological order, if unordered deltas do not conflict", [[
              { oldKey: 'old value' },
              () => {
-                 var dm = d.deltaModel('obj');
                  dm('W'                  ).add('key', { foo: 'bar' });
                  dm('X', { after: ['W'] }).add('key.x', 1           );
                  dm('Y', { after: ['W'] }).add('key.y', 2           );
@@ -1149,7 +1137,6 @@ describe("DeltaJs instance", function () {
          ], [
 			{ oldKey: 'old value' },
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('X', { after: ['W'] }).add('key.x', 1           );
 				dm('Y', { after: ['W'] }).add('key.y', 2           );
 				dm('Z', { after: ['W'] }).add('key.z', 3           );
@@ -1162,7 +1149,6 @@ describe("DeltaJs instance", function () {
 		itCan("throw an error if there is an application order cycle", [[
             {},
             () => {
-                var dm = d.deltaModel('obj');
                 dm('X',  { after: ['Y'] }).add('key1', 'value 1');
                 dm('Y',  { after: ['X'] }).add('key2', 'value 2');
             },
@@ -1170,7 +1156,6 @@ describe("DeltaJs instance", function () {
         ], [
 			{},
 			() => {
-				var dm = d.deltaModel('obj');
 				dm('W'                        ).add('keyW', 'value W');
 				dm('X',  { after: ['W', 'Z'] }).add('keyX', 'value X');
 				dm('Y',  { after: ['X']      }).add('keyY', 'value Y');
