@@ -41,35 +41,41 @@ describe("DeltaJs instance", function () {
 	function ExpectedError(type, content) { this.type = type; this.content = content; }
 	function expectError(type, content) { return new ExpectedError(type, content) }
 
-	function itCan(description, triples) {
-		var counter = 0;
-		triples.forEach(([pre, action, post]) => {
-			it(`can ${description} (${++counter})`, () => {
-				/* creating the initial object using the given 'pre' */
-				var rootObj = { obj: (typeof pre === 'function' ? pre() : pre) };
-				var target = new DeltaJs.ReadableTarget(rootObj); // because we don't allow replacing/removing the root
+	function _itCan(fn) {
+		return function (description, triples) {
+			var counter = 0;
+			triples.forEach(([pre, action, post]) => {
+				fn(`can ${description} (${++counter})`, () => {
+					/* creating the initial object using the given 'pre' */
+					var rootObj = { obj: (typeof pre === 'function' ? pre() : pre) };
+					var target = new DeltaJs.ReadableTarget(rootObj); // because we don't allow replacing/removing the root
 
-				/* creating the delta through the given code */
-				if (post instanceof ExpectedError && post.type !== DeltaJs.ApplicationError) {
-					expect(action).toThrowSpecific(post.type, post.content);
-				} else {
-					action();
-
-					/* applying the delta to the given 'pre' value */
-					if (post instanceof ExpectedError && post.type === DeltaJs.ApplicationError) {
-						expect(() => { delta.applyTo(target) }).toThrowSpecific(post.type, post.content);
+					/* creating the delta through the given code */
+					if (post instanceof ExpectedError && post.type !== DeltaJs.ApplicationError) {
+						expect(action).toThrowSpecific(post.type, post.content);
 					} else {
-						delta.applyTo(target);
-						if (typeof post === 'function') {
-							post(rootObj.obj);
+						action();
+
+						/* applying the delta to the given 'pre' value */
+						if (post instanceof ExpectedError && post.type === DeltaJs.ApplicationError) {
+							expect(() => { delta.applyTo(target) }).toThrowSpecific(post.type, post.content);
 						} else {
-							expect(rootObj.obj).toEqual(post);
+							delta.applyTo(target);
+							if (typeof post === 'function') {
+								post(rootObj.obj);
+							} else {
+								expect(rootObj.obj).toEqual(post);
+							}
 						}
 					}
-				}
+				});
 			});
-		});
+		};
 	}
+
+	var itCan = _itCan(it);
+	var xitCan = _itCan(xit);
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1149,23 +1155,147 @@ describe("DeltaJs instance", function () {
 		itCan("throw an error if there is an application order cycle", [[
             {},
             () => {
-                dm('X',  { after: ['Y'] }).add('key1', 'value 1');
-                dm('Y',  { after: ['X'] }).add('key2', 'value 2');
+                dm('X', { after: ['Y'] }).add('keyX', 'value X');
+                dm('Y', { after: ['X'] }).add('keyY', 'value Y');
             },
             expectError(DeltaJs.ApplicationOrderCycle, { from: 'X', to: 'Y' })
         ], [
 			{},
 			() => {
-				dm('W'                        ).add('keyW', 'value W');
-				dm('X',  { after: ['W', 'Z'] }).add('keyX', 'value X');
-				dm('Y',  { after: ['X']      }).add('keyY', 'value Y');
-				dm('Z',  { after: ['Y']      }).add('keyZ', 'value Z');
+				dm('W'                       ).add('keyW', 'W value');
+				dm('X', { after: ['W', 'Z'] }).add('keyX', 'X value');
+				dm('Y', { after: ['X']      }).add('keyY', 'Y value');
+				dm('Z', { after: ['Y']      }).add('keyZ', 'Z value');
 			},
 			expectError(DeltaJs.ApplicationOrderCycle, { from: 'Y', to: 'Z' })
 		]]);
 
+		xitCan("throw an error if there is an unresolved conflict", [[
+			{},
+			() => {
+				dm('X').add('key', 'X value');
+				dm('Y').add('key', 'Y value');
+			},
+			expectError(DeltaJs.UnresolvedConflict)
+		], [
+			{ key: 'original value' },
+			() => {
+				dm('X').replace('key', 'X value');
+				dm('Y').replace('key', 'Y value');
+			},
+			expectError(DeltaJs.UnresolvedConflict)
+		], [
+			{ key: [] },
+			() => {
+				dm('X').prepend('key', 'X value');
+				dm('Y').prepend('key', 'Y value');
+			},
+			expectError(DeltaJs.UnresolvedConflict)
+		], [
+			{ key: [] },
+			() => {
+				dm('X').append('key', 'X value');
+				dm('Y').append('key', 'Y value');
+			},
+			expectError(DeltaJs.UnresolvedConflict)
+		], [
+			{ key() {} },
+			() => {
+				dm('X').prepend('key', function () { console.log('something') });
+				dm('Y').prepend('key', function () { console.log('something') }); // equivalence of functions cannot be detected
+			},
+			expectError(DeltaJs.UnresolvedConflict)
+		], [
+			{ key() {} },
+			() => {
+				dm('X').append('key', function () { console.log('something') });
+				dm('Y').append('key', function () { console.log('something') }); // equivalence of functions cannot be detected
+			},
+			expectError(DeltaJs.UnresolvedConflict)
+		]]);
 
-		// TODO: conflicts
+
+		/* setup */
+		var callLog;
+		function fA(...args) { callLog.push(['fA', args]) }
+		function fB(...args) { callLog.push(['fB', args]) }
+		function fC(...args) { callLog.push(['fC', args]) }
+		beforeEach(() => { callLog = [] });
+
+		xitCan("work correctly for combinations that may look like conflicts, but aren't", [[
+			{},
+			() => {
+				dm('X').add('new value');
+				dm('Y').add('new value');
+			},
+			{ key: 'new value' }
+		], [
+			{ key: 'original value' },
+			() => {
+				dm('X').replace('key', 'new value');
+				dm('Y').replace('key', 'new value');
+			},
+			{ key: 'new value' }
+		], [
+			{ key: 'value' },
+			() => {
+				dm('X').remove('key');
+				dm('Y').remove('key');
+			},
+			{}
+		], [
+			{ key: 'value' },
+			() => {
+				dm('X').forbid('absentKey');
+				dm('Y').forbid('absentKey');
+			},
+			{ key: 'value' }
+		], [
+			{ key: [] },
+			() => {
+				dm('X').prepend('key', 'new value');
+				dm('Y').prepend('key', 'new value');
+			},
+			{ key: ['new value', 'new value'] }
+		], [
+			{ key: [] },
+			() => {
+				dm('X').append('key', 'new value');
+				dm('Y').append('key', 'new value');
+			},
+			{ key: ['new value', 'new value'] }
+		], [
+			{ key: [] },
+			() => {
+				dm('X').insert('key', 'X value');
+				dm('Y').insert('key', 'Y value');
+			},
+			(obj) => {
+				expect(obj).toEqualOneOf(
+					{ key: ['X value', 'Y value'] },
+					{ key: ['Y value', 'X value'] }
+				);
+			}
+		], [
+			{ key() {} },
+			() => {
+				dm('X').insert('key', function () { fA(this) });
+				dm('Y').insert('key', function () { fB(this) });
+			},
+			(obj) => {
+				obj.key(1, 2, 3);
+				expect(callLog).toEqualOneOf(
+					[ ['fB', [obj]], ['fA', [obj]] ],
+					[ ['fA', [obj]], ['fB', [obj]] ]
+				);
+			}
+		]]);
+
+
+
+		// TODO: conflict resolution
+
+
 
 
 	});

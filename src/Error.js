@@ -59,3 +59,15 @@ export var ApplicationOrderCycle = U.newSubclass(Error, (superFn) => function Ap
 	this.from = from;
 	this.to   = to;
 });
+
+export var DeltaConflict = U.newSubclass(Error, (superFn) => function DeltaConflict(deltas) {
+	superFn.call(this);
+	this.name = 'DeltaConflict';
+	var deltaNames = deltas.map(d => `'${d.name}'`).join(',');
+	this.message = `There is an unresolved conflict between deltas ${deltaNames}.`;
+	this.deltas = deltas;
+});
+
+
+
+
