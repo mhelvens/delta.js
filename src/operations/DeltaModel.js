@@ -98,7 +98,7 @@ export default (deltaJs) => {
 				this.graph.addVertex(name, deltaBase);
 
 				/* connect it to the partial order */
-				(options['combines'] || []).concat(options['after'] || []).forEach((subordinateName) => {
+				(options['resolves'] || []).concat(options['after'] || []).concat(options['requires'] || []).forEach((subordinateName) => {
 					this.graph.createEdge(subordinateName, name);
 					if (this.graph.hasCycle()) {
 						this.graph.removeExistingEdge(subordinateName, name);
@@ -115,8 +115,13 @@ export default (deltaJs) => {
 				}
 
 				/* extract 'if' from compound options */
-				if (U.isDefined(options['combines'])) {
-					deltaFeature.if(options['combines']);
+				if (U.isDefined(options['resolves'])) {
+					deltaFeature.if(options['resolves']);
+				}
+
+				/* extract 'selects' from compound options */
+				if (U.isDefined(options['requires'])) {
+					deltaFeature.selects(options['requires']);
 				}
 			}
 

@@ -1627,12 +1627,12 @@ describe("DeltaJs instance", function () {
 
 		});
 
-		it("–if they are eponymous– are both effected by the 'combines' option", () => {
+		it("–if they are eponymous– are both effected by the 'resolves' option", () => {
 
 			/* deltas, normally declared independently */
 			x.add('obj.x', 'x-value');
 			y.add('obj.y', 'y-value');
-			z({ combines: ['x', 'y'] })
+			z({ resolves: ['x', 'y'] })
 				.replace('obj.x', 'z-value')
 				.replace('obj.y', 'z-value');
 
@@ -1646,6 +1646,30 @@ describe("DeltaJs instance", function () {
 			expect(obj).toEqual({
 				x: 'z-value',
 				y: 'z-value'
+			});
+
+		});
+
+		it("–if they are eponymous– are both effected by the 'requires' option", () => {
+
+			/* deltas, normally declared independently */
+			x.add('obj.x', 'x-value');
+			y.add('obj.y', 'y-value');
+			z({ requires: ['x', 'y'] })
+				.add('obj.z', 'z-value')
+				.replace('obj.y', 'z-value');
+
+			/* the desired features, selected in a central location */
+			deltaJs.select(['z']);
+
+			/* a variation point, indicated throughout the domain specific code */
+			var obj = deltaJs.vp('obj', {});
+
+			/* as a consequence of the the above, 'obj' is expected to be as follows */
+			expect(obj).toEqual({
+				x: 'x-value',
+				y: 'z-value',
+				z: 'z-value'
 			});
 
 		});
