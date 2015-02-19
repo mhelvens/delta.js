@@ -11,7 +11,7 @@ export var ApplicationError = U.newSubclass(Error, (superFn) => function Applica
 export var MultipleOverloadsApplicationError = U.newSubclass(ApplicationError, (superFn) => function MultipleOverloadsApplicationError(delta, value, errors = []) {
 	superFn.call(this, delta, value);
 	this.name = 'MultipleOverloadsApplicationError';
-	this.message = `None of these deltas of types ${delta.overloads.map(d => "'"+d.type+"'").join(',')} can apply to this value of type '${typeof value}.` +
+	this.message = `None of the delta-types ${delta.overloads.map(d => "'"+d.type+"'").join(',')} can apply to this value of type '${typeof value}'.` +
 	               errors.map(e => `\n-- ${e.message}`).join('');
 	this.errors = errors;
 });
