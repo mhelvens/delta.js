@@ -1633,7 +1633,6 @@ describe("DeltaJs instance", function () {
 			x.add('obj.x', 'x-value');
 			y.add('obj.y', 'y-value');
 			z({ resolves: ['x', 'y'] })
-				.replace('obj.x', 'z-value')
 				.replace('obj.y', 'z-value');
 
 			/* the desired features, selected in a central location */
@@ -1644,7 +1643,7 @@ describe("DeltaJs instance", function () {
 
 			/* as a consequence of the the above, 'obj' is expected to be as follows */
 			expect(obj).toEqual({
-				x: 'z-value',
+				x: 'x-value',
 				y: 'z-value'
 			});
 
@@ -1656,7 +1655,6 @@ describe("DeltaJs instance", function () {
 			x.add('obj.x', 'x-value');
 			y.add('obj.y', 'y-value');
 			z({ requires: ['x', 'y'] })
-				.add('obj.z', 'z-value')
 				.replace('obj.y', 'z-value');
 
 			/* the desired features, selected in a central location */
@@ -1668,8 +1666,7 @@ describe("DeltaJs instance", function () {
 			/* as a consequence of the the above, 'obj' is expected to be as follows */
 			expect(obj).toEqual({
 				x: 'x-value',
-				y: 'z-value',
-				z: 'z-value'
+				y: 'z-value'
 			});
 
 		});
