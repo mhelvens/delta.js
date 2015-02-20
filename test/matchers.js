@@ -31,6 +31,9 @@ beforeEach(() => {
 							messageEnd = `However, the thrown ${expectedType.prototype.name} had the following properties: ${JSON.stringify(exception, null, ' ')}`;
 						} else {
 							messageEnd = `However, the thrown exception was not a subclass of ${expectedType.name}.`;
+							if (typeof exception.name === 'string') {
+								messageEnd += ` It is of type ${exception.name}.`;
+							}
 						}
 					}
 

@@ -1,6 +1,7 @@
 /* import internal stuff */
-import U           from '../misc.js';
-import defineDelta from './Delta.js';
+import U                            from '../misc.js';
+import defineDelta                  from './Delta.js';
+import {MultipleActiveFacadesError} from '../Error.js';
 
 export default (deltaJs) => {
 	if (U.isDefined(deltaJs.Delta.Composite)) { return }
@@ -37,10 +38,10 @@ export default (deltaJs) => {
 		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
 		operation() {
-			throw new Error(`A Delta.Composite subclass needs to implement the 'operation' method.`);
+			throw new Error(`A Delta.Composite subclass (in this case: ${this.type}) needs to implement the 'operation' method.`);
 		},
 
-		/** {@public}{@property}
+		/** {@public}{@method}
 		 * Returns an object that allows new delta operations to be added more easily.
 		 * @return {function} - the facade to this delta, for easily adding operations
 		 */
@@ -49,21 +50,16 @@ export default (deltaJs) => {
 			// The facade object exposes operations methods directly, but arguments to
 			// those operations can partly be given through function-call notation.
 			// Therefore, a facade is a function, storing arguments that are already given.
-			var fcd = function (...args) {
-				return thisDelta.do.apply(thisDelta, fcd._args.concat(args));
-			};
+			var fcd = (...args) => thisDelta.do.apply(thisDelta, fcd._args.concat(args));
 			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {
-					return {
-						newDelta: thisDelta.operation.apply(thisDelta, [{method}].concat(fcd._args).concat(finalArgs)),
-						fcdArgs:  fcd._args
-					};
+					return thisDelta.operation.apply(thisDelta, [{method}].concat(fcd._args).concat(finalArgs));
 				},
 				delta: thisDelta
 			});
 			return fcd;
-		},
+		}
 	});
 
 	var operationMethods = {};
@@ -72,11 +68,17 @@ export default (deltaJs) => {
 		(cls.options.methods || []).forEach((method) => {
 			if (U.isUndefined(operationMethods[method])) {
 				operationMethods[method] = function (...args) {
-					var {newDelta, fcdArgs} = this._applyOperationMethod.apply(this, [method].concat(args));
+					if (this._facadeDisabled) { throw new MultipleActiveFacadesError(this) }
+					var newDelta = this._applyOperationMethod.apply(this, [method].concat(args));
 					if (newDelta instanceof deltaJs.Delta.Composite) {
-						return newDelta.do();
+						var activeSubFacade = this._activeSubFacade;
+						while (activeSubFacade) {
+							activeSubFacade._facadeDisabled = true;
+							activeSubFacade = activeSubFacade._activeSubFacade;
+						}
+						return this._activeSubFacade = newDelta.do();
 					} else {
-						return this.delta.do.apply(this.delta, fcdArgs);
+						return this;
 					}
 				};
 			}

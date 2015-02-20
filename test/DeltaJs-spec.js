@@ -3,11 +3,9 @@
 
 describe("DeltaJs constructor", function () {
 
-
 	it("is present", function () {
 		expect(DeltaJs).toEqual(any(Function));
 	});
-
 
 	it("never throws any exception", function () {
 		expect(function () {
@@ -15,12 +13,10 @@ describe("DeltaJs constructor", function () {
 		}).not.toThrow();
 	});
 
-
 	it("returns an object of type DeltaJs", function () {
 		var deltaJs = new DeltaJs();
 		expect(deltaJs).toEqual(any(DeltaJs));
 	});
-
 
 });
 
@@ -38,7 +34,11 @@ describe("DeltaJs instance", function () {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function ExpectedError(type, content) { this.type = type; this.content = content; }
+	function ExpectedError(type, content) {
+		this.type = type;
+		this.content = content;
+	}
+
 	function expectError(type, content) { return new ExpectedError(type, content) }
 
 	function _itCan(fn) {
@@ -73,9 +73,70 @@ describe("DeltaJs instance", function () {
 		};
 	}
 
-	var itCan = _itCan(it);
+	var itCan  = _itCan(it);
 	var xitCan = _itCan(xit);
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/* set up a few functions that can be tracked */
+	var callLog;
+	var fA = (...args) => { callLog.push(['fA', args]) };
+	var fB = (...args) => { callLog.push(['fB', args]) };
+	var fC = (...args) => { callLog.push(['fC', args]) };
+	beforeEach(() => { callLog = [] });
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	describe("facades", () => {
+
+		itCan("only have one sub-facade active at a time", [[
+			{ sub1: {}, sub2: {} },
+			() => { // modify -> modify
+				var objD = d.modify('obj');
+				var subD = objD.modify('sub1');
+				objD.modify('sub2');
+				subD.add('key', 'value');
+			},
+			expectError(DeltaJs.MultipleActiveFacadesError)
+		], [
+			{ sub1: {}, sub2: {} },
+			() => { // delta model -> modify
+				var objDM = d.deltaModel('obj');
+				var subD = objDM.modify('a', 'sub1');
+				objDM.modify('b', 'sub2');
+				subD.add('key', 'value');
+			},
+			expectError(DeltaJs.MultipleActiveFacadesError)
+		], [
+			{ sub1: {}, sub2: {} },
+			() => { // modify -> delta model
+				var objD = d.modify('obj');
+				var subD = objD.deltaModel('sub1');
+				objD.deltaModel('sub2');
+				subD.add('a', 'key', 'value');
+			},
+			expectError(DeltaJs.MultipleActiveFacadesError)
+		], [
+			{ sub1: {}, sub2: {} },
+			() => { // delta model -> delta model
+				var objDM = d.deltaModel('obj');
+				var subD = objDM.deltaModel('a', 'sub1');
+				objDM.deltaModel('b', 'sub2');
+				subD.add('a1', 'key', 'value');
+			},
+			expectError(DeltaJs.MultipleActiveFacadesError)
+		], [
+			{ sub: { subSub: {} } },
+			() => { // make sure sub-facades are disabled too
+				var objD = d.modify('obj');
+				var subD = objD.modify('sub').modify('sub.subSub');
+				objD.modify('sub');
+				subD.add('key', 'value');
+			},
+			expectError(DeltaJs.MultipleActiveFacadesError)
+		]]);
+
+	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -182,7 +243,6 @@ describe("DeltaJs instance", function () {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	describe("composite object operations", () => {
-
 
 		itCan("correctly modify objects when the composition is valid", [[
 			{ key: 'val' },
@@ -395,7 +455,6 @@ describe("DeltaJs instance", function () {
 			expectError(DeltaJs.ApplicationError) // 'obj.foo' is mandatory, but was absent
 		]]);
 
-
 		itCan("throw an error when the composition is detectably invalid", [
 			() => {
 				d.modify('obj.foo');
@@ -436,13 +495,11 @@ describe("DeltaJs instance", function () {
 			}
 		].map((action) => [null, action, expectError(DeltaJs.CompositionError)]));
 
-
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	describe("array operations", () => {
-
 
 		itCan("prepend a new value to an array", [[
 			{ arr: [] },
@@ -466,7 +523,6 @@ describe("DeltaJs instance", function () {
 			expectError(DeltaJs.ApplicationError)
 		]]);
 
-
 		itCan("insert a new value into an array", [[
 			{ arr: [] },
 			() => { d.insert('obj.arr', 'val') },
@@ -476,8 +532,8 @@ describe("DeltaJs instance", function () {
 			() => { d.insert('obj.arr', 'val') },
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ arr: ['val', 'init'] },
-					{ arr: ['init', 'val'] }
+						{ arr: ['val', 'init'] },
+						{ arr: ['init', 'val'] }
 				);
 			}
 		], [
@@ -485,9 +541,9 @@ describe("DeltaJs instance", function () {
 			() => { d.insert('obj.arr', 'val') },
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ arr: ['val', 'init1', 'init2'] },
-					{ arr: ['init1', 'val', 'init2'] },
-					{ arr: ['init1', 'init2', 'val'] }
+						{ arr: ['val', 'init1', 'init2'] },
+						{ arr: ['init1', 'val', 'init2'] },
+						{ arr: ['init1', 'init2', 'val'] }
 				);
 			}
 		], [
@@ -499,7 +555,6 @@ describe("DeltaJs instance", function () {
 			() => { d.insert('obj.arr', 'val') },
 			expectError(DeltaJs.ApplicationError)
 		]]);
-
 
 		itCan("append a new value to an array", [[
 			{ arr: [] },
@@ -523,13 +578,11 @@ describe("DeltaJs instance", function () {
 			expectError(DeltaJs.ApplicationError)
 		]]);
 
-
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	describe("composite array operations", () => {
-
 
 		itCan("combine multiple array operations", [[
 			{ arr: ['init'] },
@@ -542,32 +595,32 @@ describe("DeltaJs instance", function () {
 			{ arr: ['init'] },
 			() => {
 				d.prepend('obj.arr', 1);
-				d.insert ('obj.arr', 2);
+				d.insert('obj.arr', 2);
 			},
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ arr: [2, 1, 'init'] },
-					{ arr: [1, 2, 'init'] },
-					{ arr: [1, 'init', 2] }
+						{ arr: [2, 1, 'init'] },
+						{ arr: [1, 2, 'init'] },
+						{ arr: [1, 'init', 2] }
 				);
 			}
 		], [
 			{ arr: ['init'] },
 			() => {
 				d.prepend('obj.arr', 1);
-				d.append ('obj.arr', 2);
+				d.append('obj.arr', 2);
 			},
 			{ arr: [1, 'init', 2] }
 		], [
 			{ arr: ['init'] },
 			() => {
-				d.insert ('obj.arr', 1);
+				d.insert('obj.arr', 1);
 				d.prepend('obj.arr', 2);
 			},
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ arr: [2, 1, 'init'] },
-					{ arr: [2, 'init', 1] }
+						{ arr: [2, 1, 'init'] },
+						{ arr: [2, 'init', 1] }
 				);
 			}
 		], [
@@ -578,12 +631,12 @@ describe("DeltaJs instance", function () {
 			},
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ arr: [2, 1, 'init'] },
-					{ arr: [1, 2, 'init'] },
-					{ arr: [1, 'init', 2] },
-					{ arr: [2, 'init', 1] },
-					{ arr: ['init', 2, 1] },
-					{ arr: ['init', 1, 2] }
+						{ arr: [2, 1, 'init'] },
+						{ arr: [1, 2, 'init'] },
+						{ arr: [1, 'init', 2] },
+						{ arr: [2, 'init', 1] },
+						{ arr: ['init', 2, 1] },
+						{ arr: ['init', 1, 2] }
 				);
 			}
 		], [
@@ -594,14 +647,14 @@ describe("DeltaJs instance", function () {
 			},
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ arr: [1, 'init', 2] },
-					{ arr: ['init', 1, 2] }
+						{ arr: [1, 'init', 2] },
+						{ arr: ['init', 1, 2] }
 				);
 			}
 		], [
 			{ arr: ['init'] },
 			() => {
-				d.append ('obj.arr', 1);
+				d.append('obj.arr', 1);
 				d.prepend('obj.arr', 2);
 			},
 			{ arr: [2, 'init', 1] }
@@ -613,9 +666,9 @@ describe("DeltaJs instance", function () {
 			},
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ arr: [2, 'init', 1] },
-					{ arr: ['init', 2, 1] },
-					{ arr: ['init', 1, 2] }
+						{ arr: [2, 'init', 1] },
+						{ arr: ['init', 2, 1] },
+						{ arr: ['init', 1, 2] }
 				);
 			}
 		], [
@@ -627,25 +680,24 @@ describe("DeltaJs instance", function () {
 			{ arr: ['init', 1, 2] }
 		]]);
 
-
 		itCan("combine array operations with other types of operations or throw an error if invalid", [[
 			{ key: 'val' },
 			() => {
-				d.add   ('obj.arr', ['init']);
+				d.add('obj.arr', ['init']);
 				d.append('obj.arr', 'val');
 			},
 			{ key: 'val', arr: ['init', 'val'] }
 		], [
 			{ key: 'val' },
 			() => {
-				d.add   ('obj.arr', 'not an array');
+				d.add('obj.arr', 'not an array');
 				d.append('obj.arr', 'val');
 			},
 			expectError(DeltaJs.CompositionError) // 'obj.arr', left by the 'add' operation, has to be an array
 		], [
 			{ key: 'val', arr: 'whatever' },
 			() => {
-				d.add   ('obj.arr', ['init']);
+				d.add('obj.arr', ['init']);
 				d.append('obj.arr', 'val');
 			},
 			expectError(DeltaJs.ApplicationError) // 'obj.arr' is forbidden, but was present
@@ -653,21 +705,21 @@ describe("DeltaJs instance", function () {
 			{ key: 'val', arr: 'whatever' },
 			() => {
 				d.replace('obj.arr', ['init']);
-				d.append ('obj.arr', 'val');
+				d.append('obj.arr', 'val');
 			},
 			{ key: 'val', arr: ['init', 'val'] }
 		], [
 			{ key: 'val', arr: 'whatever' },
 			() => {
 				d.replace('obj.arr', 'not an array');
-				d.append ('obj.arr', 'val');
+				d.append('obj.arr', 'val');
 			},
 			expectError(DeltaJs.CompositionError) // 'obj.arr', left by the 'replace' operation, has to be an array
 		], [
 			{ key: 'val' },
 			() => {
 				d.replace('obj.arr', ['init']);
-				d.append ('obj.arr', 'val');
+				d.append('obj.arr', 'val');
 			},
 			expectError(DeltaJs.ApplicationError) // 'obj.arr' is mandatory, but was absent
 		], [
@@ -687,19 +739,18 @@ describe("DeltaJs instance", function () {
 		], [
 			{ key: 'val', arr: ['init'] },
 			() => {
-				d.append ('obj.arr', 'val');
+				d.append('obj.arr', 'val');
 				d.replace('obj.arr', 'whatever');
 			},
 			{ key: 'val', arr: 'whatever' }
 		], [
 			{ key: 'val' },
 			() => {
-				d.append ('obj.arr', 'val');
+				d.append('obj.arr', 'val');
 				d.replace('obj.arr', 'whatever');
 			},
 			expectError(DeltaJs.ApplicationError) // 'obj.arr' is mandatory, but was absent
 		]]);
-
 
 	});
 
@@ -707,21 +758,12 @@ describe("DeltaJs instance", function () {
 
 	describe("function operations", () => {
 
-
-		/* setup */
-		var callLog;
-		function fA(...args) { callLog.push(['fA', args]) }
-		function fB(...args) { callLog.push(['fB', args]) }
-		function fC(...args) { callLog.push(['fC', args]) }
-		beforeEach(() => { callLog = [] });
-
-
 		itCan("prepend new statements to run inside an existing function", [[
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => { d.prepend('obj.fn', function (a, b) { fB(this, b, b) }) },
 			(obj) => {
 				obj.fn(1, 2, 3);
-				expect(callLog).toEqual([ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ]);
+				expect(callLog).toEqual([['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]]);
 			}
 		], [
 			{ fn: 'not a function or an array' },
@@ -733,15 +775,14 @@ describe("DeltaJs instance", function () {
 			expectError(DeltaJs.ApplicationError)
 		]]);
 
-
 		itCan("insert new statements to run inside an existing function", [[
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => { d.insert('obj.fn', function (a, b) { fB(this, b, b) }) },
 			(obj) => {
 				obj.fn(1, 2, 3);
 				expect(callLog).toEqualOneOf(
-					[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
-					[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]
+						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
 				);
 			}
 		], [
@@ -754,13 +795,12 @@ describe("DeltaJs instance", function () {
 			expectError(DeltaJs.ApplicationError)
 		]]);
 
-
 		itCan("append new statements to run inside an existing function", [[
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => { d.append('obj.fn', function (a, b) { fB(this, b, b) }) },
 			(obj) => {
 				obj.fn(1, 2, 3);
-				expect(callLog).toEqual([ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]);
+				expect(callLog).toEqual([['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]);
 			}
 		], [
 			{ fn: 'not a function or an array' },
@@ -772,21 +812,11 @@ describe("DeltaJs instance", function () {
 			expectError(DeltaJs.ApplicationError)
 		]]);
 
-
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	describe("composite function operations", () => {
-
-
-		/* setup */
-		var callLog;
-		function fA(...args) { callLog.push(['fA', args]) }
-		function fB(...args) { callLog.push(['fB', args]) }
-		function fC(...args) { callLog.push(['fC', args]) }
-		beforeEach(() => { callLog = [] });
-
 
 		itCan("combine multiple function operations", [[
 			{ fn(a, b, c) { fA(this, a, c) } },
@@ -796,43 +826,43 @@ describe("DeltaJs instance", function () {
 			},
 			(obj) => {
 				obj.fn(1, 2, 3);
-				expect(callLog).toEqual([ ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ]);
+				expect(callLog).toEqual([['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]]);
 			}
 		], [
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => {
 				d.prepend('obj.fn', function (a, b) { fB(this, b, b) });
-				d.insert ('obj.fn', function (a, b) { fC(this, b, a) });
+				d.insert('obj.fn', function (a, b) { fC(this, b, a) });
 			},
 			(obj) => {
 				obj.fn(1, 2, 3);
 				expect(callLog).toEqualOneOf(
-					[ ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
-					[ ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]] ],
-					[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]] ]
+						[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+						[['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]]],
+						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]]
 				);
 			}
 		], [
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => {
 				d.prepend('obj.fn', function (a, b) { fB(this, b, b) });
-				d.append ('obj.fn', function (a, b) { fC(this, b, a) });
+				d.append('obj.fn', function (a, b) { fC(this, b, a) });
 			},
 			(obj) => {
 				obj.fn(1, 2, 3);
-				expect(callLog).toEqual([ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]] ]);
+				expect(callLog).toEqual([['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]]);
 			}
 		], [
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => {
-				d.insert ('obj.fn', function (a, b) { fB(this, b, b) });
+				d.insert('obj.fn', function (a, b) { fB(this, b, b) });
 				d.prepend('obj.fn', function (a, b) { fC(this, b, a) });
 			},
 			(obj) => {
 				obj.fn(1, 2, 3);
 				expect(callLog).toEqualOneOf(
-					[ ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
-					[ ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]
+						[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+						[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
 				);
 			}
 		], [
@@ -844,12 +874,12 @@ describe("DeltaJs instance", function () {
 			(obj) => {
 				obj.fn(1, 2, 3);
 				expect(callLog).toEqualOneOf(
-					[ ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
-					[ ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]] ],
-					[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]] ],
-					[ ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ],
-					[ ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]] ],
-					[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]
+						[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+						[['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]]],
+						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]],
+						[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]],
+						[['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]]],
+						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
 				);
 			}
 		], [
@@ -861,19 +891,19 @@ describe("DeltaJs instance", function () {
 			(obj) => {
 				obj.fn(1, 2, 3);
 				expect(callLog).toEqualOneOf(
-					[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]] ],
-					[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]
+						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]],
+						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
 				);
 			}
 		], [
 			{ fn(a, b, c) { fA(this, a, c) } },
 			() => {
-				d.append ('obj.fn', function (a, b) { fB(this, b, b) });
+				d.append('obj.fn', function (a, b) { fB(this, b, b) });
 				d.prepend('obj.fn', function (a, b) { fC(this, b, a) });
 			},
 			(obj) => {
 				obj.fn(1, 2, 3);
-				expect(callLog).toEqual([ ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]);
+				expect(callLog).toEqual([['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]);
 			}
 		], [
 			{ fn(a, b, c) { fA(this, a, c) } },
@@ -884,9 +914,9 @@ describe("DeltaJs instance", function () {
 			(obj) => {
 				obj.fn(1, 2, 3);
 				expect(callLog).toEqualOneOf(
-					[ ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ],
-					[ ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]] ],
-					[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]
+						[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]],
+						[['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]]],
+						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
 				);
 			}
 		], [
@@ -897,33 +927,32 @@ describe("DeltaJs instance", function () {
 			},
 			(obj) => {
 				obj.fn(1, 2, 3);
-				expect(callLog).toEqual([ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]);
+				expect(callLog).toEqual([['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]);
 			}
 		]]);
-
 
 		itCan("combine function operations with other types of operations or throw an error if invalid", [[
 			{ key: 'val' },
 			() => {
-				d.add   ('obj.fn', function (a, b, c) { fA(this, a, c) });
-				d.append('obj.fn', function (a, b)    { fB(this, b, b) });
+				d.add('obj.fn', function (a, b, c) { fA(this, a, c) });
+				d.append('obj.fn', function (a, b) { fB(this, b, b) });
 			},
 			(obj) => {
 				obj.fn(1, 2, 3);
 				expect(obj.key).toBe('val');
-				expect(callLog).toEqual([ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]);
+				expect(callLog).toEqual([['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]);
 			}
 		], [
 			{ key: 'val' },
 			() => {
-				d.add   ('obj.fn', 'not a function or an array');
+				d.add('obj.fn', 'not a function or an array');
 				d.append('obj.fn', function (a, b) { fB(this, b, b) });
 			},
 			expectError(DeltaJs.CompositionError) // 'obj.fn', left by the 'add' operation, has to be an array
 		], [
 			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
 			() => {
-				d.add   ('obj.fn', function (a, b, c) { fA(this, a, c) });
+				d.add('obj.fn', function (a, b, c) { fA(this, a, c) });
 				d.append('obj.fn', function (a, b) { fB(this, b, b) });
 			},
 			expectError(DeltaJs.ApplicationError) // 'obj.fn' is forbidden, but was present
@@ -931,25 +960,25 @@ describe("DeltaJs instance", function () {
 			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
 			() => {
 				d.replace('obj.fn', function (a, b) { fB(this, b, b) });
-				d.append ('obj.fn', function (a, b) { fC(this, b, a) });
+				d.append('obj.fn', function (a, b) { fC(this, b, a) });
 			},
 			(obj) => {
 				obj.fn(1, 2, 3);
 				expect(obj.key).toBe('val');
-				expect(callLog).toEqual([ ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]] ]);
+				expect(callLog).toEqual([['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]);
 			}
 		], [
 			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
 			() => {
 				d.replace('obj.fn', 'not a function or an array');
-				d.append ('obj.fn', function (a, b) { fB(this, b, b) });
+				d.append('obj.fn', function (a, b) { fB(this, b, b) });
 			},
 			expectError(DeltaJs.CompositionError) // 'obj.fn', left by the 'replace' operation, has to be an array
 		], [
 			{ key: 'val' },
 			() => {
 				d.replace('obj.fn', function (a, b, c) { fA(this, a, c) });
-				d.append ('obj.fn', function (a, b) { fB(this, b, b) });
+				d.append('obj.fn', function (a, b) { fB(this, b, b) });
 			},
 			expectError(DeltaJs.ApplicationError) // 'obj.fn' is mandatory, but was absent
 		], [
@@ -969,19 +998,18 @@ describe("DeltaJs instance", function () {
 		], [
 			{ key: 'val', fn(a, b, c) { fA(this, a, c) } },
 			() => {
-				d.append ('obj.fn', function (a, b) { fB(this, b, b) });
+				d.append('obj.fn', function (a, b) { fB(this, b, b) });
 				d.replace('obj.fn', 'whatever');
 			},
 			{ key: 'val', fn: 'whatever' }
 		], [
 			{ key: 'val' },
 			() => {
-				d.append ('obj.fn', function (a, b) { fB(this, b, b) });
+				d.append('obj.fn', function (a, b) { fB(this, b, b) });
 				d.replace('obj.fn', 'whatever');
 			},
 			expectError(DeltaJs.ApplicationError) // 'obj.fn' is mandatory, but was absent
 		]]);
-
 
 	});
 
@@ -1037,8 +1065,8 @@ describe("DeltaJs instance", function () {
 			},
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ key: ['b', 'a'] },
-					{ key: ['a', 'b'] }
+						{ key: ['b', 'a'] },
+						{ key: ['a', 'b'] }
 				);
 			}
 		], [
@@ -1052,12 +1080,6 @@ describe("DeltaJs instance", function () {
 
 		describe("with a function operation delta inside", () => {
 
-			/* setup */
-			var callLog;
-			function fA(...args) { callLog.push(['fA', args]) }
-			function fB(...args) { callLog.push(['fB', args]) }
-			beforeEach(() => { callLog = [] });
-
 			itCan("be a middle man for that one delta", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
@@ -1065,7 +1087,7 @@ describe("DeltaJs instance", function () {
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
-					expect(callLog).toEqual([ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ]);
+					expect(callLog).toEqual([['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]]);
 				}
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
@@ -1075,8 +1097,8 @@ describe("DeltaJs instance", function () {
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqualOneOf(
-						[ ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]] ],
-						[ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]
+							[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+							[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
 					);
 				}
 			], [
@@ -1086,12 +1108,11 @@ describe("DeltaJs instance", function () {
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
-					expect(callLog).toEqual([ ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]] ]);
+					expect(callLog).toEqual([['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]);
 				}
 			]]);
 
 		});
-
 
 		itCan("apply deltas in a linear order (as if composed)", [[
 			{},
@@ -1110,62 +1131,111 @@ describe("DeltaJs instance", function () {
 		], [
 			{},
 			() => {
-				dm('X'                   ).add('key1', { foo: 'bar' });
-				dm('Y',  { after: ['X'] }).add('key2', 'some value');
-				dm('Z',  { after: ['Y'] }).add('key3', 'some other value');
+				dm('X').add('key1', { foo: 'bar' });
+				dm('Y', { after: ['X'] }).add('key2', 'some value');
+				dm('Z', { after: ['Y'] }).add('key3', 'some other value');
 				dm('rY', { after: ['Z'] }).remove('key2');
 			},
 			{ key1: { foo: 'bar' }, key3: 'some other value' }
 		]]);
 
-
 		itCan("apply unordered deltas in arbitrary order, if they do not conflict", [[
 			{ oldKey: 'old value' },
 			() => {
-				dm('X').add('key1', 1    );
-				dm('Y').add('key2', 'b'  );
+				dm('X').add('key1', 1);
+				dm('Y').add('key2', 'b');
 				dm('Z').add('key3', 'iii');
 				dm('r').remove('oldKey');
 			},
 			{ key1: 1, key2: 'b', key3: 'iii' }
 		]]);
 
-
 		itCan("apply a partially ordered set of `deltas in topological order, if unordered deltas do not conflict", [[
-             { oldKey: 'old value' },
-             () => {
-                 dm('W'                  ).add('key', { foo: 'bar' });
-                 dm('X', { after: ['W'] }).add('key.x', 1           );
-                 dm('Y', { after: ['W'] }).add('key.y', 2           );
-                 dm('Z', { after: ['W'] }).add('key.z', 3           );
-             },
-             { oldKey: 'old value', key: { foo: 'bar', x: 1, y: 2, z: 3 } }
-         ], [
 			{ oldKey: 'old value' },
 			() => {
-				dm('X', { after: ['W'] }).add('key.x', 1           );
-				dm('Y', { after: ['W'] }).add('key.y', 2           );
-				dm('Z', { after: ['W'] }).add('key.z', 3           );
-				dm('W'                  ).add('key', { foo: 'bar' }); // the order doesn't matter
+				dm('W').add('key', { foo: 'bar' });
+				dm('X', { after: ['W'] }).add('key.x', 1);
+				dm('Y', { after: ['W'] }).add('key.y', 2);
+				dm('Z', { after: ['W'] }).add('key.z', 3);
+			},
+			{ oldKey: 'old value', key: { foo: 'bar', x: 1, y: 2, z: 3 } }
+		], [
+			{ oldKey: 'old value' },
+			() => {
+				dm('X', { after: ['W'] }).add('key.x', 1);
+				dm('Y', { after: ['W'] }).add('key.y', 2);
+				dm('Z', { after: ['W'] }).add('key.z', 3);
+				dm('W').add('key', { foo: 'bar' }); // the order doesn't matter
 			},
 			{ oldKey: 'old value', key: { foo: 'bar', x: 1, y: 2, z: 3 } }
 		]]);
 
+		itCan("have multiple separate operations on the same delta", [[
+			{ subObj: {} },
+			() => {
+				var x = dm('X');
+				x.modify('subObj').add('one', 1);
+				x.modify('subObj').add('two', 2);
+			},
+			{ subObj: { one: 1, two: 2 } }
+		], [
+			{ subObj: { subSubObj: {} } },
+			() => {
+				var x = dm('X');
+				x.modify('subObj').add('one', 1);
+				x.modify('subObj.subSubObj').add('two', 2);
+			},
+			{ subObj: { one: 1, subSubObj: { two: 2 } } }
+		], [
+			{ subObj: { subSubObj: {} } },
+			() => {
+				var x = dm('X');
+				x.add('subObj.one', 1);
+				x.modify('subObj.subSubObj').add('two', 2);
+			},
+			{ subObj: { one: 1, subSubObj: { two: 2 } } }
+		], [
+			{ subObj: { subSubObj: {} } },
+			() => {
+				var x = dm('X');
+				x.modify('subObj.subSubObj').add('two', 2);
+				x.modify('subObj').add('one', 1);
+			},
+			{ subObj: { one: 1, subSubObj: { two: 2 } } }
+		]]);
 
 		itCan("throw an error if there is an application order cycle", [[
-            {},
-            () => {
-                dm('X', { after: ['Y'] }).add('keyX', 'value X');
-                dm('Y', { after: ['X'] }).add('keyY', 'value Y');
-            },
-            expectError(DeltaJs.ApplicationOrderCycle, { from: 'X', to: 'Y' })
-        ], [
 			{},
 			() => {
-				dm('W'                       ).add('keyW', 'W value');
+				dm('X', { after: ['Y'] }).add('keyX', 'value X');
+				dm('Y', { after: ['X'] }).add('keyY', 'value Y');
+			},
+			expectError(DeltaJs.ApplicationOrderCycle, { from: 'X', to: 'Y' })
+		], [
+			{},
+			() => {
+				dm('W').add('keyW', 'W value');
 				dm('X', { after: ['W', 'Z'] }).add('keyX', 'X value');
-				dm('Y', { after: ['X']      }).add('keyY', 'Y value');
-				dm('Z', { after: ['Y']      }).add('keyZ', 'Z value');
+				dm('Y', { after: ['X'] }).add('keyY', 'Y value');
+				dm('Z', { after: ['Y'] }).add('keyZ', 'Z value');
+			},
+			expectError(DeltaJs.ApplicationOrderCycle, { from: 'Y', to: 'Z' })
+		]]);
+
+		itCan("throw an error if there is an application order cycle", [[
+			{},
+			() => {
+				dm('X', { after: ['Y'] }).add('keyX', 'value X');
+				dm('Y', { after: ['X'] }).add('keyY', 'value Y');
+			},
+			expectError(DeltaJs.ApplicationOrderCycle, { from: 'X', to: 'Y' })
+		], [
+			{},
+			() => {
+				dm('W').add('keyW', 'W value');
+				dm('X', { after: ['W', 'Z'] }).add('keyX', 'X value');
+				dm('Y', { after: ['X'] }).add('keyY', 'Y value');
+				dm('Z', { after: ['Y'] }).add('keyZ', 'Z value');
 			},
 			expectError(DeltaJs.ApplicationOrderCycle, { from: 'Y', to: 'Z' })
 		]]);
@@ -1213,14 +1283,6 @@ describe("DeltaJs instance", function () {
 			},
 			expectError(DeltaJs.UnresolvedConflict)
 		]]);
-
-
-		/* setup */
-		var callLog;
-		function fA(...args) { callLog.push(['fA', args]) }
-		function fB(...args) { callLog.push(['fB', args]) }
-		function fC(...args) { callLog.push(['fC', args]) }
-		beforeEach(() => { callLog = [] });
 
 		xitCan("work correctly for combinations that may look like conflicts, but aren't", [[
 			{},
@@ -1272,8 +1334,8 @@ describe("DeltaJs instance", function () {
 			},
 			(obj) => {
 				expect(obj).toEqualOneOf(
-					{ key: ['X value', 'Y value'] },
-					{ key: ['Y value', 'X value'] }
+						{ key: ['X value', 'Y value'] },
+						{ key: ['Y value', 'X value'] }
 				);
 			}
 		], [
@@ -1285,18 +1347,13 @@ describe("DeltaJs instance", function () {
 			(obj) => {
 				obj.key(1, 2, 3);
 				expect(callLog).toEqualOneOf(
-					[ ['fB', [obj]], ['fA', [obj]] ],
-					[ ['fA', [obj]], ['fB', [obj]] ]
+						[['fB', [obj]], ['fA', [obj]]],
+						[['fA', [obj]], ['fB', [obj]]]
 				);
 			}
 		]]);
 
-
-
 		// TODO: conflict resolution
-
-
-
 
 	});
 
@@ -1532,12 +1589,12 @@ describe("DeltaJs instance", function () {
 		});
 
 		it("apply deltas to a value for which deltas are prepared (2)", () => {
-			deltaJs.do('w', { feature: false                    }).add('obj', { keyW: 'valW' });
-			deltaJs.do('x', { feature: false, after: ['w']      }).add('obj.keyX', 'valX');
-			deltaJs.do('y', { feature: false, after: ['w']      }).add('obj.keyY', 'valY');
+			deltaJs.do('w', { feature: false }).add('obj', { keyW: 'valW' });
+			deltaJs.do('x', { feature: false, after: ['w'] }).add('obj.keyX', 'valX');
+			deltaJs.do('y', { feature: false, after: ['w'] }).add('obj.keyY', 'valY');
 			deltaJs.do('z', { feature: false, after: ['x', 'y'] }).modify('obj')
-				.replace('keyX', 'valXZ')
-				.replace('keyY', 'valYZ');
+					.replace('keyX', 'valXZ')
+					.replace('keyY', 'valYZ');
 			var obj = deltaJs.vp('obj');
 			expect(obj).toEqual({
 				keyW: 'valW',
@@ -1567,10 +1624,10 @@ describe("DeltaJs instance", function () {
 		it("can, based on which features are selected, apply or not apply a delta", () => {
 
 			/* deltas, normally declared independently */
-			w({ iff: ['F']      }).add('obj.w', 'w-value');
+			w({ iff: ['F'] }).add('obj.w', 'w-value');
 			x({ iff: ['F', 'G'] }).add('obj.x', 'x-value');
 			y({ iff: ['F', 'H'] }).add('obj.y', 'y-value');
-			z({ feature: false  }).add('obj.z', 'z-value');
+			z({ feature: false }).add('obj.z', 'z-value');
 
 			/* the desired features, selected in a central location */
 			deltaJs.select(['F', 'H']);
@@ -1633,7 +1690,7 @@ describe("DeltaJs instance", function () {
 			x.add('obj.x', 'x-value');
 			y.add('obj.y', 'y-value');
 			z({ resolves: ['x', 'y'] })
-				.replace('obj.y', 'z-value');
+					.replace('obj.y', 'z-value');
 
 			/* the desired features, selected in a central location */
 			deltaJs.select(['x', 'y']);
@@ -1655,7 +1712,7 @@ describe("DeltaJs instance", function () {
 			x.add('obj.x', 'x-value');
 			y.add('obj.y', 'y-value');
 			z({ requires: ['x', 'y'] })
-				.replace('obj.y', 'z-value');
+					.replace('obj.y', 'z-value');
 
 			/* the desired features, selected in a central location */
 			deltaJs.select(['z']);

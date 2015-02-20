@@ -68,6 +68,9 @@ export var DeltaConflict = U.newSubclass(Error, (superFn) => function DeltaConfl
 	this.deltas = deltas;
 });
 
-
-
-
+export var MultipleActiveFacadesError = U.newSubclass(Error, (superFn) => function MultipleActiveFacadesError(delta) {
+	superFn.call(this);
+	this.name = 'MultipleActiveFacadesError';
+	this.delta = delta;
+	this.message = `Only one 'do' interface can be active per '${delta.type}' delta.`;
+});

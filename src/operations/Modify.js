@@ -74,6 +74,19 @@ export default (deltaJs) => {
 			return this._addOperation(allOptions, new Path(path), delta);
 		},
 
+		/** {@public}{@method}
+		 * Get the deepest existing Modify delta corresponding to a relative path.
+		 * @param path {Path} - a path relative to this delta
+		 * @return {{ delta: DeltaJs#Delta.Modify, rest: Path }} - the deepest Modify delta corresponding to the path,
+		 *                                                         and the unused rest of the path
+		 */
+		deepestModifyDeltaByPath(path) {
+			if (U.isUndefined(path.prop) || this.deltas[path.prop].type !== 'Modify') {
+				return { delta: this, rest: path };
+			}
+			return this.deltas[path.prop].deepestModifyDeltaByPath(path.rest || new Path());
+		},
+
 		/** {@private}{@method}
 		 * @param options {object}
 		 * @param path    {string}

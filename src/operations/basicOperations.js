@@ -28,8 +28,6 @@ export default (deltaJs) => {
 		['Add',     'add',     (target) => U.isUndefined(target.value)],
 		['Replace', 'replace', (target) => U.isDefined  (target.value)]
 	].forEach(([Type, type, pre]) => {
-		// In the line directly below, 'this' cannot be used because of a bug in traceur:
-		// https://github.com/google/traceur-compiler/issues/1631
 		deltaJs.newOperationType(Type, {
 			construct()          { this.deltasToApplyToArg = []                                                      },
 			precondition(target) { return target instanceof WritableTarget && pre(target)                            },
@@ -41,7 +39,7 @@ export default (deltaJs) => {
 			},
 			afterApplying(delta) {
 				var result = this.clone();
-				result.deltasToApplyToArg.push(delta);
+				result.deltasToApplyToArg.push(delta); // don't clone, as that would break any facades
 				if (result.deltasToApplyToArg.reduce((d1, d2) => deltaJs.composed(d1, d2))
 						    .precondition(wt(result, 'arg')) !== true) {
 					throw new DeltaArgApplicationError(delta, this);

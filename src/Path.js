@@ -21,7 +21,17 @@ var Path = U.newClass(function (str = "") {
 		this._rest = other._rest;
 	},
 	get prop() { return this._prop },
-	get rest() { return this._rest }
+	get rest() { return this._rest },
+	toString() {
+		var result = "";
+		if (U.isDefined(this.prop)) {
+			result += this.prop;
+			if (U.isDefined(this.rest)) {
+				result += "." + this.rest.toString();
+			}
+		}
+		return result;
+	}
 });
 
 
