@@ -77,82 +77,27 @@ export default (deltaJs) => {
 
 			/* check if a delta with this name already exists */
 			var existingDelta = this.graph.vertexValue(name);
-			//if (U.isDefined(existingDelta)) {
-			//	if (existingDelta.type === 'Modify') {
-			//		var {delta: deepestModify, rest: restPath} = existingDelta.subDeltaByPath(path);
-			//		path = restPath;
-			//		deltaBase = deepestModify;
-			//	} else {
-			//
-			//	}
-			//	//else {
-			//	//	if (path.prop) {
-			//	//		deltaBase = new deltaJs.Delta.Modify();
-			//	//		deltaBase._addOperation(options, path, delta);
-			//	//	}
-			//	//	deltaBase = existingDelta.composedWith(deltaBase);
-			//	//	deltaBase.name = existingDelta.name;
-			//	//	deltaBase.applicationCondition = existingDelta.applicationCondition; // TODO: ... doesn't really belong here
-			//	//	this.graph.setVertex(name, deltaBase);
-			//	//}
-			//}
 
+
+
+			if (U.isDefined(existingDelta) && existingDelta.type === 'Modify' && U.isDefined(path.rest)) {
+				return existingDelta._addOperation(options, path.rest, delta);
+			}
+
+
+			/* if there is a path, create the corresponding chain of deltas */
+			if (path.prop) {
+				deltaBase = new deltaJs.Delta.Modify();
+				deltaBase._addOperation(options, path, delta);
+			}
 
 			/* if there is already a delta with this name, compose them and return `delta` early */
 			if (U.isDefined(existingDelta)) {
-
-				console.log('-----------------------');
-
-				console.log('existingDelta:\n', existingDelta.toString({ debug: true }));
-
-				console.log('-----------------------');
-
-				console.log('path:', path.toString());
-				console.log('delta:\n', delta.toString({ debug: true }));
-
-				if (existingDelta.type === 'Modify') {
-
-					var {delta: deepestModify, rest: restPath} = existingDelta.deepestModifyDeltaByPath(path);
-
-					console.log('-----------------------');
-
-					console.log('deepestModify:\n', deepestModify.toString({ debug: true }));
-					console.log('rest:', restPath.toString());
-
-					if (restPath.prop) {
-						deepestModify._addOperation(options, restPath, delta);
-					} else {
-
-					}
-
-					console.log('-----------------------');
-
-					console.log('deepestModify:\n', deepestModify.toString({ debug: true }));
-					console.log('rest:', restPath.toString());
-
-					console.log('-----------------------');
-
-
-
-				} else {
-
-				}
-
-
-
-
-
-				//deltaBase = existingDelta.composedWith(deltaBase);
-				//deltaBase.name = existingDelta.name;
-				//deltaBase.applicationCondition = existingDelta.applicationCondition;
-				//this.graph.setVertex(name, deltaBase);
+				deltaBase = existingDelta.composedWith(deltaBase);
+				deltaBase.name = existingDelta.name;
+				deltaBase.applicationCondition = existingDelta.applicationCondition;
+				this.graph.setVertex(name, deltaBase);
 			} else {
-
-				/* if there is a path, create the corresponding chain of deltas */
-				if (path.prop) {
-					deltaBase = new deltaJs.Delta.Modify();
-					deltaBase._addOperation(options, path, delta);
-				}
 
 				/* add the new delta to the delta model */
 				deltaBase.name = name;
