@@ -53,27 +53,16 @@ var U = {
 		var keys = rest.slice(0, -1);
 		var def = rest[rest.length-1];
 		if (keys.length === 0) { return object }
-		var last = U.o.apply(null, [object].concat(keys.slice(0, -1)));
+		var last = U.o(object, ...keys.slice(0, -1));
 		if (U.isUndefined(last[keys[keys.length-1]])) {
 			last[keys[keys.length-1]] = def;
 		}
 		return last[keys[keys.length-1]];
 	},
 
-	o(object, ...keys) {
-		return U.default.apply(null, [object].concat(keys).concat([ {} ]));
-	},
+	o(object, ...keys) { return U.default(object, ...keys, {}) },
 
-	a(object, ...keys) {
-		return U.default.apply(null, [object].concat(keys).concat([ [] ]));
-	},
-
-	/* allows the Function constructor to be used with an array of formal parameters */
-	applyConstructor(ConstructorFn, args) {
-		var new_obj = Object.create(ConstructorFn.prototype);
-		ConstructorFn.apply(new_obj, args);
-		return new_obj;
-	},
+	a(object, ...keys) { return U.default(object, ...keys, []) },
 
 	/* a simple `assert` function, to express a condition that is expected to be true */
 	assert(condition, message) {

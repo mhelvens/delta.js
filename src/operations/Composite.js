@@ -50,13 +50,13 @@ export default (deltaJs) => {
 			// those operations can partly be given through function-call notation.
 			// Therefore, a facade is a function, storing arguments that are already given.
 			var fcd = function (...args) {
-				return thisDelta.do.apply(thisDelta, fcd._args.concat(args));
+				return thisDelta.do(...fcd._args, ...args);
 			};
 			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {
 					return {
-						newDelta: thisDelta.operation.apply(thisDelta, [{method}].concat(fcd._args).concat(finalArgs)),
+						newDelta: thisDelta.operation({method}, ...fcd._args, ...finalArgs),
 						fcdArgs:  fcd._args
 					};
 				},
@@ -72,11 +72,11 @@ export default (deltaJs) => {
 		(cls.options.methods || []).forEach((method) => {
 			if (U.isUndefined(operationMethods[method])) {
 				operationMethods[method] = function (...args) {
-					var {newDelta, fcdArgs} = this._applyOperationMethod.apply(this, [method].concat(args));
+					var {newDelta, fcdArgs} = this._applyOperationMethod(method, ...args);
 					if (newDelta instanceof deltaJs.Delta.Composite) {
 						return newDelta.do();
 					} else {
-						return this.delta.do.apply(this.delta, fcdArgs);
+						return this.delta.do(...fcdArgs);
 					}
 				};
 			}

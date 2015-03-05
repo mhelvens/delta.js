@@ -50,7 +50,7 @@ export default (deltaJs) => {
 		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
 		operation(options1, name, options2, path, arg) {
-			return this._deltaModel.operation.apply(this._deltaModel, arguments);
+			return this._deltaModel.operation(...arguments);
 		},
 
 		/** {@public}{@method}
@@ -62,9 +62,8 @@ export default (deltaJs) => {
 		 * @return {function} - the facade to this delta, for easily adding operations
 		 */
 		do(...args) {
-			return this._deltaModel.do.apply(this._deltaModel,
-					[{ feature: true }] // from the core delta model, deltas are features by default
-							.concat(args));
+			// from the core delta model, deltas are features by default
+			return this._deltaModel.do({ feature: true }, ...args);
 		}
 
 	});

@@ -32,7 +32,7 @@ export default (deltaJs) => {
 		select(...features) {
 			features.forEach((feature) => {
 				if (Array.isArray(feature)) {
-					this.select.apply(this, feature);
+					this.select(...feature);
 				} else {
 					this.features[feature].select();
 				}
