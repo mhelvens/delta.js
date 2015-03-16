@@ -50,16 +50,21 @@ export default (deltaJs) => {
 			// The facade object exposes operations methods directly, but arguments to
 			// those operations can partly be given through function-call notation.
 			// Therefore, a facade is a function, storing arguments that are already given.
-			var fcd = (...args) => thisDelta.do.apply(thisDelta, fcd._args.concat(args));
+			var fcd = function (...args) {
+				return thisDelta.do(...fcd._args, ...args);
+			};
 			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {
-					return thisDelta.operation.apply(thisDelta, [{method}].concat(fcd._args).concat(finalArgs));
+					return {
+						newDelta: thisDelta.operation({method}, ...fcd._args, ...finalArgs),
+						fcdArgs:  fcd._args
+					};
 				},
 				delta: thisDelta
 			});
 			return fcd;
-		}
+		},
 	});
 
 	var operationMethods = {};
@@ -68,17 +73,11 @@ export default (deltaJs) => {
 		(cls.options.methods || []).forEach((method) => {
 			if (U.isUndefined(operationMethods[method])) {
 				operationMethods[method] = function (...args) {
-					if (this._facadeDisabled) { throw new MultipleActiveFacadesError(this) }
-					var newDelta = this._applyOperationMethod.apply(this, [method].concat(args));
+					var {newDelta, fcdArgs} = this._applyOperationMethod(method, ...args);
 					if (newDelta instanceof deltaJs.Delta.Composite) {
-						var activeSubFacade = this._activeSubFacade;
-						while (activeSubFacade) {
-							activeSubFacade._facadeDisabled = true;
-							activeSubFacade = activeSubFacade._activeSubFacade;
-						}
-						return this._activeSubFacade = newDelta.do();
+						return newDelta.do();
 					} else {
-						return this;
+						return this.delta.do(...fcdArgs);
 					}
 				};
 			}

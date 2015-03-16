@@ -10,13 +10,13 @@ module.exports = function (config) {
 		autoWatch:     false,
 		singleRun:     true,
 		browsers:      ['PhantomJS'],
-
 		files: [
-			'bower_components/bluebird/js/browser/bluebird.js',
 			'bower_components/js-graph/dist/js-graph.js',
-			'test/polyfills.js',
 			'dist/delta.js',
-			'test-dist/**/*.js'
-		]
+			'test/**/*.js'
+		],
+		preprocessors: {
+			'test/**/*.js': ['babel']
+		}
 	});
 };

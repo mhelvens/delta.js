@@ -11,8 +11,7 @@ var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
 var karma = require('gulp-karma');
 var bump = require('gulp-bump');
-var traceur = require('gulp-traceur');
-var replace = require('gulp-replace');
+var babel = require('gulp-babel');
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,9 +144,6 @@ INTERNAL_LIBRARIES.concat(APPLICATIONS).forEach(function (m) {
 	if (m.type === 'internal-library') {
 		gulp.task('webpack-fixed:' + m.name, ['webpack:' + m.name], function () {
 			return gulp.src('dist/**/' + m.file)
-				.pipe(replace(
-					'return __webpack_require__(0)',
-					'return __webpack_require__(0).default'))
 				.pipe(gulp.dest('dist'));
 		});
 		gulp.task('uglify:' + m.name, ['webpack-fixed:' + m.name], function () {
@@ -176,22 +172,13 @@ gulp.task('build',
 		return 'build:'+mod.name
 	}));
 
-/* build tests with traceur */
-gulp.task('build-tests', function () {
-	return gulp.src('test/**/*.js')
-		.pipe(traceur({script: true}))
-		.pipe(gulp.dest('test-dist'));
-});
-
 /* run tests */
-//gulp.task('test', function () {
-gulp.task('test', ['build', 'build-tests'], function () {
+gulp.task('test', ['build'], function () {
 	return gulp.src(EXTERNAL_LIBRARIES.map(function (lib) {
 		return lib.dir + '/' + lib.file;
 	}).concat([
-		'dist/**/*.js',
-		'!dist/**/*.min.js',
-		'test-dist/**/*.js'
+		'dist/delta.js',
+		'test/**/*.js'
 	])).pipe(karma({configFile: 'karma.conf.js'}));
 });
 
@@ -202,22 +189,8 @@ gulp.task('test', ['build', 'build-tests'], function () {
 gulp.task('watch', function () {
 	gulp.watch([
 		'src/**/*.js',
-		'src/**/*.scss',
-		'src/**/*.css',
-		'src/**/*.html',
 		'test/**/*.js'
-	], ['lint', 'build', 'build-tests', 'test']);
-});
-
-APPLICATIONS.forEach(function (m) {
-	gulp.task('watch:' + m.name, function () {
-		gulp.watch([
-			'src/**/*.js',
-			'src/**/*.scss',
-			'src/**/*.css',
-			'src/**/*.html'
-		], ['lint', 'build:' + m.name]);
-	});
+	], ['lint', 'build', 'test']);
 });
 
 
@@ -236,4 +209,4 @@ APPLICATIONS.forEach(function (m) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-gulp.task('default', ['lint', 'build', 'build-tests', 'test', 'watch']);
+gulp.task('default', ['lint', 'build', 'test', 'watch']);
