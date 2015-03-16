@@ -56,10 +56,7 @@ export default (deltaJs) => {
 			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {
-					return {
-						newDelta: thisDelta.operation({method}, ...fcd._args, ...finalArgs),
-						fcdArgs:  fcd._args
-					};
+					return thisDelta.operation({method}, ...fcd._args, ...finalArgs);
 				},
 				delta: thisDelta
 			});
@@ -73,11 +70,17 @@ export default (deltaJs) => {
 		(cls.options.methods || []).forEach((method) => {
 			if (U.isUndefined(operationMethods[method])) {
 				operationMethods[method] = function (...args) {
-					var {newDelta, fcdArgs} = this._applyOperationMethod(method, ...args);
+					if (this._facadeDisabled) { throw new MultipleActiveFacadesError(this) }
+					var newDelta = this._applyOperationMethod(method, ...args);
 					if (newDelta instanceof deltaJs.Delta.Composite) {
-						return newDelta.do();
+						var activeSubFacade = this._activeSubFacade;
+						while (activeSubFacade) {
+							activeSubFacade._facadeDisabled = true;
+							activeSubFacade = activeSubFacade._activeSubFacade;
+						}
+						return this._activeSubFacade = newDelta.do();
 					} else {
-						return this.delta.do(...fcdArgs);
+						return this;
 					}
 				};
 			}

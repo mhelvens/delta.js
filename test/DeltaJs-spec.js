@@ -1170,7 +1170,7 @@ describe("DeltaJs instance", function () {
 			{ oldKey: 'old value', key: { foo: 'bar', x: 1, y: 2, z: 3 } }
 		]]);
 
-		itCan("have multiple separate operations on the same delta", [[
+		xitCan("have multiple separate operations on the same delta", [[
 			{ subObj: {} },
 			() => {
 				var x = dm('X');
