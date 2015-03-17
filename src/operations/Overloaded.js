@@ -18,7 +18,7 @@ export default (deltaJs) => {
 		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
 		 */
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super.clone() // TODO: remove options
+			var result = deltaJs.Delta.prototype.clone.call(this, ...this.args); // super()
 			result.overloads = this.overloads.map(delta => delta.clone());
 			return result;
 		},
@@ -55,8 +55,8 @@ export default (deltaJs) => {
 		 * @param options {object?}
 		 * @return {string}
 		 */
-		toString(options) {
-			var str = deltaJs.Delta.prototype.toString.call(this, options);
+		toString(options = {}) {
+			var str = deltaJs.Delta.prototype.toString.call(this, options); // super()
 			var overloads = this.overloads.map((delta) => delta.toString(options)).join('\n');
 			str += '\n' + U.indent(overloads, 4);
 			return str;

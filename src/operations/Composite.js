@@ -16,15 +16,15 @@ export default (deltaJs) => {
 	U.extend(deltaJs.constructor.prototype, {
 		/** {@protected}{@method}
 		 * @param options {object}
-		 * @param arg     {*}
+		 * @param args    {[*]}
 		 * @return {DeltaJs#Delta}
 		 */
-		_newDeltaByMethod(options, arg) {
-			var newDeltas = _overloads[options.method].map(handler => handler(arg, options));
+		_newDeltaByMethod(options, ...args) {
+			var newDeltas = _overloads[options.method].map(handler => handler(...args));
 			if (newDeltas.length === 1) {
 				return newDeltas[0];
 			} else { // newDeltas.length > 1
-				var delta = new this.Delta.Overloaded(arg, options);
+				var delta = new this.Delta.Overloaded(...args);
 				delta.overloads = newDeltas;
 				return delta;
 			}
@@ -60,7 +60,7 @@ export default (deltaJs) => {
 			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {
-					return thisDelta.operation({method}, ...fcd._args, ...finalArgs); // TODO: (method)
+					return thisDelta.operation({method}, ...fcd._args, ...finalArgs);
 				},
 				delta: thisDelta
 			});

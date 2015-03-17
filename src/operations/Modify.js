@@ -17,7 +17,7 @@ export default (deltaJs) => {
 		 * @return {DeltaJs#Delta.Modify} - a clone of this delta
 		 */
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super() // TODO: remove options
+			var result = deltaJs.Delta.prototype.clone.call(this, ...this.args); // super()
 			Object.keys(this.deltas).forEach((prop) => {
 				result.deltas[prop] = this.deltas[prop].clone();
 			});
@@ -35,11 +35,10 @@ export default (deltaJs) => {
 		 */
 		applyTo(target, options = {}) {
 			Object.keys(this.deltas).forEach((prop) => {
-				//if (!options.restrictToProperty || options.restrictToProperty === prop) {
-				//	this.deltas[prop].applyTo(wt(target.value, prop),
-				//			U.extend({}, options, { restrictToProperty: null }));
-				//}
-				this.deltas[prop].applyTo(wt(target.value, prop), options);
+				if (!options.restrictToProperty || options.restrictToProperty === prop) {
+					this.deltas[prop].applyTo(wt(target.value, prop),
+							U.extend({}, options, { restrictToProperty: null }));
+				}
 			});
 		},
 
@@ -47,10 +46,10 @@ export default (deltaJs) => {
 		 * @param options {object?}
 		 * @return {string}
 		 */
-		toString(options) {
-			var str = deltaJs.Delta.prototype.toString.call(this, options);
+		toString(options = {}) {
+			var str = deltaJs.Delta.prototype.toString.call(this, options); // super()
 			if (Object.keys(this.deltas).length > 0) {
-				var deltas = Object.keys(this.deltas).map((p) => this.deltas[p].toString(options)).join('\n');
+				var deltas = Object.keys(this.deltas).map((p) => this.deltas[p].toString(U.extend({}, options, { targetProp: p }))).join('\n');
 				str += '\n' + U.indent(deltas, 4);
 			}
 			return str;
@@ -60,17 +59,17 @@ export default (deltaJs) => {
 		 * Prepare a specific delta operation with this Modify delta as the base.
 		 * @param options {object} - any options; there may be any number of these before the `path` argument
 		 * @param path {string}    - the relative path to which to apply this operation
-		 * @param arg {*}          - the argument to the operation
+		 * @param args {[*]}       - the arguments to the operation
 		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
-		operation(options, path, arg) {
-			var args = [].slice.call(arguments, 0);
+		operation(options, path, ...args) {
+			var argss = [...arguments];
 			var allOptions = {};
-			while (typeof args[0] === 'object') {
-				U.extend(allOptions, args.shift());
+			while (typeof argss[0] === 'object') {
+				U.extend(allOptions, argss.shift());
 			}
-			[path, arg] = args;
-			var delta = deltaJs._newDeltaByMethod(allOptions, arg);
+			path = argss.shift();
+			var delta = deltaJs._newDeltaByMethod(allOptions, ...argss);
 			return this._addOperation(allOptions, new Path(path), delta);
 		},
 
@@ -101,7 +100,6 @@ export default (deltaJs) => {
 
 			/* store the new delta, possibly composed with an existing one */
 			this.deltas[path.prop] = this.deltas[path.prop] ? this.deltas[path.prop].composedWith(delta) : delta;
-			this.deltas[path.prop].options.targetProp = path.prop; // TODO: remove options
 
 			/* return the composed delta if it has an operations interface; otherwise, return the given delta */
 			return (this.deltas[path.prop] instanceof deltaJs.Delta.Composite) ? this.deltas[path.prop] : delta;

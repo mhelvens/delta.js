@@ -37,21 +37,21 @@ export default (deltaJs) => {
 		 * @param name {string}      - the name of the delta inside the delta model
 		 * @param options2 {object?} - any (optional) options; there may be any number of these before the `path` argument
 		 * @param path {string}      - the relative path to perform this operation on
-		 * @param arg {*}            - the argument to the operation
+		 * @param args {[*]}         - the arguments to the operation
 		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
-		operation(options1, name, options2, path, arg) {
-			var args = [].slice.call(arguments);
+		operation(options1, name, options2, path, ...args) {
+			var argss = [...arguments];
 			var allOptions = {};
-			while (typeof args[0] === 'object') {
-				U.extend(allOptions, args.shift());
+			while (typeof argss[0] === 'object') {
+				U.extend(allOptions, argss.shift());
 			}
-			name = args.shift();
-			while (typeof args[0] === 'object') {
-				U.extend(allOptions, args.shift());
+			name = argss.shift();
+			while (typeof argss[0] === 'object') {
+				U.extend(allOptions, argss.shift());
 			}
-			[path, arg] = args;
-			var delta = deltaJs._newDeltaByMethod(allOptions, arg);
+			path = argss.shift();
+			var delta = deltaJs._newDeltaByMethod(allOptions, ...argss);
 			return this._addOperation(name, allOptions, new Path(path), delta);
 		},
 
@@ -59,8 +59,8 @@ export default (deltaJs) => {
 		 * @param options {object?}
 		 * @return {string}
 		 */
-		toString(options) {
-			var str = deltaJs.Delta.prototype.toString.call(this, options);
+		toString(options = {}) {
+			var str = deltaJs.Delta.prototype.toString.call(this, options); // super()
 			if (this.graph.vertexCount() > 0) {
 				var deltas = '';
 				this.graph.topologically((name, delta) => {

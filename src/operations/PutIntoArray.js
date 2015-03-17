@@ -20,10 +20,10 @@ export default (deltaJs) => {
 	/* declaring the array operation type ***********************************************/
 	var PutIntoArray = deltaJs.newOperationType('PutIntoArray', {
 		construct() {
-			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : []; // TODO: (method)
+			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : [];
 		},
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super() // TODO: remove options
+			var result = deltaJs.Delta.prototype.clone.call(this, ...this.args); // super()
 			result.values = [];
 			this.values.forEach((v) => { result.values.push(v) });
 			return result;

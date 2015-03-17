@@ -33,7 +33,7 @@ export default (deltaJs) => {
 			precondition(target) { return target instanceof WritableTarget && pre(target)                            },
 			applyTo(target)      { target.value = this.deltasToApplyToArg.reduce((v, d) => d.appliedTo(v), this.arg) },
 			clone() {
-				var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super() // TODO; remove options
+				var result = deltaJs.Delta.prototype.clone.call(this, ...this.args); // super()
 				result.deltasToApplyToArg = this.deltasToApplyToArg.map(d => d);
 				return result;
 			},
@@ -51,8 +51,8 @@ export default (deltaJs) => {
 			 * @param options {object?}
 			 * @return {string}
 			 */
-			toString(options) {
-				var str = deltaJs.Delta.prototype.toString.call(this, options);
+			toString(options = {}) {
+				var str = deltaJs.Delta.prototype.toString.call(this, options); // super()
 				if (Object.keys(this.deltasToApplyToArg).length > 0) {
 					var deltas = Object.keys(this.deltasToApplyToArg)
 							.map((p) => this.deltasToApplyToArg[p].toString(options)).join('\n');

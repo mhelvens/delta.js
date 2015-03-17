@@ -46,10 +46,10 @@ export default (deltaJs) => {
 		 * @param name {string}      - the name of the delta inside the delta model
 		 * @param options2 {object?} - any (optional) options; there may be any number of these before the `path` argument
 		 * @param path {string}      - the relative path to perform this operation on
-		 * @param arg {*}            - the argument to the operation
+		 * @param args {[*]}         - the arguments to the operation
 		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
-		operation(options1, name, options2, path, arg) {
+		operation(options1, name, options2, path, args) {
 			return this._deltaModel.operation(...arguments);
 		},
 

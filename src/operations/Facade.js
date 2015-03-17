@@ -96,7 +96,7 @@ export default (deltaJs) => {
 
 			try {
 
-				var {method, options, args} = Facade._transformArgs(...allDoArgs);
+				var {method, options, path, args} = Facade._transformArgs(...allDoArgs);
 
 				/* the argument list is finished; create a new delta and put it in the right place */
 				var delta;
@@ -162,9 +162,7 @@ export default (deltaJs) => {
 			if (newDeltas.length === 1) {
 				return newDeltas[0];
 			} else { // newDeltas.length > 1
-				var delta = new deltaJs.Delta.Overloaded(newDeltas); // TODO: accept argument for delta array
-				delta.overloads = newDeltas;
-				return delta;
+				return new deltaJs.Delta.Overloaded(newDeltas);
 			}
 		}
 

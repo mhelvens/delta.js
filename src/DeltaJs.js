@@ -83,18 +83,14 @@ export default U.newClass(function DeltaJs() {
 
 		/* Delta subclass */
 		class Cls extends Superclass {
-			constructor(arg, options = {}) { // TODO: ...args instead of arg, and remove options
-				super(options, arg);
-				if (this.construct) { this.construct() }
+			constructor(...args) {
+				super(...args);
+				if (this.construct) { this.construct(...args) }
 			}
 		}
 		this.Delta[name] = Cls;
 		U.extend(Cls.prototype, prototype, {
 			applyTo(target, options = {}) {
-
-				/* should this delta only be applied for a specific property on the target object? */
-				if (options.restrictToProperty &&  this.options.targetProp &&
-					options.restrictToProperty !== this.options.targetProp) { return } // TODO: remove options
 
 				/* should this delta only be applied for a specific feature selection? */
 				if (!this.selected) { return }
@@ -105,12 +101,7 @@ export default U.newClass(function DeltaJs() {
 
 				/* OK, then apply it if a method to do so was included in the operation */
 				if (U.isDefined(prototype.applyTo)) {
-					var newOptions = (
-						!!this.options.targetProp ? // TODO: remove options
-							U.extend({}, options, { restrictToProperty: null }) :
-							options
-					);
-					prototype.applyTo.call(this, target, newOptions);
+					prototype.applyTo.call(this, target, options);
 				}
 
 			},
