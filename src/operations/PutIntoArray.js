@@ -18,17 +18,17 @@ export default (deltaJs) => {
 	}
 
 	/* declaring the array operation type ***********************************************/
-	var PutIntoArray = deltaJs.newOperationType('PutIntoArray', {
-		construct() {
+	class PutIntoArray extends deltaJs.Delta {
+		constructor(...args) {
+			super(...args);
 			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : [];
-		},
+		}
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, ...this.args); // super()
-			result.values = [];
-			this.values.forEach((v) => { result.values.push(v) });
+			var result = super.clone();
+			result.values = [...this.values];
 			return result;
-		},
-		precondition(target) { return U.isDefined(target.value) && Array.isArray(target.value) },
+		}
+		precondition(target) { return U.isDefined(target.value) && Array.isArray(target.value) }
 		applyTo(target) {
 			var arr = target.value;
 			this.values.forEach(({method, value}) => {
@@ -48,9 +48,10 @@ export default (deltaJs) => {
 					} break;
 				}
 			});
-		},
-		methods: []
-	});
+		}
+	}
+	PutIntoArray.prototype.methods = [];
+	deltaJs.newOperationType('PutIntoArray', PutIntoArray);
 
 	/* Facade methods ****************************************************************************/
 	deltaJs.newFacadeMethod('prepend', (value) => new PutIntoArray({ method: 'prepend', value }, {}));

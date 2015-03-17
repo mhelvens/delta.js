@@ -8,6 +8,10 @@ export default (deltaJs) => {
 
 	defineDelta(deltaJs);
 
+
+	// TODO: replace this file entirely with the new Facade.js
+
+
 	var _overloads = {}; // method -> [delta-classes]
 	deltaJs.onNewFacadeMethod((method, handler) => {
 		U.a(_overloads, method).push(handler);
@@ -31,19 +35,17 @@ export default (deltaJs) => {
 		}
 	});
 
-	/** {@class}
-	 *
-	 */
-	deltaJs.Delta.Composite = U.newSubclass(deltaJs.Delta, (superFn) => function Composite(...args) {
-		superFn.apply(this, args);
-	}, {
+	class Composite extends deltaJs.Delta {
+		constructor(...args) { super(...args) }
+
 		/** {@public}{@abstract}{@method}
 		 * Implement this method in subclasses to prepare a specific delta operation with this delta as the base.
 		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
 		operation() {
-			throw new Error(`A Delta.Composite subclass (in this case: ${this.type}) needs to implement the 'operation' method.`);
-		},
+			throw new Error(`A Delta.Composite subclass (in this case: ${this.type}) ` +
+			                `needs to implement the 'operation' method.`);
+		}
 
 		/** {@public}{@method}
 		 * Returns an object that allows new delta operations to be added more easily.
@@ -65,8 +67,9 @@ export default (deltaJs) => {
 				delta: thisDelta
 			});
 			return fcd;
-		},
-	});
+		}
+	}
+	deltaJs.Delta.Composite = Composite;
 
 	var operationMethods = {};
 	deltaJs.onNewFacadeMethod((method) => {

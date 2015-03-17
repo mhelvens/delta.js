@@ -13,23 +13,26 @@ export default (deltaJs) => {
 
 	defineComposite(deltaJs);
 
-	var DeltaModel = deltaJs.newOperationType(deltaJs.Delta.Composite, 'DeltaModel', {
-		construct() {
+	class DeltaModel extends deltaJs.Delta.Composite {
+		constructor(...args) {
+			super(...args);
 			this.graph = new JsGraph();
-		},
+		}
+
 		clone() {
-			var result = new DeltaModel();
+			var result = super.clone();
 			result.graph = this.graph.clone();
 			result.graph.eachVertex((id, delta) => {
 				result.graph.setVertex(id, delta.clone());
 			});
 			return result;
-		},
+		}
+
 		applyTo(target, options = {}) {
 			this.graph.topologically((name, subDelta) => {
 				subDelta.applyTo(target, options);
 			});
-		},
+		}
 
 		/** {@public}{@method}
 		 * Prepare a specific delta operation with this Modify delta as the base.
@@ -53,14 +56,14 @@ export default (deltaJs) => {
 			path = argss.shift();
 			var delta = deltaJs._newDeltaByMethod(allOptions, ...argss);
 			return this._addOperation(name, allOptions, new Path(path), delta);
-		},
+		}
 
 		/** {@public}{@method}
 		 * @param options {object?}
 		 * @return {string}
 		 */
 		toString(options = {}) {
-			var str = deltaJs.Delta.prototype.toString.call(this, options); // super()
+			var str = super.toString(options);
 			if (this.graph.vertexCount() > 0) {
 				var deltas = '';
 				this.graph.topologically((name, delta) => {
@@ -69,10 +72,9 @@ export default (deltaJs) => {
 				str += '\n' + U.indent(deltas, 4);
 			}
 			return str;
-		},
+		}
 
 		_addOperation(name, options, path, delta) {
-
 			var deltaBase;
 
 			/* check if a delta with this name already exists */
@@ -132,14 +134,13 @@ export default (deltaJs) => {
 			}
 
 			return delta;
-
 		}
 
 		// TODO: add precondition method which checks 'source' deltas
+	}
+	deltaJs.newOperationType('DeltaModel', DeltaModel);
 
-	});
-
-	/* composition - introducing 'DeltaModel' */
+	/* composition */
 	// to compose delta models, we simply have one apply after the other
 	// without any composability checks; in the future, this may become more clever
 	deltaJs.newComposition((d1, d2) => (d1 instanceof DeltaModel || d2 instanceof DeltaModel), (d1, d2) => {

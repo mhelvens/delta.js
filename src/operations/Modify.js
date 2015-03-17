@@ -10,24 +10,24 @@ export default (deltaJs) => {
 
 	defineComposite(deltaJs);
 
-	deltaJs.newOperationType(deltaJs.Delta.Composite, 'Modify', {
-		construct() { this.deltas = {} },
+	class Modify extends deltaJs.Delta.Composite {
+		constructor(...args) { super(...args); this.deltas = {}; }
 
 		/** {@public}{@abstract}{@method}{@nosideeffects}
 		 * @return {DeltaJs#Delta.Modify} - a clone of this delta
 		 */
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, ...this.args); // super()
+			var result = super.clone();
 			Object.keys(this.deltas).forEach((prop) => {
 				result.deltas[prop] = this.deltas[prop].clone();
 			});
 			return result;
-		},
+		}
 
 		/** {@public}{@method}
 		 * @param target {*}
 		 */
-		precondition(target) { return target.value instanceof Object },
+		precondition(target) { return target.value instanceof Object }
 
 		/** {@public}{@method}
 		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
@@ -37,23 +37,26 @@ export default (deltaJs) => {
 			Object.keys(this.deltas).forEach((prop) => {
 				if (!options.restrictToProperty || options.restrictToProperty === prop) {
 					this.deltas[prop].applyTo(wt(target.value, prop),
-							U.extend({}, options, { restrictToProperty: null }));
+						U.extend({}, options, { restrictToProperty: null }));
 				}
 			});
-		},
+		}
 
 		/** {@public}{@method}
 		 * @param options {object?}
 		 * @return {string}
 		 */
 		toString(options = {}) {
-			var str = deltaJs.Delta.prototype.toString.call(this, options); // super()
+			var str = super.toString(options);
 			if (Object.keys(this.deltas).length > 0) {
-				var deltas = Object.keys(this.deltas).map((p) => this.deltas[p].toString(U.extend({}, options, { targetProp: p }))).join('\n');
+				var deltas = Object
+					.keys(this.deltas)
+					.map((p) => this.deltas[p].toString(U.extend({}, options, { targetProp: p })))
+					.join('\n');
 				str += '\n' + U.indent(deltas, 4);
 			}
 			return str;
-		},
+		}
 
 		/** {@public}{@method}
 		 * Prepare a specific delta operation with this Modify delta as the base.
@@ -62,7 +65,7 @@ export default (deltaJs) => {
 		 * @param args {[*]}       - the arguments to the operation
 		 * @return {DeltaJs#Delta} - the delta resulting from the operation
 		 */
-		operation(options, path, ...args) {
+		operation(options, path, ...args) { // TODO: replace this through the new Facade refactoring
 			var argss = [...arguments];
 			var allOptions = {};
 			while (typeof argss[0] === 'object') {
@@ -71,7 +74,7 @@ export default (deltaJs) => {
 			path = argss.shift();
 			var delta = deltaJs._newDeltaByMethod(allOptions, ...argss);
 			return this._addOperation(allOptions, new Path(path), delta);
-		},
+		}
 
 		/** {@public}{@method}
 		 * Get the deepest existing Modify delta corresponding to a relative path.
@@ -84,7 +87,7 @@ export default (deltaJs) => {
 				return { delta: this, rest: path };
 			}
 			return this.deltas[path.prop].deepestModifyDeltaByPath(path.rest || new Path());
-		},
+		}
 
 		/** {@private}{@method}
 		 * @param options {object}
@@ -95,7 +98,7 @@ export default (deltaJs) => {
 			/* if there is a 'rest' to the path, set a link in the chain */
 			if (path.rest) {
 				return this.operation({ method: 'modify' }, path.prop)
-						._addOperation(options, path.rest, delta);
+				           ._addOperation(options, path.rest, delta);
 			}
 
 			/* store the new delta, possibly composed with an existing one */
@@ -104,6 +107,7 @@ export default (deltaJs) => {
 			/* return the composed delta if it has an operations interface; otherwise, return the given delta */
 			return (this.deltas[path.prop] instanceof deltaJs.Delta.Composite) ? this.deltas[path.prop] : delta;
 		}
-	});
+	}
+	deltaJs.newOperationType('Modify', Modify);
 
 };

@@ -11,17 +11,17 @@ export default (deltaJs) => {
 
 	defineDelta(deltaJs);
 
-	deltaJs.newOperationType('Overloaded', {
-		construct() { this.overloads = [] },
+	class Overloaded extends deltaJs.Delta {
+		constructor(...args) { super(...args); this.overloads = []; }
 
 		/** {@public}{@abstract}{@method}{@nosideeffects}
 		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
 		 */
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, ...this.args); // super()
+			var result = super.clone();
 			result.overloads = this.overloads.map(delta => delta.clone());
 			return result;
-		},
+		}
 
 		/** {@public}{@method}
 		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
@@ -49,19 +49,20 @@ export default (deltaJs) => {
 					throw new MultipleOverloadsApplicationError(this, target.value, errors);
 				}
 			}
-		},
+		}
 
 		/** {@public}{@method}
 		 * @param options {object?}
 		 * @return {string}
 		 */
 		toString(options = {}) {
-			var str = deltaJs.Delta.prototype.toString.call(this, options); // super()
+			var str = super.toString(options);
 			var overloads = this.overloads.map((delta) => delta.toString(options)).join('\n');
 			str += '\n' + U.indent(overloads, 4);
 			return str;
 		}
-	});
+	}
+	deltaJs.newOperationType('Overloaded', Overloaded);
 
 	deltaJs.newComposition((d1, d2) => (d1 instanceof deltaJs.Delta.Overloaded || d2 instanceof deltaJs.Delta.Overloaded), (d1, d2) => {
 		var D1 = d1 instanceof deltaJs.Delta.Overloaded ? d1.overloads : [d1];

@@ -7,22 +7,19 @@ import defineApplicationConditions from '../applicationConditions.js';
 export default (deltaJs) => {
 	if (U.isDefined(deltaJs.Delta)) { return }
 
-	deltaJs._nextDeltaID = 0;
+	class Delta {
 
-	/** {@class Delta}
-	 *
-	 */
-	deltaJs.Delta = U.newClass(function Delta(...args) {
-		this.id = deltaJs._nextDeltaID++;
-		this.arg = args[0];
-		this.args = args;
-	}, {
+		constructor(...args) {
+			this.id = ++Delta._nextID;
+			this.arg = args[0];
+			this.args = args;
+		}
 
 		/** {@public}{@abstract}{@method}{@nosideeffects}
 		 * This method should be overwritten by subclasses to make a clone of 'this' delta.
 		 * @return {DeltaJs#Delta} - a clone of this delta
 		 */
-		clone() { return new this.constructor(this.arg) },
+		clone() { return new this.constructor(this.arg) }
 
 		/** {@public}{@method}{@nosideeffects}
 		 * @param  value   {*}       - any given value
@@ -35,13 +32,13 @@ export default (deltaJs) => {
 			var obj = { value };
 			this.applyTo(wt(obj, 'value'), options);
 			return obj.value;
-		},
+		}
 
 		/** {@public}{@method}{@nosideeffects}
 		 * @param other {DeltaJs#Delta} - the other delta to compose with
 		 * @return {DeltaJs#Delta} - the composed delta
 		 */
-		composedWith(other) { return deltaJs.composed(this, other) },
+		composedWith(other) { return deltaJs.composed(this, other) }
 
 		/** {@public}{@method}
 		 * @param options {object?}
@@ -53,7 +50,10 @@ export default (deltaJs) => {
 			if (this.args.length > 0) { str += `: ${this.args.map((a) => JSON.stringify(a)).join(',')}` }
 			if (options.debug)        { str += ` (${this.id})`                                          }
 			return str;
-		},
+		}
 
-	});
+	}
+	Delta._nextID = 0;
+	deltaJs.Delta = Delta;
+
 };

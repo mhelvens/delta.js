@@ -17,20 +17,20 @@ export default (deltaJs) => {
 	}
 
 	/* declaring the function operation type */
-	var PutIntoFunction = deltaJs.newOperationType('PutIntoFunction', {
-		construct() {
+	class PutIntoFunction extends deltaJs.Delta {
+		constructor(...args) {
+			super(...args);
 			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : [];
-		},
+		}
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, ...this.args); // super()
-			result.values = [];
-			this.values.forEach((v) => { result.values.push(v) });
+			var result = super.clone();
+			result.values = [...this.values];
 			return result;
-		},
+		}
 		precondition(target) {
 			return U.isDefined(target.value) && typeof target.value === 'function' &&
-			       (U.isDefined(target.value._DeltaJs_functions) || target instanceof WritableTarget);
-		},
+				(U.isDefined(target.value._DeltaJs_functions) || target instanceof WritableTarget);
+		}
 		applyTo(target) {
 			if (U.isUndefined(target.value._DeltaJs_functions)) {
 				var originalFn = target.value;
@@ -48,24 +48,25 @@ export default (deltaJs) => {
 			var arr = target.value._DeltaJs_functions;
 			this.values.forEach(({method, value}) => {
 				switch (method) {
-				case 'prepend': {
-					arr.unshift(value);
-				} break;
-				case 'insert': {
-					// 'insert' doesn't *have* to use a random position. Any position will do.
-					//  E.g., its implementation could just be the same as for 'append'.
-					//  Nonetheless, we use a random position to force the tests to be permissive.
-					var position = Math.floor(Math.random() * (arr.length + 1));
-					arr.splice(position, 0, value);
-				} break;
-				case 'append': {
-					arr.push(value);
-				} break;
+					case 'prepend': {
+						arr.unshift(value);
+					} break;
+					case 'insert': {
+						// 'insert' doesn't *have* to use a random position. Any position will do.
+						//  E.g., its implementation could just be the same as for 'append'.
+						//  Nonetheless, we use a random position to force the tests to be permissive.
+						var position = Math.floor(Math.random() * (arr.length + 1));
+						arr.splice(position, 0, value);
+					} break;
+					case 'append': {
+						arr.push(value);
+					} break;
 				}
 			});
-		},
-		methods: []
-	});
+		}
+	}
+	PutIntoFunction.prototype.methods = [];
+	deltaJs.newOperationType('PutIntoFunction', PutIntoFunction);
 
 	/* Facade methods ****************************************************************************/
 	deltaJs.newFacadeMethod('prepend', (value) => new PutIntoFunction({ method: 'prepend', value }, {}));

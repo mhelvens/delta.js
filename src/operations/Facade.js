@@ -121,27 +121,6 @@ export default (deltaJs) => {
 			}
 		}
 
-		static constructor() {
-			/* initialize a list of delta creation functions */
-			Facade._deltaCreationFunctions = {}; // method -> (args => Delta)
-
-			/* automatically populate the Facade class with new operation methods */
-			deltaJs.onNewFacadeMethod((method) => {
-				if (U.isUndefined(Facade.prototype[method])) {
-					throw new Error(`The method name '${method}' is already in use.`); // TODO: specific error class
-				}
-				Facade.prototype[method] = function (...args) {
-					this.do(method, ...args);
-				};
-			});
-
-			/* register handlers for each method */
-			Facade._methodHandlers = {}; // method -> [handlers]
-			deltaJs.onNewFacadeMethod((method, handler) => {
-				U.a(Facade._methodHandlers, method).push(handler);
-			});
-		}
-
 		static _transformArgs(...args) {
 			var options = {};
 			var method;
@@ -170,9 +149,27 @@ export default (deltaJs) => {
 	deltaJs.Facade = Facade;
 
 
-	/** {@class}
-	 *
-	 */
+	/* initialize a list of delta creation functions */
+	Facade._deltaCreationFunctions = {}; // method -> (args => Delta)
+
+	/* automatically populate the Facade class with new operation methods */
+	deltaJs.onNewFacadeMethod((method) => {
+		if (U.isUndefined(Facade.prototype[method])) {
+			throw new Error(`The method name '${method}' is already in use.`); // TODO: specific error class
+		}
+		Facade.prototype[method] = function (...args) {
+			this.do(method, ...args);
+		};
+	});
+
+	/* register handlers for each method */
+	Facade._methodHandlers = {}; // method -> [handlers]
+	deltaJs.onNewFacadeMethod((method, handler) => {
+		U.a(Facade._methodHandlers, method).push(handler);
+	});
+
+
+	/* the Composite class */
 	class Composite {}
 	deltaJs.Delta.Composite = Composite;
 

@@ -64,32 +64,27 @@ export default U.newClass(function DeltaJs() {
 	},
 
 	/** {@public}{@method}
-	 * @param Superclass {Function?} - optional superclass
-	 * @param name       {string}    - name of the new operation type
-	 * @param prototype  {object}    - prototype of the new operation class
+	 * @param name  {string}   - name of the new operation type
+	 * @param Class {Function} - prototype of the new operation class
 	 */
-	newOperationType(Superclass, name, prototype) {
-		if (typeof Superclass === 'string') { [Superclass, name, prototype] = [this.Delta, Superclass, name] }
-		if (!prototype)  { prototype  = {} }
+	newOperationType(name, Class) {
+		/* sanity checks */
+		U.assert(name[0] === name[0].toUpperCase(),
+			`Delta operation classes must have a name starting with a capital letter -- '${name}' does not.`);
+		U.assert(U.isUndefined(this.Delta[name]),
+			`The '${name}' operation type already exists.`);
+
+		/* store the operation class */
+		this.Delta[name] = Class;
 
 		/* 'this' alias */
 		var thisDeltaJs = this;
 
-		/* sanity checks */
-		U.assert(name[0] === name[0].toUpperCase(),
-			`Delta operations must have a name starting with a capital letter -- '${name}' does not.`);
-		U.assert(!this.Delta[name],
-			`The '${name}' operation type already exists.`);
+		/* fetch the given applyTo function (if any) which will be slightly modified */
+		var givenApplyTo = Class.prototype.applyTo || (()=>{});
 
-		/* Delta subclass */
-		class Cls extends Superclass {
-			constructor(...args) {
-				super(...args);
-				if (this.construct) { this.construct(...args) }
-			}
-		}
-		this.Delta[name] = Cls;
-		U.extend(Cls.prototype, prototype, {
+		/* augment the class prototype */
+		U.extend(Class.prototype, {
 			applyTo(target, options = {}) {
 
 				/* should this delta only be applied for a specific feature selection? */
@@ -100,36 +95,32 @@ export default U.newClass(function DeltaJs() {
 				if (judgment !== true) { throw judgment }
 
 				/* OK, then apply it if a method to do so was included in the operation */
-				if (U.isDefined(prototype.applyTo)) {
-					prototype.applyTo.call(this, target, options);
-				}
+				givenApplyTo.call(this, target, options);
 
 			},
 			type: name
 		});
 
-		/* create the given methods with default handler */
-		(prototype.methods || [ name[0].toLowerCase()+name.slice(1) ]).forEach((method) => {
-			this.newFacadeMethod(method, (...args) => new Cls(...args));
+		/* create any given methods with default handler */
+		var lowercaseName = name[0].toLowerCase()+name.slice(1);
+		(Class.prototype.methods || [lowercaseName]).forEach((method) => {
+			this.newFacadeMethod(method, (...args) => new Class(...args));
 		});
 
 		/* return the new class */
-		return Cls;
-
+		return Class;
 	},
 
 	/** {@public}{@method}
-	 * @param method  {string}    - method name
-	 * @param handler {Function}  - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
+	 * @param method  {string}   - method name
+	 * @param handler {Function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
 	 */
 	newFacadeMethod(method, handler) {
-
 		/* register  */
 		this._facadeMethods.push([method, handler]);
 
 		/* notify listeners */
 		this._onNewFacadeMethodListeners.forEach((fn) => { fn(method, handler) });
-
 	},
 
 	/** {@public}{@method}
