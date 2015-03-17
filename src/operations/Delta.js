@@ -12,8 +12,8 @@ export default (deltaJs) => {
 	/** {@class Delta}
 	 *
 	 */
-	deltaJs.Delta = U.newClass(function Delta(arg, options = {}) {
-		this.arg  = arg;
+	deltaJs.Delta = U.newClass(function Delta(options, ...args) {
+		this.arg = args[0]; // TODO: store all args
 		this.id = deltaJs._nextDeltaID++;
 		this.options = options;
 	}, {
@@ -22,7 +22,7 @@ export default (deltaJs) => {
 		 * This method should be overwritten by subclasses to make a clone of 'this' delta.
 		 * @return {DeltaJs#Delta} - a clone of this delta
 		 */
-		clone() { return new this.constructor(this.arg, this.options) },
+		clone() { return new this.constructor(this.arg, this.options) }, // TODO: remove options
 
 		/** {@public}{@method}{@nosideeffects}
 		 * @param  value   {*}       - any given value
@@ -49,8 +49,8 @@ export default (deltaJs) => {
 		 */
 		toString(options = {}) {
 			var str = this.type;
-			if (this.options.targetProp) { str += ` ‹${this.options.targetProp}›` }
-			if (U.isDefined(this.arg))   { str += `: ${JSON.stringify(this.arg)}` }
+			if (this.options.targetProp) { str += ` ‹${this.options.targetProp}›` } // TODO: pass targetProp through options argument
+			if (U.isDefined(this.arg))   { str += `: ${JSON.stringify(this.arg)}` } // TODO: and remove this.options
 			if (options.debug)           { str += ` (${this.id})`                 }
 			return str;
 		},

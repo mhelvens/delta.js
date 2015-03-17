@@ -6,9 +6,7 @@ import JsGraph from 'js-graph';
 import U      from './misc.js';
 import Path   from './Path.js';
 import {ReadableTarget, WritableTarget, rt, wt} from './Target.js';
-import {ApplicationError, MultipleOverloadsApplicationError,
-		NoOverloadsApplicationError, DeltaArgApplicationError,
-		CompositionError, MultipleOverloadsCompositionError} from './Error.js';
+import {ApplicationError, CompositionError} from './Error.js';
 import defineDelta                 from './operations/Delta.js';
 import defineComposite             from './operations/Composite.js';
 import defineOverloaded            from './operations/Overloaded.js';
@@ -29,9 +27,9 @@ import defineApplicationConditions from './applicationConditions.js';
  */
 export default U.newClass(function DeltaJs() {
 
-	this._compositions = []; // [{precondition, composeFn}]
-	this._overloads = {}; // method -> [delta-classes]
-	this._onNewOperationTypeListeners = [];
+	this._compositions  = []; // [{precondition, composeFn}]
+	this._facadeMethods = []; // method -> (args => Delta)
+	this._onNewFacadeMethodListeners  = [];
 
 	defineDelta                (this);
 	defineComposite            (this);
@@ -48,13 +46,13 @@ export default U.newClass(function DeltaJs() {
 }, /** @lends DeltaJs.prototype */ {
 
 	/** {@private}{@method}
-	 * @param delta  {DeltaJs#Delta}
-	 * @param target {DeltaJs.ReadableTarget}
+	 * @param delta        {DeltaJs#Delta}
+	 * @param target       {DeltaJs.ReadableTarget}
 	 * @return {Boolean|ApplicationError} - `true` if the precondition is satisfied, otherwise
 	 *                                      `false` or an instance of `DeltaJs.ApplicationError`
 	 */
 	_evaluatePrecondition(delta, target) {
-		if (typeof delta.precondition === 'function') {
+		if (delta.precondition) {
 			var judgment = delta.precondition(target);
 			if (judgment instanceof ApplicationError) {
 				return judgment;
@@ -66,12 +64,13 @@ export default U.newClass(function DeltaJs() {
 	},
 
 	/** {@public}{@method}
-	 * @param name      {string}
-	 * @param prototype {object}
+	 * @param Superclass {Function?} - optional superclass
+	 * @param name       {string}    - name of the new operation type
+	 * @param prototype  {object}    - prototype of the new operation class
 	 */
 	newOperationType(Superclass, name, prototype) {
-		if (typeof Superclass === 'string') { [Superclass, name, prototype] = [undefined, Superclass, name] }
-		prototype = prototype || {};
+		if (typeof Superclass === 'string') { [Superclass, name, prototype] = [this.Delta, Superclass, name] }
+		if (!prototype)  { prototype  = {} }
 
 		/* 'this' alias */
 		var thisDeltaJs = this;
@@ -83,15 +82,19 @@ export default U.newClass(function DeltaJs() {
 			`The '${name}' operation type already exists.`);
 
 		/* Delta subclass */
-		var cls = this.Delta[name] = U.newSubclass(Superclass || this.Delta, (superFn) => function (arg, options) {
-			superFn.call(this, arg, options);
-			if (this.construct) { this.construct() }
-		}, U.extend({}, prototype, {
+		class Cls extends Superclass {
+			constructor(arg, options = {}) {
+				super(options, arg);
+				if (this.construct) { this.construct() }
+			}
+		}
+		this.Delta[name] = Cls;
+		U.extend(Cls.prototype, prototype, {
 			applyTo(target, options = {}) {
 
 				/* should this delta only be applied for a specific property on the target object? */
 				if (options.restrictToProperty &&  this.options.targetProp &&
-					options.restrictToProperty !== this.options.targetProp) { return }
+					options.restrictToProperty !== this.options.targetProp) { return } // TODO: remove options
 
 				/* should this delta only be applied for a specific feature selection? */
 				if (!this.selected) { return }
@@ -102,41 +105,50 @@ export default U.newClass(function DeltaJs() {
 
 				/* OK, then apply it if a method to do so was included in the operation */
 				if (U.isDefined(prototype.applyTo)) {
-					prototype.applyTo.call(this, target, (
-							!!this.options.targetProp ?
+					var newOptions = (
+						!!this.options.targetProp ? // TODO: remove options
 							U.extend({}, options, { restrictToProperty: null }) :
 							options
-					));
+					);
+					prototype.applyTo.call(this, target, newOptions);
 				}
 
-			}
-		}));
-		cls.type = cls.prototype.type = name;
-		cls.options = cls.prototype.options = { // TODO: don't put this in prototype anymore
-			// if no methods are provided, use the operation name starting with a lowercase letter
-			methods: prototype.methods || [ name[0].toLowerCase()+name.slice(1) ]
-		};
+			},
+			type: name
+		});
 
-		/* add this new type to the list of types associated with each method */
-		cls.options.methods.forEach((method) => { U.a(this._overloads, method).push(name) });
-
-		/* notify listeners */
-		this._onNewOperationTypeListeners.forEach((fn) => { fn(cls) });
+		/* create the given methods with default handler */
+		(prototype.methods || [ name[0].toLowerCase()+name.slice(1) ]).forEach((method) => {
+			this.newFacadeMethod(method, (...args) => new Cls(...args));
+		});
 
 		/* return the new class */
-		return cls;
+		return Cls;
 
 	},
 
 	/** {@public}{@method}
-	 * @param fn {(Function) => undefined} - a function that takes a subclass of `DeltaJs#Delta`
+	 * @param method  {string}    - method name
+	 * @param handler {Function}  - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
 	 */
-	onNewOperationType(fn) {
-		this._onNewOperationTypeListeners.push(fn);
-		Object.keys(this.Delta).forEach((name) => {
-			if (name[0] === name[0].toUpperCase()) {
-				fn(this.Delta[name]);
-			}
+	newFacadeMethod(method, handler) {
+
+		/* register  */
+		this._facadeMethods.push([method, handler]);
+
+		/* notify listeners */
+		this._onNewFacadeMethodListeners.forEach((fn) => { fn(method, handler) });
+
+	},
+
+	/** {@public}{@method}
+	 * @param fn {(String, Function) => undefined} -
+	 *           a function that takes a name and a function that creates a `DeltaJs#Delta` instance
+	 */
+	onNewFacadeMethod(fn) {
+		this._onNewFacadeMethodListeners.push(fn);
+		this._facadeMethods.forEach(([method, handler]) => {
+			fn(method, handler);
 		});
 	},
 

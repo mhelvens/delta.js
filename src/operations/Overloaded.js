@@ -11,14 +11,14 @@ export default (deltaJs) => {
 
 	defineDelta(deltaJs);
 
-	deltaJs.newOperationType(deltaJs.Delta, 'Overloaded', {
+	deltaJs.newOperationType('Overloaded', {
 		construct() { this.overloads = [] },
 
 		/** {@public}{@abstract}{@method}{@nosideeffects}
 		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
 		 */
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super()
+			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super.clone() // TODO: remove options
 			result.overloads = this.overloads.map(delta => delta.clone());
 			return result;
 		},

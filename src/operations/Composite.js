@@ -8,6 +8,11 @@ export default (deltaJs) => {
 
 	defineDelta(deltaJs);
 
+	var _overloads = {}; // method -> [delta-classes]
+	deltaJs.onNewFacadeMethod((method, handler) => {
+		U.a(_overloads, method).push(handler);
+	});
+
 	U.extend(deltaJs.constructor.prototype, {
 		/** {@protected}{@method}
 		 * @param options {object}
@@ -15,8 +20,7 @@ export default (deltaJs) => {
 		 * @return {DeltaJs#Delta}
 		 */
 		_newDeltaByMethod(options, arg) {
-			var newDeltas = this._overloads[options.method]
-					.map(type => new this.Delta[type](arg, options));
+			var newDeltas = _overloads[options.method].map(handler => handler(arg, options));
 			if (newDeltas.length === 1) {
 				return newDeltas[0];
 			} else { // newDeltas.length > 1
@@ -65,26 +69,23 @@ export default (deltaJs) => {
 	});
 
 	var operationMethods = {};
-	deltaJs.onNewOperationType((cls) => {
-		if (cls === deltaJs.Delta.Composite) { return }
-		(cls.options.methods || []).forEach((method) => {
-			if (U.isUndefined(operationMethods[method])) {
-				operationMethods[method] = function (...args) {
-					if (this._facadeDisabled) { throw new MultipleActiveFacadesError(this) }
-					var newDelta = this._applyOperationMethod(method, ...args);
-					if (newDelta instanceof deltaJs.Delta.Composite) {
-						var activeSubFacade = this._activeSubFacade;
-						while (activeSubFacade) {
-							activeSubFacade._facadeDisabled = true;
-							activeSubFacade = activeSubFacade._activeSubFacade;
-						}
-						return this._activeSubFacade = newDelta.do();
-					} else {
-						return this;
+	deltaJs.onNewFacadeMethod((method) => {
+		if (U.isUndefined(operationMethods[method])) {
+			operationMethods[method] = function (...args) {
+				if (this._facadeDisabled) { throw new MultipleActiveFacadesError(this) }
+				var newDelta = this._applyOperationMethod(method, ...args);
+				if (newDelta instanceof deltaJs.Delta.Composite) {
+					var activeSubFacade = this._activeSubFacade;
+					while (activeSubFacade) {
+						activeSubFacade._facadeDisabled = true;
+						activeSubFacade = activeSubFacade._activeSubFacade;
 					}
-				};
-			}
-		});
+					return this._activeSubFacade = newDelta.do();
+				} else {
+					return this;
+				}
+			};
+		}
 	});
 
 };

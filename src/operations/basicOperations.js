@@ -33,7 +33,7 @@ export default (deltaJs) => {
 			precondition(target) { return target instanceof WritableTarget && pre(target)                            },
 			applyTo(target)      { target.value = this.deltasToApplyToArg.reduce((v, d) => d.appliedTo(v), this.arg) },
 			clone() {
-				var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super()
+				var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super() // TODO; remove options
 				result.deltasToApplyToArg = this.deltasToApplyToArg.map(d => d);
 				return result;
 			},

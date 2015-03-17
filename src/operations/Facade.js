@@ -7,6 +7,7 @@ import {ApplicationOrderCycle} from './Error.js';
 import U                            from '../misc.js';
 import Path                         from '../Path.js';
 import defineDelta                  from './Delta.js';
+import defineOverloaded             from './Overloaded.js';
 import {MultipleActiveFacadesError} from '../Error.js';
 
 
@@ -14,7 +15,8 @@ export default (deltaJs) => {
 	if (U.isDefined(deltaJs.Facade)) { return }
 
 
-	defineDelta(deltaJs);
+	defineDelta     (deltaJs);
+	defineOverloaded(deltaJs);
 
 
 	// TODO: Bake in delta model functionality
@@ -24,82 +26,157 @@ export default (deltaJs) => {
 	// TODO: Error messages based on syntactic conflicts in delta models
 
 
-	//var facadeMethods = {
-	//	addOperator(path, delta) {
-	//		var facade = this.getFacadeByPath(new Path(path));
-	//		facade.delta = delta;
-	//		if (delta instanceof deltaJs.Delta.Composite) {
-	//			return facade;
-	//		}
-	//		return this;
-	//	},
-	//	getFacadeByPath(path) {
-	//		if (path && path.prop) {
-	//			if (!this.children[path.prop]) {
-	//				this.children[path.prop] = new deltaJs.Facade({ parent: this });
-	//			}
-	//			return this.children[path.prop].getFacadeByPath(path.rest);
-	//		} else {
-	//			return this;
-	//		}
-	//	}
-	//};
-	//
-	//
-	//function newFacade(options) { // TODO: lots of stuff
-	//	var { delta, parent, facadeArgs } = options;
-	//	// The facade object exposes operations methods directly, but arguments to
-	//	// those operations can partly be given through function-call notation.
-	//	// Therefore, a facade is a function, storing arguments that are already given.
-	//	var result = (...args) => newFacade(U.extend({}, options, { facadeArgs: result.facadeArgs.concat(args) }));
-	//	U.extend(result, facadeMethods, operationMethods, options, {
-	//		_applyOperationMethod(method, ...finalArgs) {
-	//			return result.addOperator(thisDelta, [{method}].concat(result._args).concat(finalArgs));
-	//		},
-	//		children: {},
-	//		delta, parent, facadeArgs
-	//	});
-	//	return result;
-	//}
-	//
-	//
-	///* react to any new operation types */ // TODO: lots of stuff
-	//var operationMethods = {};
-	//deltaJs.onNewOperationType((cls) => {
-	//	if (cls === deltaJs.Delta.Composite) { return }
-	//	(cls.options.methods || []).forEach((method) => {
-	//		if (U.isUndefined(operationMethods[method])) {
-	//			operationMethods[method] = function (...args) {
-	//				if (this._facadeDisabled) { throw new MultipleActiveFacadesError(this) }
-	//				var newDelta = this._applyOperationMethod.apply(this, [method].concat(args));
-	//				if (newDelta instanceof deltaJs.Delta.Composite) {
-	//					var activeSubFacade = this._activeSubFacade;
-	//					while (activeSubFacade) {
-	//						activeSubFacade._facadeDisabled = true;
-	//						activeSubFacade = activeSubFacade._activeSubFacade;
-	//					}
-	//					return this._activeSubFacade = newDelta.do();
-	//				} else {
-	//					return this;
-	//				}
-	//			};
-	//		}
-	//	});
-	//});
-	//
-	//
-	///** {@class}
-	// *
-	// */
-	//deltaJs.Delta.Composite = U.newSubclass(deltaJs.Delta, { // TODO: what 'operation' should do
-	//	/** {@public}{@abstract}{@method}
-	//	 * Implement this method in subclasses to prepare a specific delta operation with this delta as the base.
-	//	 * @return {DeltaJs#Delta} - the delta resulting from the operation
-	//	 */
-	//	operation() {
-	//		throw new Error(`A Delta.Composite subclass (in this case: ${this.type}) needs to implement the 'operation' method.`);
-	//	}
-	//});
+	class Facade {
+
+		// A Facade object exposes operation methods directly, but option-arguments
+		// to those operations can be pre-supplied through the `do` method.
+		//
+		// (...options, operationMethod, ...options, path, ...operationArgs)
+		//
+		// When the operationMethod has been given, the argument list is
+		// considered finished, and the operation is added.
+
+		constructor(options = {}) {
+			/* mandatory fields */
+			this._options         = options;
+			this._delta           = options.delta  || null;
+			this._parent          = options.parent || null;
+			this._children        = {};
+			this._activeSubFacade = null;
+
+			/* the fields for a Facade with a partial argument list */
+			this._doOptions = options._doOptions || {};
+			this._original  = options._original  || this;
+
+			/* activate this Facade instance */
+			this._active = true;
+			if (this._parent) {
+				if (this._parent._activeSubFacade) {
+					this._parent._activeSubFacade._active = false;
+				}
+				this._parent._activeSubFacade = this._original;
+			}
+		}
+
+		_assertThisFacadeIsActive() {
+			if (!this._active) {
+				throw new MultipleActiveFacadesError(this._original);
+			}
+		}
+
+		addOperator(path, delta) {
+			this._assertThisFacadeIsActive();
+			var facade = this.getFacadeByPath(new Path(path));
+			facade.delta = delta;
+
+			// TODO: do we determine which facade to return to the user from this method, or from another method?
+			//if (delta instanceof deltaJs.Delta.Composite) {
+			//	return facade;
+			//} else {
+			//	return this;
+			//}
+		}
+
+		getFacadeByPath(path) {
+			if (path && path.prop) {
+				if (!this.children[path.prop]) {
+					// note: the following creates a new child Facade, and activates it
+					this.children[path.prop] = new deltaJs.Facade({ parent: this });
+				}
+				return this.children[path.prop].getFacadeByPath(path.rest);
+			} else {
+				return this._original;
+			}
+		}
+
+		do(...doArgs) {
+			this._assertThisFacadeIsActive();
+
+			var allDoArgs = [...this._doArgs, ...doArgs];
+
+			try {
+
+				var {method, options, args} = Facade._transformArgs(...allDoArgs);
+
+				/* the argument list is finished; create a new delta and put it in the right place */
+				var delta;
+				// TODO
+
+				/* return the right Facade instance */
+				if (delta instanceof Composite) {
+					// TODO (get the path from the args = the second argument that is a string)
+				} else {
+					return this; // return this facade, but preserve preloaded options
+				}
+
+			} catch (__) {
+
+				/* return a object with this Facade instance as its prototype, carrying any preloaded args */
+				// note that this mixes prototypical inheritance into the existing classical inheritance scheme
+				var result = Object.create(this);
+				result._doArgs   = allDoArgs;
+				result._original = this._original;
+				return result;
+
+			}
+		}
+
+		static constructor() {
+			/* initialize a list of delta creation functions */
+			Facade._deltaCreationFunctions = {}; // method -> (args => Delta)
+
+			/* automatically populate the Facade class with new operation methods */
+			deltaJs.onNewFacadeMethod((method) => {
+				if (U.isUndefined(Facade.prototype[method])) {
+					throw new Error(`The method name '${method}' is already in use.`); // TODO: specific error class
+				}
+				Facade.prototype[method] = function (...args) {
+					this.do(method, ...args);
+				};
+			});
+
+			/* register handlers for each method */
+			Facade._methodHandlers = {}; // method -> [handlers]
+			deltaJs.onNewFacadeMethod((method, handler) => {
+				U.a(Facade._methodHandlers, method).push(handler);
+			});
+		}
+
+		static _transformArgs(...args) {
+			var options = {};
+			var method;
+			var path;
+			do {
+				if (args.length === 0) { throw new Error(`Invalid argument list.`) }
+				var arg = args.shift();
+				if (typeof arg === 'string') {
+					if (!method) { method = arg }
+					else         { path   = arg }
+				} else { U.extend(options, arg) }
+			} while (!path);
+			return { method, options, path, args };
+		}
+
+		static _newDeltaByMethod(method, args) {
+			var newDeltas = Facade._methodHandlers[method].map(handler => handler(...args));
+			if (newDeltas.length === 1) {
+				return newDeltas[0];
+			} else { // newDeltas.length > 1
+				var delta = new deltaJs.Delta.Overloaded(newDeltas); // TODO: accept argument for delta array
+				delta.overloads = newDeltas;
+				return delta;
+			}
+		}
+
+	}
+	deltaJs.Facade = Facade;
+
+
+	/** {@class}
+	 *
+	 */
+	class Composite {}
+	deltaJs.Delta.Composite = Composite;
 
 
 };

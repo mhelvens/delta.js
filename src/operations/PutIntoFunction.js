@@ -19,7 +19,7 @@ export default (deltaJs) => {
 	/* declaring the function operation type */
 	deltaJs.newOperationType('PutIntoFunction', {
 		construct() {
-			if (this.options.method) {
+			if (this.options.method) { // TODO: remove options
 				this.values = [{
 	               method: this.options.method,
 	               value: this.arg
@@ -29,7 +29,7 @@ export default (deltaJs) => {
 			}
 		},
 		clone() {
-			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super()
+			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super() // TODO: remove options
 			result.values = [];
 			this.values.forEach((v) => { result.values.push(v) });
 			return result;
