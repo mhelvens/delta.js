@@ -17,16 +17,9 @@ export default (deltaJs) => {
 	}
 
 	/* declaring the function operation type */
-	deltaJs.newOperationType('PutIntoFunction', {
+	var PutIntoFunction = deltaJs.newOperationType('PutIntoFunction', {
 		construct() {
-			if (this.options.method) { // TODO: remove options
-				this.values = [{
-	               method: this.options.method,
-	               value: this.arg
-               }];
-			} else {
-				this.values = [];
-			}
+			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : []; // TODO: (method)
 		},
 		clone() {
 			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super() // TODO: remove options
@@ -71,8 +64,13 @@ export default (deltaJs) => {
 				}
 			});
 		},
-		methods: ['prepend', 'insert', 'append']
+		methods: []
 	});
+
+	/* Facade methods ****************************************************************************/
+	deltaJs.newFacadeMethod('prepend', (value) => new PutIntoFunction({ method: 'prepend', value }, {}));
+	deltaJs.newFacadeMethod('insert',  (value) => new PutIntoFunction({ method: 'insert',  value }, {}));
+	deltaJs.newFacadeMethod('append',  (value) => new PutIntoFunction({ method: 'append',  value }, {}));
 
 	/* composition - introducing 'PutIntoFunction' **************************************************/
 	deltaJs.newComposition( t('Add'            , 'PutIntoFunction'), (d1, d2) => d1.afterApplying(d2) );
@@ -80,9 +78,7 @@ export default (deltaJs) => {
 	deltaJs.newComposition( t('PutIntoFunction', 'Remove'         ), d('Remove')                      );
 	deltaJs.newComposition( t('PutIntoFunction', 'Replace'        ), d('Replace', ({p2}) => p2)       );
 	deltaJs.newComposition( t('PutIntoFunction', 'PutIntoFunction'), (d1, d2) => {
-		var result = new deltaJs.Delta.PutIntoFunction();
-		result.values = (d1.values).concat(d2.values);
-		return result;
+		return new deltaJs.Delta.PutIntoFunction((d1.values).concat(d2.values));
 	});
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 

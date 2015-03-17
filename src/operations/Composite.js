@@ -60,7 +60,7 @@ export default (deltaJs) => {
 			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {
-					return thisDelta.operation({method}, ...fcd._args, ...finalArgs);
+					return thisDelta.operation({method}, ...fcd._args, ...finalArgs); // TODO: (method)
 				},
 				delta: thisDelta
 			});

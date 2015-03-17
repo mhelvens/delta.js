@@ -18,9 +18,9 @@ export default (deltaJs) => {
 	}
 
 	/* declaring the array operation type ***********************************************/
-	deltaJs.newOperationType('PutIntoArray', {
+	var PutIntoArray = deltaJs.newOperationType('PutIntoArray', {
 		construct() {
-			this.values = this.options.method ? [{ method: this.options.method, value: this.arg }] : []; // TODO: remove options
+			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : []; // TODO: (method)
 		},
 		clone() {
 			var result = deltaJs.Delta.prototype.clone.call(this, this.arg, this.options); // super() // TODO: remove options
@@ -49,18 +49,22 @@ export default (deltaJs) => {
 				}
 			});
 		},
-		methods: ['prepend', 'insert', 'append']
+		methods: []
 	});
 
-	/* composition - introducing 'PutIntoArray' **************************************************/
+	/* Facade methods ****************************************************************************/
+	deltaJs.newFacadeMethod('prepend', (value) => new PutIntoArray({ method: 'prepend', value }, {}));
+	deltaJs.newFacadeMethod('insert',  (value) => new PutIntoArray({ method: 'insert',  value }, {}));
+	deltaJs.newFacadeMethod('append',  (value) => new PutIntoArray({ method: 'append',  value }, {}));
+
+	/* composition *******************************************************************************/
 	deltaJs.newComposition( t('Add'    , 'PutIntoArray'    ), (d1, d2) => d1.afterApplying(d2) );
 	deltaJs.newComposition( t('Replace', 'PutIntoArray'    ), (d1, d2) => d1.afterApplying(d2) );
 	deltaJs.newComposition( t('PutIntoArray'    , 'Remove' ), d('Remove')                      );
 	deltaJs.newComposition( t('PutIntoArray'    , 'Replace'), d('Replace', ({p2}) => p2)       );
 	deltaJs.newComposition( t('PutIntoArray'    , 'PutIntoArray'    ), (d1, d2) => {
-		var result = new deltaJs.Delta.PutIntoArray();
-		result.values = (d1.values).concat(d2.values);
-		return result;
+		return new deltaJs.Delta.PutIntoArray((d1.values).concat(d2.values));
 	});
+	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 
 };

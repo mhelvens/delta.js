@@ -83,7 +83,7 @@ export default U.newClass(function DeltaJs() {
 
 		/* Delta subclass */
 		class Cls extends Superclass {
-			constructor(arg, options = {}) {
+			constructor(arg, options = {}) { // TODO: ...args instead of arg, and remove options
 				super(options, arg);
 				if (this.construct) { this.construct() }
 			}

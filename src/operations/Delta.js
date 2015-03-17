@@ -13,8 +13,9 @@ export default (deltaJs) => {
 	 *
 	 */
 	deltaJs.Delta = U.newClass(function Delta(options, ...args) {
-		this.arg = args[0]; // TODO: store all args
 		this.id = deltaJs._nextDeltaID++;
+		this.arg = args[0];
+		this.args = args;
 		this.options = options;
 	}, {
 
