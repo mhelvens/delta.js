@@ -64,10 +64,11 @@ export default U.newClass(function DeltaJs() {
 	},
 
 	/** {@public}{@method}
-	 * @param name  {string}   - name of the new operation type
-	 * @param Class {Function} - prototype of the new operation class
+	 * @param name        {string}    - name of the new operation type
+	 * @param Class       {Function}  - the new operation class
+	 * @param FacadeClass {?Function} - the optional custom Facade class for this operation-type
 	 */
-	newOperationType(name, Class) {
+	newOperationType(name, Class, FacadeClass) {
 		/* sanity checks */
 		U.assert(name[0] === name[0].toUpperCase(),
 			`Delta operation classes must have a name starting with a capital letter -- '${name}' does not.`);
@@ -76,6 +77,9 @@ export default U.newClass(function DeltaJs() {
 
 		/* store the operation class */
 		this.Delta[name] = Class;
+
+		/* set the (optional) Facade class */
+		Class.Facade = FacadeClass;
 
 		/* 'this' alias */
 		var thisDeltaJs = this;

@@ -3,12 +3,16 @@ import U               from '../misc.js';
 import Path            from '../Path.js';
 import {wt}            from '../Target.js';
 import defineComposite from './Composite.js';
+import defineFacade    from './Facade.js';
 
 
 export default (deltaJs) => {
 	if (U.isDefined(deltaJs.Delta.Modify)) { return }
 
+
 	defineComposite(deltaJs);
+	defineFacade(deltaJs);
+
 
 	class Modify extends deltaJs.Delta.Composite {
 		constructor(...args) { super(...args); this.deltas = {}; }
@@ -107,7 +111,66 @@ export default (deltaJs) => {
 			/* return the composed delta if it has an operations interface; otherwise, return the given delta */
 			return (this.deltas[path.prop] instanceof deltaJs.Delta.Composite) ? this.deltas[path.prop] : delta;
 		}
+
 	}
-	deltaJs.newOperationType('Modify', Modify);
+
+
+	class Facade extends deltaJs.Facade {
+
+		constructor(options = {}) {
+			super(options);
+			this._children = {};
+		}
+
+		/** {@public}{@method}
+		 * @param rawArgs {*[]}
+		 * @return {?{ options: Object, path: string, args: *[] }}
+		 */
+		processFacadeArguments(...rawArgs) {
+			// rawArgs is parsed as (...options, path, ...args)
+			var options = {};
+			var path;
+			do {
+				if (rawArgs.length === 0) { return null }
+				var arg = rawArgs.shift();
+				if (typeof arg === 'string') { path = arg             }
+				else                         { U.extend(options, arg) }
+			} while (!path);
+			return { options, path, args: rawArgs };
+		}
+
+		_childFacade(prop, FacadeClass) {
+			if (U.isUndefined(this._children[prop])) {
+				this._children[prop] = new Facade.Proxy({ parent: this });
+			}
+			return this._children[prop]._childFacade(FacadeClass)._activeFacade();
+		}
+
+		/** {@public}{@method}
+		 * @param path    {Path}
+		 * @param delta   {Function}
+		 * @param options {Object}
+		 */
+		addOperation(path, delta, options) {
+			if (path.rest) {
+
+				this._childFacade(path.prop, Modify.Facade).addOperation(path.rest, delta, options);
+
+			} else if (path.prop) {
+
+				this._childFacade(path.prop, delta.constructor.Facade);
+
+			} else {
+				// TODO: For this case, do we need to lift the addOperation method to Facade.Proxy?
+				//     : Perhaps we just do not allow this?
+				throw new Error('Have not programmed this case.');
+			}
+		}
+
+	}
+
+
+	deltaJs.newOperationType('Modify', Modify, Facade);
+
 
 };

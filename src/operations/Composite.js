@@ -56,9 +56,7 @@ export default (deltaJs) => {
 			// The facade object exposes operations methods directly, but arguments to
 			// those operations can partly be given through function-call notation.
 			// Therefore, a facade is a function, storing arguments that are already given.
-			var fcd = function (...args) {
-				return thisDelta.do(...fcd._args, ...args);
-			};
+			var fcd = (...args) => thisDelta.do(...fcd._args, ...args);
 			fcd._args = firstArgs;
 			U.extend(fcd, operationMethods, {
 				_applyOperationMethod(method, ...finalArgs) {

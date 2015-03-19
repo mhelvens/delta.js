@@ -20,7 +20,7 @@ export default (deltaJs) => {
 
 
 	// TODO: Bake in delta model functionality
-	// TODO: 'one Facade active at a time' (cannot use earlier ones after new ones have been used)
+	// DONE: 'one Facade active at a time' (cannot use earlier ones after new ones have been used)
 	// TODO: Basic application of deltas
 	// TODO: Composition in order to generate error messages
 	// TODO: Error messages based on syntactic conflicts in delta models
@@ -28,113 +28,63 @@ export default (deltaJs) => {
 
 	class Facade {
 
-		// A Facade object exposes operation methods directly, but option-arguments
+		// A Facade instance exposes operation methods directly. Arguments
 		// to those operations can be pre-supplied through the `do` method.
-		//
-		// (...options, operationMethod, ...options, path, ...operationArgs)
-		//
-		// When the operationMethod has been given, the argument list is
-		// considered finished, and the operation is added.
 
-		constructor(options = {}) {
-			/* mandatory fields */
-			this._options         = options;
-			this._delta           = options.delta  || null;
-			this._parent          = options.parent || null;
-			this._children        = {};
-			this._activeSubFacade = null;
 
-			/* the fields for a Facade with a partial argument list */
-			this._doOptions = options._doOptions || {};
-			this._original  = options._original  || this;
-
-			/* activate this Facade instance */
-			this._active = true;
-			if (this._parent) {
-				if (this._parent._activeSubFacade) {
-					this._parent._activeSubFacade._active = false;
-				}
-				this._parent._activeSubFacade = this._original;
-			}
+		constructor({parent} = {}) {
+			this._parent   = parent;
+			this._doArgs   = [];
+			this._original = this;
+			this._active   = true;
 		}
 
-		_assertThisFacadeIsActive() {
-			if (!this._active) {
-				throw new MultipleActiveFacadesError(this._original);
-			}
-		}
-
-		addOperator(path, delta) {
-			this._assertThisFacadeIsActive();
-			var facade = this.getFacadeByPath(new Path(path));
-			facade.delta = delta;
-
-			// TODO: do we determine which facade to return to the user from this method, or from another method?
-			//if (delta instanceof deltaJs.Delta.Composite) {
-			//	return facade;
-			//} else {
-			//	return this;
-			//}
-		}
-
-		getFacadeByPath(path) {
-			if (path && path.prop) {
-				if (!this.children[path.prop]) {
-					// note: the following creates a new child Facade, and activates it
-					this.children[path.prop] = new deltaJs.Facade({ parent: this });
-				}
-				return this.children[path.prop].getFacadeByPath(path.rest);
-			} else {
-				return this._original;
-			}
-		}
 
 		do(...doArgs) {
-			this._assertThisFacadeIsActive();
+			/* return a version of this Facade with extra preloaded args */
+			// note that this mixes prototypical inheritance
+			// into the existing classical inheritance scheme
+			var result = Object.create(this);
+			result._doArgs   = [...this._doArgs, ...doArgs];
+			result._original = this._original;
+			return result;
+		}
 
+
+		_do(method, doArgs) {
+			/* gather all arguments */
 			var allDoArgs = [...this._doArgs, ...doArgs];
 
-			try {
+			/* container-specific processing of arguments */
+			// this gathers all options objects together, and recognizes
+			// whether an operation type has yet been passed
+			var argResponse = this.processFacadeArguments(...allDoArgs);
 
-				var {method, options, path, args} = Facade._transformArgs(...allDoArgs);
+			/* the argument list is finished; create a new delta and put it in the right place */
+			var delta = Facade._newDeltaByMethod(method, argResponse.rest); // TODO: is this still good?
+			this.addOperation(new Path(argResponse.path), delta, argResponse.options);
 
-				/* the argument list is finished; create a new delta and put it in the right place */
-				var delta;
+			/* return the right Facade instance */
+			if (U.isDefined(delta.constructor.Facade)) {
 				// TODO
-
-				/* return the right Facade instance */
-				if (delta instanceof Composite) {
-					// TODO (get the path from the args = the second argument that is a string)
-				} else {
-					return this; // return this facade, but preserve preloaded options
-				}
-
-			} catch (__) {
-
-				/* return a object with this Facade instance as its prototype, carrying any preloaded args */
-				// note that this mixes prototypical inheritance into the existing classical inheritance scheme
-				var result = Object.create(this);
-				result._doArgs   = allDoArgs;
-				result._original = this._original;
-				return result;
-
+			} else {
+				return this; // return this facade, preserving preloaded options
 			}
+
+
 		}
 
-		static _transformArgs(...args) {
-			var options = {};
-			var method;
-			var path;
-			do {
-				if (args.length === 0) { throw new Error(`Invalid argument list.`) }
-				var arg = args.shift();
-				if (typeof arg === 'string') {
-					if (!method) { method = arg }
-					else         { path   = arg }
-				} else { U.extend(options, arg) }
-			} while (!path);
-			return { method, options, path, args };
+
+		//noinspection JSCommentMatchesSignature
+		/** {@public}{@abstract}{@method}
+		 * @param args {[*]}
+		 * @return {{options: Object, path: String, args: [*]}}
+		 */
+		processFacadeArguments() {
+			throw new Error(`A Delta.Container subclass (in this case: ${this.type}) ` +
+			                `needs to implement the static 'processFacadeArguments' method.`);
 		}
+
 
 		static _newDeltaByMethod(method, args) {
 			var newDeltas = Facade._methodHandlers[method].map(handler => handler(...args));
@@ -145,22 +95,22 @@ export default (deltaJs) => {
 			}
 		}
 
+		// TODO: (abstract?) applyTo method
+
 	}
 	deltaJs.Facade = Facade;
 
 
-	/* initialize a list of delta creation functions */
-	Facade._deltaCreationFunctions = {}; // method -> (args => Delta)
-
 	/* automatically populate the Facade class with new operation methods */
 	deltaJs.onNewFacadeMethod((method) => {
 		if (U.isUndefined(Facade.prototype[method])) {
-			throw new Error(`The method name '${method}' is already in use.`); // TODO: specific error class
+			throw new Error(`The method name '${method}' is already in use.`); // TODO: specific error class?
 		}
 		Facade.prototype[method] = function (...args) {
-			this.do(method, ...args);
+			this._do(method, args);
 		};
 	});
+
 
 	/* register handlers for each method */
 	Facade._methodHandlers = {}; // method -> [handlers]
@@ -169,9 +119,76 @@ export default (deltaJs) => {
 	});
 
 
-	/* the Composite class */
-	class Composite {}
-	deltaJs.Delta.Composite = Composite;
+
+	/* a Facade class for non-container operation types */
+	class Basic extends Facade {
+		constructor(options = {}) {
+			super(options);
+			this.delta = options.delta;
+			this._args = options.args;
+		}
+	}
+	Facade.Basic = Basic;
+
+
+	/* all container-type facades (Modify, DeltaModel) hold references to FacadeProxy's */
+	class Proxy {
+
+		// This class accumulates a sequence of Facade instances,
+		// where only the last one in the list is active.
+		// The end-user should not get a reference to a FacadeProxy,
+		// but should only hold references to its stored facades.
+
+		constructor({parent} = {}) {
+			this._parent  = parent;
+			this._facades = [];
+		}
+
+		_activeFacade() { return this._facades[this._facades.length-1] }
+
+		_childFacade(FacadeClass) {
+			/* can we reuse the currently active Facade? if not, deactivate it */
+			var current = this._activeFacade();
+			if (current.constructor === FacadeClass && FacadeClass === deltaJs.Modify.Facade) { return current }
+			current._active = false;
+
+			/* create a new Facade of the right class, remember it and return it */
+			var next = new FacadeClass({ parent: this._parent }); // direct link to non-proxy parent
+			this._facades.push(next);
+			return next;
+		}
+
+		// TODO: applyTo method
+
+	}
+	Facade.Proxy = Proxy;
+
+
+
+
+
 
 
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
