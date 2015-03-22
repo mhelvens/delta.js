@@ -18,15 +18,15 @@ U.extend(DeltaJs, { Path });
 
 /* make Error classes available under the DeltaJs symbol */
 import {ApplicationError, MultipleOverloadsApplicationError,
-		NoOverloadsApplicationError, DeltaArgApplicationError,
-		CompositionError, MultipleOverloadsCompositionError,
-		ConstraintFailure, ApplicationOrderCycle,
-		UnresolvedConflict, MultipleActiveFacadesError} from './Error.js';
+		NoOverloadsApplicationError, CompositionError,
+        MultipleOverloadsCompositionError, ConstraintFailure,
+        ApplicationOrderCycle, UnresolvedDeltaConflict,
+        MultipleActiveProxiesError} from './Error.js';
 U.extend(DeltaJs, { ApplicationError, MultipleOverloadsApplicationError,
-                    NoOverloadsApplicationError, DeltaArgApplicationError,
-                    CompositionError, MultipleOverloadsCompositionError,
-                    ConstraintFailure, ApplicationOrderCycle,
-                    UnresolvedConflict, MultipleActiveFacadesError });
+                    NoOverloadsApplicationError, CompositionError,
+                    MultipleOverloadsCompositionError, ConstraintFailure,
+                    ApplicationOrderCycle, UnresolvedDeltaConflict,
+                    MultipleActiveProxiesError });
 
 
 /* export the DeltaJs class */

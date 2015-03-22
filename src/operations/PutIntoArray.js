@@ -1,14 +1,17 @@
 /* import internal stuff */
 import U                                        from '../misc.js';
 import {WritableTarget, ReadableTarget, rt, wt} from '../Target.js';
-import {DeltaArgApplicationError}               from '../Error.js';
 import defineBasicOperations                    from './basicOperations.js';
+import defineProxy                              from './Proxy.js';
 
 
 export default (deltaJs) => {
 	if (U.isDefined(deltaJs.Delta.PutIntoArray)) { return }
 
+
 	defineBasicOperations(deltaJs);
+	defineProxy          (deltaJs);
+
 
 	/* convenience definitions for the application and composition functions below */
 	function t(type1, type2) { return (d1, d2) => (d1.type === type1 && d2.type === type2) }
@@ -17,8 +20,9 @@ export default (deltaJs) => {
 		return (d1, d2) => new deltaJs.Delta[type](fn && fn({d1, d2, p1: d1.arg, p2: d2.arg}));
 	}
 
+
 	/* declaring the array operation type ***********************************************/
-	class PutIntoArray extends deltaJs.Delta {
+	deltaJs.newOperationType('PutIntoArray', class PutIntoArray extends deltaJs.Delta {
 		constructor(...args) {
 			super(...args);
 			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : [];
@@ -49,23 +53,25 @@ export default (deltaJs) => {
 				}
 			});
 		}
-	}
-	PutIntoArray.prototype.methods = [];
-	deltaJs.newOperationType('PutIntoArray', PutIntoArray);
+		get methods() { return [] }
+	});
 
-	/* Facade methods ****************************************************************************/
-	deltaJs.newFacadeMethod('prepend', (value) => new PutIntoArray({ method: 'prepend', value }, {}));
-	deltaJs.newFacadeMethod('insert',  (value) => new PutIntoArray({ method: 'insert',  value }, {}));
-	deltaJs.newFacadeMethod('append',  (value) => new PutIntoArray({ method: 'append',  value }, {}));
+
+	/* Proxy methods ****************************************************************************/
+	deltaJs.newProxyMethod('prepend', (value) => new deltaJs.Delta.PutIntoArray({ method: 'prepend', value }));
+	deltaJs.newProxyMethod('insert',  (value) => new deltaJs.Delta.PutIntoArray({ method: 'insert',  value }));
+	deltaJs.newProxyMethod('append',  (value) => new deltaJs.Delta.PutIntoArray({ method: 'append',  value }));
+
 
 	/* composition *******************************************************************************/
-	deltaJs.newComposition( t('Add'    , 'PutIntoArray'    ), (d1, d2) => d1.afterApplying(d2) );
-	deltaJs.newComposition( t('Replace', 'PutIntoArray'    ), (d1, d2) => d1.afterApplying(d2) );
-	deltaJs.newComposition( t('PutIntoArray'    , 'Remove' ), d('Remove')                      );
-	deltaJs.newComposition( t('PutIntoArray'    , 'Replace'), d('Replace', ({p2}) => p2)       );
-	deltaJs.newComposition( t('PutIntoArray'    , 'PutIntoArray'    ), (d1, d2) => {
-		return new deltaJs.Delta.PutIntoArray((d1.values).concat(d2.values));
+	deltaJs.newComposition( t('Add'    ,      'PutIntoArray'), d('Add',     ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Replace',      'PutIntoArray'), d('Replace', ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('PutIntoArray', 'Remove'      ), d('Remove')                                  );
+	deltaJs.newComposition( t('PutIntoArray', 'Replace'     ), d('Replace', ({p2}) => p2)                   );
+	deltaJs.newComposition( t('PutIntoArray', 'PutIntoArray'), (d1, d2) => {
+		return new deltaJs.Delta.PutIntoArray([...d1.values, ...d2.values]);
 	});
+
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 
 };

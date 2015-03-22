@@ -2,12 +2,16 @@
 import U                     from '../misc.js';
 import {WritableTarget}      from '../Target.js';
 import defineBasicOperations from './basicOperations.js';
+import defineProxy           from './Proxy.js';
 
 
 export default (deltaJs) => {
 	if (U.isDefined(deltaJs.Delta.PutIntoFunction)) { return }
 
+
 	defineBasicOperations(deltaJs);
+	defineProxy          (deltaJs);
+
 
 	/* convenience definitions for the application and composition functions below */
 	function t(type1, type2) { return (d1, d2) => (d1.type === type1 && d2.type === type2) }
@@ -16,8 +20,9 @@ export default (deltaJs) => {
 		return (d1, d2) => new deltaJs.Delta[type](fn && fn({d1, d2, p1: d1.arg, p2: d2.arg}));
 	}
 
+
 	/* declaring the function operation type */
-	class PutIntoFunction extends deltaJs.Delta {
+	deltaJs.newOperationType('PutIntoFunction', class PutIntoFunction extends deltaJs.Delta {
 		constructor(...args) {
 			super(...args);
 			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : [];
@@ -64,23 +69,25 @@ export default (deltaJs) => {
 				}
 			});
 		}
-	}
-	PutIntoFunction.prototype.methods = [];
-	deltaJs.newOperationType('PutIntoFunction', PutIntoFunction);
+		get methods() { return [] }
+	});
 
-	/* Facade methods ****************************************************************************/
-	deltaJs.newFacadeMethod('prepend', (value) => new PutIntoFunction({ method: 'prepend', value }, {}));
-	deltaJs.newFacadeMethod('insert',  (value) => new PutIntoFunction({ method: 'insert',  value }, {}));
-	deltaJs.newFacadeMethod('append',  (value) => new PutIntoFunction({ method: 'append',  value }, {}));
+
+	/* Proxy methods ****************************************************************************/
+	deltaJs.newProxyMethod('prepend', (value) => new deltaJs.Delta.PutIntoFunction({ method: 'prepend', value }));
+	deltaJs.newProxyMethod('insert',  (value) => new deltaJs.Delta.PutIntoFunction({ method: 'insert',  value }));
+	deltaJs.newProxyMethod('append',  (value) => new deltaJs.Delta.PutIntoFunction({ method: 'append',  value }));
+
 
 	/* composition - introducing 'PutIntoFunction' **************************************************/
-	deltaJs.newComposition( t('Add'            , 'PutIntoFunction'), (d1, d2) => d1.afterApplying(d2) );
-	deltaJs.newComposition( t('Replace'        , 'PutIntoFunction'), (d1, d2) => d1.afterApplying(d2) );
-	deltaJs.newComposition( t('PutIntoFunction', 'Remove'         ), d('Remove')                      );
-	deltaJs.newComposition( t('PutIntoFunction', 'Replace'        ), d('Replace', ({p2}) => p2)       );
+	deltaJs.newComposition( t('Add'            , 'PutIntoFunction'), d('Add',     ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Replace'        , 'PutIntoFunction'), d('Replace', ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('PutIntoFunction', 'Remove'         ), d('Remove')                                  );
+	deltaJs.newComposition( t('PutIntoFunction', 'Replace'        ), d('Replace', ({p2}) => p2)                   );
 	deltaJs.newComposition( t('PutIntoFunction', 'PutIntoFunction'), (d1, d2) => {
-		return new deltaJs.Delta.PutIntoFunction((d1.values).concat(d2.values));
+		return new deltaJs.Delta.PutIntoFunction([...d1.values, ...d2.values]);
 	});
+
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 
 };

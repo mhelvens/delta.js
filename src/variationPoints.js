@@ -56,10 +56,10 @@ export default (deltaJs) => {
 		/** {@public}{@method}
 		 * A {DeltaJs} instance has one fundamental {DeltaJs#DeltaModel} instance, which is applied
 		 * to any variation points that are encountered. This method is an alias to the eponymous
-		 * method on that 'root' delta model. It returns the facade that allows new delta operations
+		 * method on that 'root' delta model. It returns the proxy that allows new delta operations
 		 * to be added more easily. It presets the 'feature' option to 'true', but this can be
 		 * overwritten manually.
-		 * @return {function} - the facade to this delta, for easily adding operations
+		 * @return {function} - the proxy to this delta, for easily adding operations
 		 */
 		do(...args) {
 			// from the core delta model, deltas are features by default

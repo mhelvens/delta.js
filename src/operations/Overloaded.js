@@ -9,10 +9,17 @@ import {MultipleOverloadsApplicationError,
 export default (deltaJs) => {
 	if (U.isDefined(deltaJs.Delta.Overloaded)) { return }
 
+
 	defineDelta(deltaJs);
 
-	class Overloaded extends deltaJs.Delta {
-		constructor(...args) { super(...args); this.overloads = []; }
+
+	deltaJs.newOperationType('Overloaded', class Overloaded extends deltaJs.Delta {
+
+		constructor(...args) {
+			super(...args);
+			this.overloads = this.arg || [];
+		}
+
 
 		/** {@public}{@abstract}{@method}{@nosideeffects}
 		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
@@ -23,6 +30,7 @@ export default (deltaJs) => {
 			return result;
 		}
 
+
 		/** {@public}{@method}
 		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
 		 * @param options {object?}              - the (optional) options for this delta application
@@ -31,7 +39,7 @@ export default (deltaJs) => {
 			/* apply the first overload that applies to the target; gather any errors */
 			var errors = [];
 			var success = this.overloads.some((delta) => {
-				var judgment = deltaJs._evaluatePrecondition(delta, target);
+				var judgment = delta.evaluatePrecondition(target);
 				if (judgment !== true) {
 					errors.push(judgment);
 					return false;
@@ -51,6 +59,7 @@ export default (deltaJs) => {
 			}
 		}
 
+
 		/** {@public}{@method}
 		 * @param options {object?}
 		 * @return {string}
@@ -61,10 +70,14 @@ export default (deltaJs) => {
 			str += '\n' + U.indent(overloads, 4);
 			return str;
 		}
-	}
-	deltaJs.newOperationType('Overloaded', Overloaded);
 
-	deltaJs.newComposition((d1, d2) => (d1 instanceof deltaJs.Delta.Overloaded || d2 instanceof deltaJs.Delta.Overloaded), (d1, d2) => {
+	});
+
+
+	deltaJs.newComposition((d1, d2) => (
+		d1 instanceof deltaJs.Delta.Overloaded ||
+		d2 instanceof deltaJs.Delta.Overloaded
+	), (d1, d2) => {
 		var D1 = d1 instanceof deltaJs.Delta.Overloaded ? d1.overloads : [d1];
 		var D2 = d2 instanceof deltaJs.Delta.Overloaded ? d2.overloads : [d2];
 		var result = new deltaJs.Delta.Overloaded();
