@@ -70,16 +70,13 @@ export default (deltaJs) => {
 		}
 
 
-		/** {@public}{@method}
-		 * @param args {*[]}
-		 * @return {DeltaJs#Proxy}
-		 */
-		do(...args) {
-			return new deltaJs.Delta.Modify.Proxy({ delta: this }).do(...args);
+	}, class ModifyProxy extends deltaJs.ContainerProxy {
+
+		constructor(...args) {
+			super(...args);
+			this._childOptions = {}; // key -> options-of-first-occurrence
 		}
 
-
-	}, class ModifyProxy extends deltaJs.ContainerProxy {
 
 		/** {@public}{@method}
 		 * @param rawArgs {*[]}
@@ -90,7 +87,7 @@ export default (deltaJs) => {
 			var options = {};
 			var path;
 			do {
-				if (rawArgs.length === 0) { return null }
+				if (rawArgs.length === 0) { throw new Error(`The argument list for this Modify.Proxy method is insufficient.`) }
 				var arg = rawArgs.shift();
 				if (typeof arg === 'string') { path = arg             }
 				else                         { U.extend(options, arg) }
@@ -100,23 +97,26 @@ export default (deltaJs) => {
 
 
 		/** {@public}{@method}
+		 * @param delta   {DeltaJs#Delta}
 		 * @param path    {Path}
-		 * @param delta   {Function}
 		 * @param options {Object}
 		 */
-		addOperation(path, delta, options) {
+		addOperation(delta, path, options) {
 			if (!path.prop) { throw new Error('Operations on a Modify.Proxy need to have a non-empty path.') }
 
 			/* create proxies */
 			var deepestProxy, childProxy;
 			if (path.rest) {
 				childProxy = this.addChildProxy(path.prop, new deltaJs.Delta.Modify());
-				deepestProxy = childProxy.addOperation(path.rest, delta, options);
+				deepestProxy = childProxy.addOperation(delta, path.rest, options);
 			} else {
 				childProxy = deepestProxy = this.addChildProxy(path.prop, delta);
 			}
 
-			// TODO: store feature stuff from the options
+			/* store options */
+			if (!this._childOptions[path.prop]) {
+				this._childOptions[path.prop] = options;
+			}
 
 			/* return the deepest created proxy */
 			return deepestProxy;

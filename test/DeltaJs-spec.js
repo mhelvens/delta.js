@@ -28,7 +28,6 @@ describe("DeltaJs instance", function () {
 	var deltaJs, delta;
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
-		delta = new deltaJs.Delta.Modify();
 	});
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +100,10 @@ describe("DeltaJs instance", function () {
 	describe("algebraic", () => {
 
 		describe("delta application", () => {
+
+			beforeEach(() => {
+				delta = new deltaJs.Delta.Modify();
+			});
 
 			it("can be manually performed on values", () => {
 				delta.subDeltas['foo'] = new deltaJs.Delta.Add('bar');
@@ -582,7 +585,6 @@ describe("DeltaJs instance", function () {
 
 		var d;
 		beforeEach(() => {
-			d = delta.do();
 			afterAction(() => {
 				delta = d.delta();
 			});
@@ -590,6 +592,10 @@ describe("DeltaJs instance", function () {
 
 
 		describe("object operations", () => {
+
+			beforeEach(() => {
+				d = new deltaJs.Delta.Modify().do();
+			});
 
 			itCan("add a new field to an object", [[
 				{},
@@ -647,6 +653,10 @@ describe("DeltaJs instance", function () {
 
 
 		describe("composite object operations", () => {
+
+			beforeEach(() => {
+				d = new deltaJs.Delta.Modify().do();
+			});
 
 			itCan("correctly modify objects when the composition is valid", [[
 				{ key: "val" },
@@ -904,6 +914,10 @@ describe("DeltaJs instance", function () {
 
 		describe("array operations", () => {
 
+			beforeEach(() => {
+				d = new deltaJs.Delta.Modify().do();
+			});
+
 			itCan("prepend a new value to an array", [[
 				{ arr: [] },
 				() => { d.prepend('arr', 'val') },
@@ -985,6 +999,10 @@ describe("DeltaJs instance", function () {
 
 
 		describe("composite array operations", () => {
+
+			beforeEach(() => {
+				d = new deltaJs.Delta.Modify().do();
+			});
 
 			itCan("combine multiple array operations", [[
 				{ arr: ['init'] },
@@ -1159,6 +1177,10 @@ describe("DeltaJs instance", function () {
 
 		describe("function operations", () => {
 
+			beforeEach(() => {
+				d = new deltaJs.Delta.Modify().do();
+			});
+
 			itCan("prepend new statements to run inside an existing function", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => { d.prepend('fn', function (a, b) { fB(this, b, b) }) },
@@ -1216,10 +1238,11 @@ describe("DeltaJs instance", function () {
 		});
 
 
-
-
-
 		describe("composite function operations", () => {
+
+			beforeEach(() => {
+				d = new deltaJs.Delta.Modify().do();
+			});
 
 			itCan("combine multiple function operations", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
@@ -1417,407 +1440,399 @@ describe("DeltaJs instance", function () {
 		});
 
 
+		describe("the delta model operation", () => {
+
+			var dm;
+			beforeEach(() => {
+				dm = d = new deltaJs.Delta.DeltaModel().do();
+			});
+
+			itCan("be a middle-man for a single other delta", [[
+				{},
+				() => {
+					dm.do('X').add('key', { foo: "bar" });
+				},
+				{ key: { foo: "bar" } }
+			], [
+				{ key: { foo: "bar" } },
+				() => {
+					dm.do('X').remove('key');
+				},
+				{}
+			], [
+				{},
+				() => {
+					dm.do('X').forbid('key');
+				},
+				{}
+			], [
+				{ key: { foo: "bar" } },
+				() => {
+					dm.do('X').replace('key', 'value');
+				},
+				{ key: "value" }
+			], [
+				{ key: { foo: "bar" } },
+				() => {
+					dm.do('X').modify('key').replace('foo', 'bas');
+				},
+				{ key: { foo: "bas" } }
+			], [
+				{ key: ['a'] },
+				() => {
+					dm.do('X').prepend('key', 'b');
+				},
+				{ key: ['b', 'a'] }
+			], [
+				{ key: ['a'] },
+				() => {
+					dm.do('X').insert('key', 'b');
+				},
+				(obj) => {
+					expect(obj).toEqualOneOf(
+						{ key: ['b', 'a'] },
+						{ key: ['a', 'b'] }
+					);
+				}
+			], [
+				{ key: ['a'] },
+				() => {
+					dm.do('X').append('key', 'b');
+				},
+				{ key: ['a', 'b'] }
+			]]);
+
+			describe("with a function operation delta inside", () => {
+				itCan("be a middle man for that one delta", [[
+					{ fn(a, b, c) { fA(this, a, c) } },
+					() => {
+						dm.do('X').prepend('fn', function (a, b) { fB(this, b, b) });
+					},
+					(obj) => {
+						obj.fn(1, 2, 3);
+						expect(callLog).toEqual([['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]]);
+					}
+				], [
+					{ fn(a, b, c) { fA(this, a, c) } },
+					() => {
+						dm.do('X').insert('fn', function (a, b) { fB(this, b, b) });
+					},
+					(obj) => {
+						obj.fn(1, 2, 3);
+						expect(callLog).toEqualOneOf(
+								[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+								[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
+						);
+					}
+				], [
+					{ fn(a, b, c) { fA(this, a, c) } },
+					() => {
+						dm.do('X').append('fn', function (a, b) { fB(this, b, b) });
+					},
+					(obj) => {
+						obj.fn(1, 2, 3);
+						expect(callLog).toEqual([['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]);
+					}
+				]]);
+			});
+
+			itCan("apply deltas in a linear order (as if composed)", [[
+				{},
+				() => {
+					dm.do('X').add('key', { foo: "bar" });
+					dm.do('Y').remove({ after: ['X'] }, 'key');
+				},
+				{}
+			], [
+				{},
+				() => {
+					dm.do('X').add('key', { foo: "bar" });
+					dm.do('Y').replace({ after: ['X'] }, 'key', 'some value');
+				},
+				{ key: 'some value' }
+			], [
+				{},
+				() => {
+					dm.do('X').add('key1', { foo: "bar" });
+					dm.do('Y',  { after: ['X'] }).add('key2', 'some value');
+					dm.do('Z',  { after: ['Y'] }).add('key3', 'some other value');
+					dm.do('rY', { after: ['Z'] }).remove('key2');
+				},
+				{ key1: { foo: "bar" }, key3: 'some other value' }
+			]]);
+
+			itCan("apply unordered deltas in arbitrary order, if they do not conflict", [[
+				{ oldKey: 'old value' },
+				() => {
+					dm.do('X').add('key1', 1);
+					dm.do('Y').add('key2', 'b');
+					dm.do('Z').add('key3', 'iii');
+					dm.do('r').remove('oldKey');
+				},
+				{ key1: 1, key2: "b", key3: "iii" }
+			]]);
+
+			itCan("apply a partially ordered set of deltas in topological order, if unordered deltas do not conflict", [[
+				{ oldKey: 'old value' },
+				() => {
+					dm.do('W').add('key', { foo: "bar" });
+					dm.do('X', { after: ['W'] }).add('key.x', 1);
+					dm.do('Y', { after: ['W'] }).add('key.y', 2);
+					dm.do('Z', { after: ['W'] }).add('key.z', 3);
+				},
+				{ oldKey: 'old value', key: { foo: "bar", x: 1, y: 2, z: 3 } }
+			], [
+				{ oldKey: 'old value' },
+				() => {
+					dm.do('X', { after: ['W'] }).add('key.x', 1);
+					dm.do('Y', { after: ['W'] }).add('key.y', 2);
+					dm.do('Z', { after: ['W'] }).add('key.z', 3);
+					dm.do('W').add('key', { foo: "bar" }); // the order doesn't matter
+				},
+				{ oldKey: 'old value', key: { foo: "bar", x: 1, y: 2, z: 3 } }
+			]]);
+
+			itCan("have multiple separate operations on the same sub-delta", [[
+				{ subObj: {} },
+				() => {
+					var x = dm.do('X');
+					x.modify('subObj').add('one', 1);
+					x.modify('subObj').add('two', 2);
+				},
+				{ subObj: { one: 1, two: 2 } }
+			], [
+				{ subObj: { subSubObj: {} } },
+				() => {
+					var x = dm.do('X');
+					x.modify('subObj').add('one', 1);
+					x.modify('subObj.subSubObj').add('two', 2);
+				},
+				{ subObj: { one: 1, subSubObj: { two: 2 } } }
+			], [
+				{ subObj: { subSubObj: {} } },
+				() => {
+					var x = dm.do('X');
+					x.add('subObj.one', 1);
+					x.modify('subObj.subSubObj').add('two', 2);
+				},
+				{ subObj: { one: 1, subSubObj: { two: 2 } } }
+			], [
+				{ subObj: { subSubObj: {} } },
+				() => {
+					var x = dm.do('X');
+					x.modify('subObj.subSubObj').add('two', 2);
+					x.modify('subObj').add('one', 1);
+				},
+				{ subObj: { one: 1, subSubObj: { two: 2 } } }
+			]]);
+
+			itCan("throw an error if there is an application order cycle", [[
+				{},
+				() => {
+					dm.do('X', { after: ['Y'] }).add('keyX', 'value X');
+					dm.do('Y', { after: ['X'] }).add('keyY', 'value Y');
+				},
+				expectError(DeltaJs.ApplicationOrderCycle, { from: "X", to: "Y" })
+			], [
+				{},
+				() => {
+					dm.do('W').add('keyW', 'W value');
+					dm.do('X', { after: ['W', 'Z'] }).add('keyX', 'X value');
+					dm.do('Y', { after: ['X'] }).add('keyY', 'Y value');
+					dm.do('Z', { after: ['Y'] }).add('keyZ', 'Z value');
+				},
+				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
+			]]);
+
+			itCan("throw an error if there is an application order cycle", [[
+				{},
+				() => {
+					dm.do('X', { after: ['Y'] }).add('keyX', 'value X');
+					dm.do('Y', { after: ['X'] }).add('keyY', 'value Y');
+				},
+				expectError(DeltaJs.ApplicationOrderCycle, { from: "X", to: "Y" })
+			], [
+				{},
+				() => {
+					dm.do('W').add('keyW', 'W value');
+					dm.do('X', { after: ['W', 'Z'] }).add('keyX', 'X value');
+					dm.do('Y', { after: ['X'] }).add('keyY', 'Y value');
+					dm.do('Z', { after: ['Y'] }).add('keyZ', 'Z value');
+				},
+				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
+			], [
+				{},
+				() => {
+					dm.do('X', { after: ['Z'] }).add('keyX', 'value X');
+					dm.do('Y', { after: ['X'] }).add('keyY', 'value Y');
+					dm.do('Z', { after: ['Y'] }).add('keyZ', 'value Z');
+				},
+				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" }) // it's about the last connection that makes the cycle
+			]]);
+
+			xitCan("throw an error if there is an unresolved conflict", [[
+				{},
+				() => {
+					dm.do('X').add('key', 'X value');
+					dm.do('Y').add('key', 'Y value');
+				},
+				expectError(DeltaJs.UnresolvedDeltaConflict)
+			], [
+				{ key: 'original value' },
+				() => {
+					dm.do('X').replace('key', 'X value');
+					dm.do('Y').replace('key', 'Y value');
+				},
+				expectError(DeltaJs.UnresolvedDeltaConflict)
+			], [
+				{ key: [] },
+				() => {
+					dm.do('X').prepend('key', 'X value');
+					dm.do('Y').prepend('key', 'Y value');
+				},
+				expectError(DeltaJs.UnresolvedDeltaConflict)
+			], [
+				{ key: [] },
+				() => {
+					dm.do('X').append('key', 'X value');
+					dm.do('Y').append('key', 'Y value');
+				},
+				expectError(DeltaJs.UnresolvedDeltaConflict)
+			], [
+				{ key() {} },
+				() => {
+					dm.do('X').prepend('key', function () { console.log('something') });
+					dm.do('Y').prepend('key', function () { console.log('something') }); // equivalence of functions cannot be detected
+				},
+				expectError(DeltaJs.UnresolvedDeltaConflict)
+			], [
+				{ key() {} },
+				() => {
+					dm.do('X').append('key', function () { console.log('something') });
+					dm.do('Y').append('key', function () { console.log('something') }); // equivalence of functions cannot be detected
+				},
+				expectError(DeltaJs.UnresolvedDeltaConflict)
+			]]);
+
+			itCan("work correctly for combinations that may look like conflicts, but aren't", [[
+				{ key: 'original value' },
+				() => {
+					dm.do('X').replace('key', 'new value');
+					dm.do('Y').replace('key', 'new value');
+				},
+				{ key: 'new value' }
+			], [
+				{ key: "value" },
+				() => {
+					dm.do('X').forbid('absentKey');
+					dm.do('Y').forbid('absentKey');
+				},
+				{ key: "value" }
+			], [
+				{ key: [] },
+				() => {
+					dm.do('X').prepend('key', 'new value');
+					dm.do('Y').prepend('key', 'new value');
+				},
+				{ key: ['new value', 'new value'] }
+			], [
+				{ key: [] },
+				() => {
+					dm.do('X').append('key', 'new value');
+					dm.do('Y').append('key', 'new value');
+				},
+				{ key: ['new value', 'new value'] }
+			], [
+				{ key: [] },
+				() => {
+					dm.do('X').insert('key', 'X value');
+					dm.do('Y').insert('key', 'Y value');
+				},
+				(obj) => {
+					expect(obj).toEqualOneOf(
+						{ key: ['X value', 'Y value'] },
+						{ key: ['Y value', 'X value'] }
+					);
+				}
+			], [
+				{ key() {} },
+				() => {
+					dm.do('X').insert('key', function () { fA(this) });
+					dm.do('Y').insert('key', function () { fB(this) });
+				},
+				(obj) => {
+					obj.key(1, 2, 3);
+					expect(callLog).toEqualOneOf(
+						[['fB', [obj]], ['fA', [obj]]],
+						[['fA', [obj]], ['fB', [obj]]]
+					);
+				}
+			]]);
 
 
 
+		});
 
 
-		itCan("only have one sub-proxy per key active at a time", [[
-			{ obj: { sub: {} } }, // modify -> modify
-			() => {
-				d = d.modify('obj');
-				var subD = d.modify('sub'); // create subD
-				d.replace('sub', {});       // deactivate subD
-				subD.add('key', 'value');   // try to use subD
-			},
-			expectError(DeltaJs.MultipleActiveProxiesError)
-		], [
-			{ obj: { sub: {} } }, // deltaModel -> modify
-			() => {
-				d = d.deltaModel('obj');
-				var subD = d.do('x').modify('sub'); // create subD
-				d.do('x').replace('sub', {});       // deactivate subD
-				subD.add('key', 'value');           // try to use subD
-			},
-			expectError(DeltaJs.MultipleActiveProxiesError)
-		], [
-			{ obj: { sub: {} } }, // modify -> delta model
-			() => {
-				d = d.modify('obj');
-				var subD = d.deltaModel('sub');   // create subD
-				d.replace('sub', {});             // deactivate subD
-				subD.do('y').add('key', 'value'); // try to use subD
-			},
-			expectError(DeltaJs.MultipleActiveProxiesError)
-		], [
-			{ obj: { sub: {} } }, // delta model -> delta model
-			() => {
-				d = d.deltaModel('obj');
-				var subD = d.do('x').deltaModel('sub'); // create subD
-				d.do('x').replace('sub', {});           // deactivate subD
-				subD.do('y').add('key', 'value');       // try to use subD
-			},
-			expectError(DeltaJs.MultipleActiveProxiesError)
-		], [
-			{ obj: { sub: { subSub: {} } } }, // make sure sub-proxies are disabled too
-			() => {
-				d = d.modify('obj');
-				var subD    = d.modify('sub');       // create subD
-				var subSubD = subD.modify('subSub'); // create subSubD
-				d.replace('sub', {});                // deactivate subD
-				subSubD.add('key', 'value');         // try to use subSubD
-			},
-			expectError(DeltaJs.MultipleActiveProxiesError)
-		]]);
+		describe("proxy-hierarchies", () => {
+
+			beforeEach(() => {
+				d = new deltaJs.Delta.Modify().do();
+			});
+
+			itCan("can only have one sub-proxy per key active at a time", [[
+				{ obj: { sub: {} } }, // modify -> modify
+				() => {
+					d = d.modify('obj');
+					var subD = d.modify('sub'); // create subD
+					d.replace('sub', {});       // deactivate subD
+					subD.add('key', 'value');   // try to use subD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			], [
+				{ obj: { sub: {} } }, // deltaModel -> modify
+				() => {
+					d = d.deltaModel('obj');
+					var subD = d.do('x').modify('sub'); // create subD
+					d.do('x').replace('sub', {});       // deactivate subD
+					subD.add('key', 'value');           // try to use subD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			], [
+				{ obj: { sub: {} } }, // modify -> delta model
+				() => {
+					d = d.modify('obj');
+					var subD = d.deltaModel('sub');   // create subD
+					d.replace('sub', {});             // deactivate subD
+					subD.do('y').add('key', 'value'); // try to use subD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			], [
+				{ obj: { sub: {} } }, // delta model -> delta model
+				() => {
+					d = d.deltaModel('obj');
+					var subD = d.do('x').deltaModel('sub'); // create subD
+					d.do('x').replace('sub', {});           // deactivate subD
+					subD.do('y').add('key', 'value');       // try to use subD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			], [
+				{ obj: { sub: { subSub: {} } } }, // make sure sub-proxies are disabled too
+				() => {
+					d = d.modify('obj');
+					var subD = d.modify('sub');       // create subD
+					var subSubD = subD.modify('subSub'); // create subSubD
+					d.replace('sub', {});                // deactivate subD
+					subSubD.add('key', 'value');         // try to use subSubD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			]]);
+
+		});
 
 	});
 
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//
-	//describe("the delta model operation", () => {
-	//
-	//	var dm;
-	//	beforeEach(() => {
-	//		dm = d.deltaModel('obj');
-	//	});
-	//
-	//	itCan("be a middle-man for a single other delta", [[
-	//		{},
-	//		() => {
-	//			dm('X').add('key', { foo: "bar" });
-	//		},
-	//		{ key: { foo: "bar" } }
-	//	], [
-	//		{ key: { foo: "bar" } },
-	//		() => {
-	//			dm('X').remove('key');
-	//		},
-	//		{}
-	//	], [
-	//		{},
-	//		() => {
-	//			dm('X').forbid('key');
-	//		},
-	//		{}
-	//	], [
-	//		{ key: { foo: "bar" } },
-	//		() => {
-	//			dm('X').replace('key', 'value');
-	//		},
-	//		{ key: "value" }
-	//	], [
-	//		{ key: { foo: "bar" } },
-	//		() => {
-	//			dm('X').modify('key').replace('foo', 'bas');
-	//		},
-	//		{ key: { foo: "bas" } }
-	//	], [
-	//		{ key: ['a'] },
-	//		() => {
-	//			dm('X').prepend('key', 'b');
-	//		},
-	//		{ key: ['b', 'a'] }
-	//	], [
-	//		{ key: ['a'] },
-	//		() => {
-	//			dm('X').insert('key', 'b');
-	//		},
-	//		(obj) => {
-	//			expect(obj).toEqualOneOf(
-	//					{ key: ['b', 'a'] },
-	//					{ key: ['a', 'b'] }
-	//			);
-	//		}
-	//	], [
-	//		{ key: ['a'] },
-	//		() => {
-	//			dm('X').append('key', 'b');
-	//		},
-	//		{ key: ['a', 'b'] }
-	//	]]);
-	//
-	//
-	//	describe("with a function operation delta inside", () => {
-	//
-	//		itCan("be a middle man for that one delta", [[
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => {
-	//				dm('X').prepend('fn', function (a, b) { fB(this, b, b) });
-	//			},
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog).toEqual([['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]]);
-	//			}
-	//		], [
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => {
-	//				dm('X').insert('fn', function (a, b) { fB(this, b, b) });
-	//			},
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog).toEqualOneOf(
-	//						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
-	//						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
-	//				);
-	//			}
-	//		], [
-	//			{ fn(a, b, c) { fA(this, a, c) } },
-	//			() => {
-	//				dm('X').append('fn', function (a, b) { fB(this, b, b) });
-	//			},
-	//			(obj) => {
-	//				obj.fn(1, 2, 3);
-	//				expect(callLog).toEqual([['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]);
-	//			}
-	//		]]);
-	//
-	//	});
-	//
-	//	itCan("apply deltas in a linear order (as if composed)", [[
-	//		{},
-	//		() => {
-	//			dm('X').add('key', { foo: "bar" });
-	//			dm('Y').remove({ after: ['X'] }, 'key');
-	//		},
-	//		{}
-	//	], [
-	//		{},
-	//		() => {
-	//			dm('X').add('key', { foo: "bar" });
-	//			dm('Y').replace({ after: ['X'] }, 'key', 'some value');
-	//		},
-	//		{ key: 'some value' }
-	//	], [
-	//		{},
-	//		() => {
-	//			dm('X').add('key1', { foo: "bar" });
-	//			dm('Y', { after: ['X'] }).add('key2', 'some value');
-	//			dm('Z', { after: ['Y'] }).add('key3', 'some other value');
-	//			dm('rY', { after: ['Z'] }).remove('key2');
-	//		},
-	//		{ key1: { foo: "bar" }, key3: 'some other value' }
-	//	]]);
-	//
-	//	itCan("apply unordered deltas in arbitrary order, if they do not conflict", [[
-	//		{ oldKey: 'old value' },
-	//		() => {
-	//			dm('X').add('key1', 1);
-	//			dm('Y').add('key2', 'b');
-	//			dm('Z').add('key3', 'iii');
-	//			dm('r').remove('oldKey');
-	//		},
-	//		{ key1: 1, key2: "b", key3: "iii" }
-	//	]]);
-	//
-	//	itCan("apply a partially ordered set of `deltas in topological order, if unordered deltas do not conflict", [[
-	//		{ oldKey: 'old value' },
-	//		() => {
-	//			dm('W').add('key', { foo: "bar" });
-	//			dm('X', { after: ['W'] }).add('key.x', 1);
-	//			dm('Y', { after: ['W'] }).add('key.y', 2);
-	//			dm('Z', { after: ['W'] }).add('key.z', 3);
-	//		},
-	//		{ oldKey: 'old value', key: { foo: "bar", x: 1, y: 2, z: 3 } }
-	//	], [
-	//		{ oldKey: 'old value' },
-	//		() => {
-	//			dm('X', { after: ['W'] }).add('key.x', 1);
-	//			dm('Y', { after: ['W'] }).add('key.y', 2);
-	//			dm('Z', { after: ['W'] }).add('key.z', 3);
-	//			dm('W').add('key', { foo: "bar" }); // the order doesn't matter
-	//		},
-	//		{ oldKey: 'old value', key: { foo: "bar", x: 1, y: 2, z: 3 } }
-	//	]]);
-	//
-	//	xitCan("have multiple separate operations on the same delta", [[
-	//		{ subObj: {} },
-	//		() => {
-	//			var x = dm('X');
-	//			x.modify('subObj').add('one', 1);
-	//			x.modify('subObj').add('two', 2);
-	//		},
-	//		{ subObj: { one: 1, two: 2 } }
-	//	], [
-	//		{ subObj: { subSubObj: {} } },
-	//		() => {
-	//			var x = dm('X');
-	//			x.modify('subObj').add('one', 1);
-	//			x.modify('subObj.subSubObj').add('two', 2);
-	//		},
-	//		{ subObj: { one: 1, subSubObj: { two: 2 } } }
-	//	], [
-	//		{ subObj: { subSubObj: {} } },
-	//		() => {
-	//			var x = dm('X');
-	//			x.add('subObj.one', 1);
-	//			x.modify('subObj.subSubObj').add('two', 2);
-	//		},
-	//		{ subObj: { one: 1, subSubObj: { two: 2 } } }
-	//	], [
-	//		{ subObj: { subSubObj: {} } },
-	//		() => {
-	//			var x = dm('X');
-	//			x.modify('subObj.subSubObj').add('two', 2);
-	//			x.modify('subObj').add('one', 1);
-	//		},
-	//		{ subObj: { one: 1, subSubObj: { two: 2 } } }
-	//	]]);
-	//
-	//	itCan("throw an error if there is an application order cycle", [[
-	//		{},
-	//		() => {
-	//			dm('X', { after: ['Y'] }).add('keyX', 'value X');
-	//			dm('Y', { after: ['X'] }).add('keyY', 'value Y');
-	//		},
-	//		expectError(DeltaJs.ApplicationOrderCycle, { from: "X", to: "Y" })
-	//	], [
-	//		{},
-	//		() => {
-	//			dm('W').add('keyW', 'W value');
-	//			dm('X', { after: ['W', 'Z'] }).add('keyX', 'X value');
-	//			dm('Y', { after: ['X'] }).add('keyY', 'Y value');
-	//			dm('Z', { after: ['Y'] }).add('keyZ', 'Z value');
-	//		},
-	//		expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
-	//	]]);
-	//
-	//	itCan("throw an error if there is an application order cycle", [[
-	//		{},
-	//		() => {
-	//			dm('X', { after: ['Y'] }).add('keyX', 'value X');
-	//			dm('Y', { after: ['X'] }).add('keyY', 'value Y');
-	//		},
-	//		expectError(DeltaJs.ApplicationOrderCycle, { from: "X", to: "Y" })
-	//	], [
-	//		{},
-	//		() => {
-	//			dm('W').add('keyW', 'W value');
-	//			dm('X', { after: ['W', 'Z'] }).add('keyX', 'X value');
-	//			dm('Y', { after: ['X'] }).add('keyY', 'Y value');
-	//			dm('Z', { after: ['Y'] }).add('keyZ', 'Z value');
-	//		},
-	//		expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
-	//	]]);
-	//
-	//	xitCan("throw an error if there is an unresolved conflict", [[
-	//		{},
-	//		() => {
-	//			dm('X').add('key', 'X value');
-	//			dm('Y').add('key', 'Y value');
-	//		},
-	//		expectError(DeltaJs.UnresolvedDeltaConflict)
-	//	], [
-	//		{ key: 'original value' },
-	//		() => {
-	//			dm('X').replace('key', 'X value');
-	//			dm('Y').replace('key', 'Y value');
-	//		},
-	//		expectError(DeltaJs.UnresolvedDeltaConflict)
-	//	], [
-	//		{ key: [] },
-	//		() => {
-	//			dm('X').prepend('key', 'X value');
-	//			dm('Y').prepend('key', 'Y value');
-	//		},
-	//		expectError(DeltaJs.UnresolvedDeltaConflict)
-	//	], [
-	//		{ key: [] },
-	//		() => {
-	//			dm('X').append('key', 'X value');
-	//			dm('Y').append('key', 'Y value');
-	//		},
-	//		expectError(DeltaJs.UnresolvedDeltaConflict)
-	//	], [
-	//		{ key() {} },
-	//		() => {
-	//			dm('X').prepend('key', function () { console.log('something') });
-	//			dm('Y').prepend('key', function () { console.log('something') }); // equivalence of functions cannot be detected
-	//		},
-	//		expectError(DeltaJs.UnresolvedDeltaConflict)
-	//	], [
-	//		{ key() {} },
-	//		() => {
-	//			dm('X').append('key', function () { console.log('something') });
-	//			dm('Y').append('key', function () { console.log('something') }); // equivalence of functions cannot be detected
-	//		},
-	//		expectError(DeltaJs.UnresolvedDeltaConflict)
-	//	]]);
-	//
-	//	xitCan("work correctly for combinations that may look like conflicts, but aren't", [[
-	//		{},
-	//		() => {
-	//			dm('X').add('new value');
-	//			dm('Y').add('new value');
-	//		},
-	//		{ key: 'new value' }
-	//	], [
-	//		{ key: 'original value' },
-	//		() => {
-	//			dm('X').replace('key', 'new value');
-	//			dm('Y').replace('key', 'new value');
-	//		},
-	//		{ key: 'new value' }
-	//	], [
-	//		{ key: "value" },
-	//		() => {
-	//			dm('X').remove('key');
-	//			dm('Y').remove('key');
-	//		},
-	//		{}
-	//	], [
-	//		{ key: "value" },
-	//		() => {
-	//			dm('X').forbid('absentKey');
-	//			dm('Y').forbid('absentKey');
-	//		},
-	//		{ key: "value" }
-	//	], [
-	//		{ key: [] },
-	//		() => {
-	//			dm('X').prepend('key', 'new value');
-	//			dm('Y').prepend('key', 'new value');
-	//		},
-	//		{ key: ['new value', 'new value'] }
-	//	], [
-	//		{ key: [] },
-	//		() => {
-	//			dm('X').append('key', 'new value');
-	//			dm('Y').append('key', 'new value');
-	//		},
-	//		{ key: ['new value', 'new value'] }
-	//	], [
-	//		{ key: [] },
-	//		() => {
-	//			dm('X').insert('key', 'X value');
-	//			dm('Y').insert('key', 'Y value');
-	//		},
-	//		(obj) => {
-	//			expect(obj).toEqualOneOf(
-	//					{ key: ['X value', 'Y value'] },
-	//					{ key: ['Y value', 'X value'] }
-	//			);
-	//		}
-	//	], [
-	//		{ key() {} },
-	//		() => {
-	//			dm('X').insert('key', function () { fA(this) });
-	//			dm('Y').insert('key', function () { fB(this) });
-	//		},
-	//		(obj) => {
-	//			obj.key(1, 2, 3);
-	//			expect(callLog).toEqualOneOf(
-	//					[['fB', [obj]], ['fA', [obj]]],
-	//					[['fA', [obj]], ['fB', [obj]]]
-	//			);
-	//		}
-	//	]]);
-	//
-	//	// TODO: conflict resolution
-	//
-	//});
-	//
-	//
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
 	//

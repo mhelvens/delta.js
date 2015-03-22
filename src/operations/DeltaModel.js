@@ -62,6 +62,12 @@ export default (deltaJs) => {
 
 	}, class DeltaModelProxy extends deltaJs.ContainerProxy {
 
+		constructor(...args) {
+			super(...args);
+			this._childOptions = {}; // key -> options-of-first-occurrence
+		}
+
+
 		/** {@public}{@method}
 		 * @param rawArgs {*[]}
 		 * @return {?{ options: Object, path: string, args: *[] }}
@@ -71,7 +77,7 @@ export default (deltaJs) => {
 			var options = {};
 			var path;
 			do {
-				if (rawArgs.length === 0) { return null }
+				if (rawArgs.length === 0) { throw new Error(`The argument list for this Modify.DeltaModel method is insufficient.`) }
 				var arg = rawArgs.shift();
 				if (typeof arg === 'string') {
 					if (!options.name) { options.name = arg     }
@@ -83,22 +89,28 @@ export default (deltaJs) => {
 
 
 		/** {@public}{@method}
+		 * @param delta   {DeltaJs#Delta}
 		 * @param path    {Path}
-		 * @param delta   {Function}
 		 * @param options {Object}
 		 * @return {DeltaJs#Proxy}
 		 */
-		addOperation(path, delta, options) {
+		addOperation(delta, path, options) {
+			/* create proxies */
 			var deepestProxy;
 			if (path.prop) {
-				var newOptions = U.extend({}, options, { name: undefined });
-				deepestProxy = this.addChildProxy(options.name, new deltaJs.Delta.Modify()).addOperation(path, delta, newOptions);
+				let newOptions = U.extend({}, options, { name: undefined });
+				let childProxy = this.addChildProxy(options.name, new deltaJs.Delta.Modify());
+				deepestProxy = childProxy.addOperation(delta, path, newOptions);
 			} else {
 				deepestProxy = this.addChildProxy(options.name, delta);
 			}
 
-			// TODO: store ordering and feature stuff from the options
+			/* store options */
+			if (!this._childOptions[options.name]) {
+				this._childOptions[options.name] = options;
+			}
 
+			/* return the deepest created proxy */
 			return deepestProxy;
 		}
 
@@ -109,7 +121,21 @@ export default (deltaJs) => {
 		 * @return the delta belonging to this proxy
 		 */
 		delta() {
-			// TODO
+			var result = super.delta();
+			result.graph.clear();
+			this.childKeys().forEach((name) => {
+				result.graph.addVertex(name, this.childDelta(name));
+				let options = this._childOptions[name];
+				[ ...(options['resolves'] || []), ...(options['after'] || []), ...(options['requires'] || []) ]
+					.forEach((subName) => {
+						result.graph.createEdge(subName, name);
+						if (result.graph.hasCycle()) {
+							result.graph.removeExistingEdge(subName, name);
+							throw new ApplicationOrderCycle(subName, name);
+						}
+					});
+			});
+			return result;
 		}
 
 	});

@@ -66,9 +66,10 @@ export default (deltaJs) => {
 
 		constructor(options = {}) {
 			super(options);
-			this._doArgs   = [];
-			this._original = this;
-			this._children = {}; // key -> [proxies]
+			this._doArgs       = [];
+			this._original     = this;
+			this._children     = {}; // key -> [proxies]
+			this._childOptions = {}; // key -> options
 		}
 
 
@@ -141,8 +142,7 @@ export default (deltaJs) => {
 
 			/* the argument list is finished; create a new delta and put it in the right place */
 			var delta = deltaJs.ContainerProxy._newDeltaByMethod(method, args);
-			var ProxyConstructor = delta.constructor.Proxy || deltaJs.BasicProxy;
-			var proxy = this.addOperation(new Path(path), delta, options);
+			var proxy = this.addOperation(delta, new Path(path), options);
 
 			/* return the right Proxy instance for chaining */
 			return (proxy instanceof deltaJs.ContainerProxy) ? proxy : this;
@@ -167,8 +167,8 @@ export default (deltaJs) => {
 		 * Subclasses of `ContainerProxy` should implement this method to add a given delta
 		 * under a given path with the given options, and return its corresponding Proxy.
 		 *
+		 * @param delta   {DeltaJs#Delta}
 		 * @param path    {Path}
-		 * @param delta   {Function}
 		 * @param options {Object}
 		 * @return {DeltaJs#Proxy}
 		 */
@@ -216,6 +216,28 @@ export default (deltaJs) => {
 		}
 
 	};
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	U.extend(deltaJs.Delta.prototype, {
+
+		/** {@public}{@method}
+		 * @param args {*[]}
+		 * @return {DeltaJs#Proxy}
+		 */
+		do(...args) {
+			var ProxyClass = this.constructor.Proxy;
+			if (!ProxyClass) {
+				throw new Error(`Calling 'do' on delta type '${this.type}', which has no Proxy interface.`);
+			}
+			return new ProxyClass({ delta: this }).do(...args);
+		}
+
+	});
+
+
 
 
 	//deltaJs.ContainerProxy._proxyMethods = []; // method -> (args => Delta)

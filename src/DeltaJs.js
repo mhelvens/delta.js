@@ -74,7 +74,7 @@ export default class DeltaJs {
 				/* should this delta only be applied for a specific feature selection? */
 				if (!this.selected) { return }
 
-				/* if the target is not already in Target form, do so now */
+				/* if the target is not already in Target form, make it so now */
 				if (!(target instanceof DeltaJs.ReadableTarget)) {
 					target = new DeltaJs.ReadableTarget(target);
 				}
