@@ -81,6 +81,14 @@ var U = {
 	/* shift every line in a string right by a given number of spaces */
 	indent(str, amount, char = ' ') {
 		return str.replace(/^(?!\s*$)/mg, U.repeat(amount, char));
+	},
+
+	/* run a function only once per obj+string combo */
+	oncePer(obj, key, fn) {
+		var p = `_once per: ${key}`;
+		if (obj[p]) { return }
+		obj[p] = true; // TODO: make non-enumeratable, or use ES6 Symbol
+		return fn.call(obj, obj);
 	}
 };
 

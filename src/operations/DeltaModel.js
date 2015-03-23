@@ -9,13 +9,10 @@ import defineProxy             from './Proxy.js';
 import {ApplicationOrderCycle} from '../Error.js';
 
 
-export default (deltaJs) => {
-	if (U.isDefined(deltaJs.Delta.DeltaModel)) { return }
-
+export default (deltaJs) => U.oncePer(deltaJs, 'DeltaModel', () => {
 
 	defineModify(deltaJs);
 	defineProxy (deltaJs);
-
 
 	deltaJs.newOperationType('DeltaModel', class DeltaModel extends deltaJs.Delta {
 
@@ -23,7 +20,6 @@ export default (deltaJs) => {
 			super(...args);
 			this.graph = new JsGraph();
 		}
-
 
 		clone() {
 			var result = super.clone();
@@ -34,13 +30,11 @@ export default (deltaJs) => {
 			return result;
 		}
 
-
 		applyTo(target, options = {}) {
 			this.graph.topologically((name, subDelta) => {
 				subDelta.applyTo(target, options);
 			});
 		}
-
 
 		/** {@public}{@method}
 		 * @param options {object?}
@@ -65,55 +59,72 @@ export default (deltaJs) => {
 		constructor(...args) {
 			super(...args);
 			this._childOptions = {}; // key -> options-of-first-occurrence
+			this._childApplicationConditions = {}; // key -> application-condition
 		}
-
 
 		/** {@public}{@method}
 		 * @param rawArgs {*[]}
-		 * @return {?{ options: Object, path: string, args: *[] }}
+		 * @return {?{ options: Object, args: *[] }}
 		 */
 		processProxyArguments(...rawArgs) {
-			// rawArgs is parsed as (...options, name, ...options, path, ...args)
+			// rawArgs is parsed as (...options, name, ...options, path, ...args),
+			// though name and/or path may also be passed as options directly
 			var options = {};
-			var path;
 			do {
 				if (rawArgs.length === 0) { throw new Error(`The argument list for this Modify.DeltaModel method is insufficient.`) }
 				var arg = rawArgs.shift();
 				if (typeof arg === 'string') {
 					if (!options.name) { options.name = arg     }
-					else               { path         = arg     }
+					else               { options.path = arg     }
 				} else                 { U.extend(options, arg) }
-			} while (!path);
-			return { options, path, args: rawArgs };
+			} while (!options.path || !options.name);
+			return { options, args: rawArgs };
 		}
-
 
 		/** {@public}{@method}
 		 * @param delta   {DeltaJs#Delta}
-		 * @param path    {Path}
 		 * @param options {Object}
 		 * @return {DeltaJs#Proxy}
 		 */
-		addOperation(delta, path, options) {
+		addOperation(delta, options) {
+			var {path, name, feature} = options;
+
+			/* create application condition and optional eponymous linked feature */
+			if (!this._childApplicationConditions[name]) {
+				let appCond;
+				if (feature) { appCond = deltaJs.newFeature(  name,            options                             ) }
+				else         { appCond = deltaJs.newFeature( `delta__${name}`, U.extend({ hidden: true }, options) ) }
+				if (U.isDefined(options['resolves'])) {
+					appCond.if(options['resolves']);
+					options = U.extend({}, options, { feature: false });
+				}
+				if (U.isDefined(options['requires'])) {
+					appCond.selects(options['requires']);
+				}
+				if (feature || appCond.conditional) {
+					delta.applicationCondition = appCond;
+				}
+				this._childApplicationConditions[name] = appCond;
+			}
+
 			/* create proxies */
 			var deepestProxy;
 			if (path.prop) {
 				let newOptions = U.extend({}, options, { name: undefined });
-				let childProxy = this.addChildProxy(options.name, new deltaJs.Delta.Modify());
-				deepestProxy = childProxy.addOperation(delta, path, newOptions);
+				let childProxy = this.addChildProxy(name, new deltaJs.Delta.Modify());
+				deepestProxy = childProxy.addOperation(delta, newOptions);
 			} else {
-				deepestProxy = this.addChildProxy(options.name, delta);
+				deepestProxy = this.addChildProxy(name, delta);
 			}
 
 			/* store options */
-			if (!this._childOptions[options.name]) {
-				this._childOptions[options.name] = options;
+			if (!this._childOptions[name]) {
+				this._childOptions[name] = options;
 			}
 
 			/* return the deepest created proxy */
 			return deepestProxy;
 		}
-
 
 		/** {@public}{@method}
 		 * Dynamically compute and return the delta belonging to this proxy.
@@ -124,16 +135,26 @@ export default (deltaJs) => {
 			var result = super.delta();
 			result.graph.clear();
 			this.childKeys().forEach((name) => {
-				result.graph.addVertex(name, this.childDelta(name));
 				let options = this._childOptions[name];
-				[ ...(options['resolves'] || []), ...(options['after'] || []), ...(options['requires'] || []) ]
-					.forEach((subName) => {
-						result.graph.createEdge(subName, name);
-						if (result.graph.hasCycle()) {
-							result.graph.removeExistingEdge(subName, name);
-							throw new ApplicationOrderCycle(subName, name);
-						}
-					});
+
+				/* delta in the graph */
+				var delta = this.childDelta(name);
+				result.graph.addVertex(name, delta);
+
+				/* application order */
+				[ ...options['resolves']||[], ...options['after']||[], ...options['requires']||[] ].forEach((subName) => {
+					result.graph.createEdge(subName, name);
+					if (result.graph.hasCycle()) {
+						result.graph.removeExistingEdge(subName, name);
+						throw new ApplicationOrderCycle(subName, name);
+					}
+				});
+
+				/* application condition */
+				if (options.feature || this._childApplicationConditions[name].conditional) {
+					delta.applicationCondition = this._childApplicationConditions[name];
+				}
+
 			});
 			return result;
 		}
@@ -155,7 +176,7 @@ export default (deltaJs) => {
 		return result;
 	});
 
-};
+});
 
 
 

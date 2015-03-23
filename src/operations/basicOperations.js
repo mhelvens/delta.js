@@ -5,14 +5,10 @@ import defineDelta                              from './Delta.js';
 import defineModify                             from './Modify.js';
 
 
-export default (deltaJs) => {
-	if (U.isDefined(deltaJs._basicOperationsDefined)) { return }
-	deltaJs._basicOperationsDefined = true;
-
+export default (deltaJs) => U.oncePer(deltaJs, 'basic operations', () => {
 
 	defineDelta (deltaJs);
 	defineModify(deltaJs);
-
 
 	/* convenience definitions for the application and composition functions below ******/
 	function t(type1, type2) { return (d1, d2) => (d1.type === type1 && d2.type === type2) }
@@ -20,7 +16,6 @@ export default (deltaJs) => {
 		if (typeof fn === 'string') { fn = ((v) => (o) => o[v])(fn) }
 		return (d1, d2) => new deltaJs.Delta[type](fn && fn({d1, d2, p1: d1.arg, p2: d2.arg}));
 	}
-
 
 	/* declaring the basic operation types **********************************************/
 	deltaJs.newOperationType('NoOp', class NoOp extends deltaJs.Delta {});
@@ -41,27 +36,22 @@ export default (deltaJs) => {
 		precondition(target) { return U.isUndefined(target.value) }
 	});
 
-
 	/* composition - introducing 'NoOp' *************************************************/
 	deltaJs.newComposition( (d1, d2) => d1 instanceof deltaJs.Delta.NoOp, (d1, d2) => d2.clone() );
 	deltaJs.newComposition( (d1, d2) => d2 instanceof deltaJs.Delta.NoOp, (d1, d2) => d1.clone() );
 
-
 	/* composition - introducing 'Add' **************************************************/
 	deltaJs.newComposition( t('Add', 'Modify'), d('Add', ({d2, p1}) => d2.appliedTo(p1)) );
-
 
 	/* composition - introducing 'Remove' ***********************************************/
 	deltaJs.newComposition( t('Modify', 'Remove'), d('Remove')                );
 	deltaJs.newComposition( t('Add'   , 'Remove'), d('Forbid')                );
 	deltaJs.newComposition( t('Remove', 'Add'   ), d('Replace', ({p2}) => p2) );
 
-
 	/* composition - introducing 'Forbid' ***********************************************/
 	deltaJs.newComposition( t('Remove', 'Forbid'), d('Remove')            );
 	deltaJs.newComposition( t('Forbid', 'Add'   ), d('Add', ({p2}) => p2) );
 	deltaJs.newComposition( t('Forbid', 'Forbid'), d('Forbid')            );
-
 
 	/* composition - introducing 'Replace' **********************************************/
 	deltaJs.newComposition( t('Modify' , 'Replace'), d('Replace', ({p2}) => p2)                   );
@@ -70,4 +60,4 @@ export default (deltaJs) => {
 	deltaJs.newComposition( t('Replace', 'Remove' ), d('Remove')                                  );
 	deltaJs.newComposition( t('Replace', 'Replace'), d('Replace', ({p2}) => p2)                   );
 
-};
+});

@@ -133,22 +133,23 @@ var MyClass = deltaJs.vp('MyClass', function MyClass() {
 ```
 
 
-### `.do(name, [options], [path, [arg]])`
+### `.do(name, [options])`
 
-This function returns an interface to conveniently create new deltas / operations in
-the core delta model that can then target specific variation points:
+This function returns a `Proxy` interface that may be used to easily create
+new deltas / operations in a core delta model that can then target specific
+variation points:
 
 ```javascript
-var delta = deltaJs.do('cool-feature', {
+var proxy = deltaJs.do('cool-feature', {
     // options
 });
 ```
 
-This `delta` variable can then be used to specify the modifications this delta should
-perform, and where to perform them. For example:
+This `proxy` variable can then be used to specify the modifications its
+corresponding delta should perform, and where to perform them. For example:
 
 ```javascript
-delta.add('MyClass.prototype.coolMethod', function () {
+proxy.add('MyClass.prototype.coolMethod', function () {
 	// do something cool
 }).insert('MyClass.prototype.construct', function () {
 	this.coolMethod();
@@ -191,9 +192,9 @@ The following options may be passed:
 | options              | default   | meaning
 | -------------------- | --------- | -------
 | `feature`            | `true`    | a Boolean, specifying whether a feature with the same name should be linked to this delta
-| `if`                 | `false`   | a predicate, specifying whether this delta will be automatically selected
+| `if`                 | `false`   | a predicate, specifying when (if ever) this delta should be automatically selected
 | `onlyIf`             | `true`    | a predicate that is required to hold if this delta is ever selected. If this delta is ever selected without this predicate being met, an error will be thrown whenever this delta is applied.
-| `after`              | `[]`      | a list of delta names. This delta is guaranteed to be applied after the deltas in this list. If the registration of this delta creates an application order *cycle*, an error will be thrown.
+| `after`              | `[]`      | a list of delta names. This delta is guaranteed to be applied after the deltas in the list. If the registration of this delta creates an application order *cycle*, an error will be thrown.
 | `selects`            | `[]`      | a list of delta names. If this delta is selected, all deltas in this list will also be selected.
 
 For convenience, there are some options that combine multiple of the above:
@@ -201,11 +202,11 @@ For convenience, there are some options that combine multiple of the above:
 | options     | combines
 | ----------- | --------
 | `iff`       | `if` and `onlyIf`
-| `expects`   | `onlyIf` and `after`
+| `requires`  | `after` and `selects`
 | `resolves`  | `if`, `onlyIf` and `after`; and sets `feature` to `false`
 
-Specific changes to the variation points can be specified through various operations.
-For more information on this, have a look at the `Facade` API below.
+Deltas representing specific changes to the variation points can be created through
+various operations through the `Proxy` API described below.
 
 
 ### `.select(...deltaNames)`
@@ -216,22 +217,22 @@ This method can be used to manually select specific features by name.
 deltaJs.select('cool-feature', 'silly-feature', 'debugging-patch-359');
 ```
 
-Other features and deltas can be automatically pulled in if they are linked
-with these through the `if` or `selects` options.
+Other features and deltas, if they are linked with the features given,
+can be automatically pulled in through any `if` or `selects` options.
 
 Note that a feature needs to be registered before it can be selected. And a delta needs to be
 selected before the appearance of any variation point to which it applies. It is probably
 something you want to do very early in your application.
 
 
-## The `Facade` API
+## The `Proxy` API
 
 <img align="right" width="300px" margin="15px" src="./docs/coder-generic.jpg" />
 
 Deltas can modify values in any number of ways, from completely
 replacing them with other values, to making fine-grained modifications in a deeply nested
 object. It does so through well-defined *operations*, which you can specify through the
-various methods of `Facade` instance.
+various methods of a `Proxy` instance.
 
 Every delta *targets* a specific JavaScript object, which we'll denote as `target` in the
 descriptions below. All operations of that delta act on one of the properties of `target`.
@@ -241,7 +242,7 @@ contains all variation points as properties. We'll denote this object as `root`.
 
 ### `.modify(key)`
 
-This method returns another `Facade` object that targets `target[key]`,
+This method returns another `Proxy` object that targets `target[key]`,
 allowing us to *step into* a sub-object to make fine-grained modifications
 inside:
 

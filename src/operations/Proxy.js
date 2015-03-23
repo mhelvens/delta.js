@@ -17,18 +17,9 @@ import {MultipleActiveProxiesError} from '../Error.js';
 // TODO: Error messages based on syntactic conflicts in delta models
 
 
-export default (deltaJs) => {
-	if (U.isDefined(deltaJs.Proxy)) { return }
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
 
 	defineDelta(deltaJs);
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 	deltaJs.Proxy = class Proxy {
 
@@ -133,16 +124,20 @@ export default (deltaJs) => {
 
 
 		_do(method, doArgs) {
-
 			/* is this proxy active? */
 			if (!this.active) { throw new MultipleActiveProxiesError() }
 
 			/* container-specific processing of arguments */
-			var {options, path, args} = this.processProxyArguments(...this._doArgs, ...doArgs);
+			var {options, args} = this.processProxyArguments(...this._doArgs, ...doArgs);
+
+			/* if the options contain a path, reify it */
+			if (typeof options.path === 'string') {
+				options.path = new Path(options.path);
+			}
 
 			/* the argument list is finished; create a new delta and put it in the right place */
 			var delta = deltaJs.ContainerProxy._newDeltaByMethod(method, args);
-			var proxy = this.addOperation(delta, new Path(path), options);
+			var proxy = this.addOperation(delta, options);
 
 			/* return the right Proxy instance for chaining */
 			return (proxy instanceof deltaJs.ContainerProxy) ? proxy : this;
@@ -155,7 +150,7 @@ export default (deltaJs) => {
 		 * options object, path and final argument list from a given 'raw' argument list.
 		 *
 		 * @param args {[*]}
-		 * @return {{options: Object, path: String, args: [*]}}
+		 * @return {{options: Object, args: [*]}}
 		 */
 		processProxyArguments() {
 			throw new Error(`A 'ContainerProxy' subclass needs to implement the 'processProxyArguments' method.`);
@@ -168,7 +163,6 @@ export default (deltaJs) => {
 		 * under a given path with the given options, and return its corresponding Proxy.
 		 *
 		 * @param delta   {DeltaJs#Delta}
-		 * @param path    {Path}
 		 * @param options {Object}
 		 * @return {DeltaJs#Proxy}
 		 */
@@ -217,9 +211,7 @@ export default (deltaJs) => {
 
 	};
 
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 	U.extend(deltaJs.Delta.prototype, {
 
@@ -237,90 +229,4 @@ export default (deltaJs) => {
 
 	});
 
-
-
-
-	//deltaJs.ContainerProxy._proxyMethods = []; // method -> (args => Delta)
-	//deltaJs.ContainerProxy._onNewProxyMethodListeners  = [];
-	//
-	//
-	///* process new operation methods */
-	//deltaJs.ContainerProxy.onNewProxyMethod((method, handler) => {
-	//
-	//	/* automatically populate the Proxy class with new operation method */
-	//	if (U.isUndefined(deltaJs.ContainerProxy.prototype[method])) {
-	//		deltaJs.ContainerProxy.prototype[method] = function (...args) {
-	//			this._do(method, args);
-	//		};
-	//	}
-	//
-	//	/* register handlers for each method */
-	//	U.a(deltaJs.ContainerProxy, '_methodHandlers', method).push(handler);
-	//
-	//});
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	///* all container-type proxies (Modify, DeltaModel) hold references to ProxyProxy's */
-	//class Proxy {
-	//
-	//	// This class accumulates a sequence of Proxy instances,
-	//	// where only the last one in the list is active.
-	//	// The end-user should not get a reference to a ProxyProxy,
-	//	// but should only hold references to its stored proxys.
-	//
-	//	constructor({parent} = {}) {
-	//		this._parent  = parent;
-	//		this._proxys = [];
-	//	}
-	//
-	//	activeProxy() { return this._proxys[this._proxys.length-1] }
-	//
-	//	childProxy(ProxyClass) {
-	//		/* can we reuse the currently active Proxy? if not, deactivate it */
-	//		var current = this._activeProxy();
-	//		if (current.constructor === ProxyClass && ProxyClass === deltaJs.Modify.Proxy) { return current }
-	//		current._active = false;
-	//
-	//		/* create a new Proxy of the right class, remember it and return it */
-	//		var next = new ProxyClass({ parent: this._parent }); // direct link to non-proxy parent
-	//		this._proxys.push(next);
-	//		return next;
-	//	}
-	//
-	//	// TODO: applyTo method
-	//
-	//}
-	//Proxy.Proxy = Proxy;
-
-
-
-
-
-
-
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+});

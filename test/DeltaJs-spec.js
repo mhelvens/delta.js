@@ -1780,6 +1780,51 @@ describe("DeltaJs instance", function () {
 				d = new deltaJs.Delta.Modify().do();
 			});
 
+			itCan("always give you the deepest container proxy in your call-chain", [[
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					d.modify('obj')         // .
+						.add('foo', 'bar')  // .obj
+						.add('bar', 'bas'); // .obj
+				},
+				{ obj: { foo: "bar", bar: "bas", sub: { subSub: {} } } }
+			], [
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					d.modify('obj')                   // .
+						.add('sub.subSub.foo', 'bar') // .obj
+						.add('bar', 'bas');           // .obj (even though two implicit modifies were used)
+				},
+				{ obj: { bar: "bas", sub: { subSub: { foo: "bar" } } } }
+			], [
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					d.modify('obj.sub')         // .
+						.modify('subSub')       // .obj.sub
+							.add('foo', 'bar')  // .obj.sub.subSub
+							.add('bar', 'bas'); // .obj.sub.subSub
+				},
+				{ obj: { sub: { subSub: { foo: "bar", bar: "bas" } } } }
+			], [
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					d.deltaModel('obj')             // .
+						.do('X')                    // .obj
+							.add('foo', 'bar')      // .obj[X]
+					        .modify('sub')          // .obj[X] (note that all .do argument are remembered in the chain)
+								.add('bar', 'bas'); // .obj[X].sub
+				},
+				{ obj: { foo: "bar", sub: { bar: "bas", subSub: {} } } }
+			], [
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					var subD = d.modify('obj').add('foo', "bar");
+					subD.add('bar', "bas");
+					d.add('key', "val"); // (note that you can use an existing reference to a shallower proxy)
+				},
+				{ key: "val", obj: { foo: "bar", bar: "bas", sub: { subSub: {} } } }
+			]]);
+
 			itCan("can only have one sub-proxy per key active at a time", [[
 				{ obj: { sub: {} } }, // modify -> modify
 				() => {
@@ -1820,7 +1865,7 @@ describe("DeltaJs instance", function () {
 				{ obj: { sub: { subSub: {} } } }, // make sure sub-proxies are disabled too
 				() => {
 					d = d.modify('obj');
-					var subD = d.modify('sub');       // create subD
+					var subD = d.modify('sub');          // create subD
 					var subSubD = subD.modify('subSub'); // create subSubD
 					d.replace('sub', {});                // deactivate subD
 					subSubD.add('key', 'value');         // try to use subSubD
@@ -1830,383 +1875,364 @@ describe("DeltaJs instance", function () {
 
 		});
 
+
+
 	});
 
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//
-	//
-	//describe("features", () => {
-	//
-	//	it("have a class to represent them", () => {
-	//		expect(typeof deltaJs.Feature).toBe('function');
-	//	});
-	//
-	//	it("have a DeltaJs method to declare them", () => {
-	//		expect(typeof deltaJs.newFeature).toBe('function');
-	//	});
-	//
-	//	it("have a DeltaJs object in which they are stored", () => {
-	//		expect(deltaJs.features).toEqual(any(Object));
-	//		expect(deltaJs.features['f']).toBeUndefined();
-	//		var f = deltaJs.newFeature('f');
-	//		expect(f).toEqual(any(deltaJs.Feature));
-	//		expect(deltaJs.features['f']).toBe(f);
-	//	});
-	//
-	//	it("can be instantiated", () => {
-	//		var f = deltaJs.newFeature('f');
-	//		expect(f).toBe(deltaJs.features['f']);
-	//		expect(f).toEqual(any(deltaJs.Feature));
-	//	});
-	//
-	//	describe("that are instantiated", () => {
-	//		var e, f, g, h;
-	//		beforeEach(() => {
-	//			e = deltaJs.newFeature('e');
-	//			f = deltaJs.newFeature('f');
-	//			g = deltaJs.newFeature('g');
-	//			h = deltaJs.newFeature('h');
-	//		});
-	//		function expectAllUnselected() {
-	//			expect(e.selected).toBeFalsy();
-	//			expect(f.selected).toBeFalsy();
-	//			expect(g.selected).toBeFalsy();
-	//			expect(h.selected).toBeFalsy();
-	//		}
-	//
-	//		it("know their name", () => {
-	//			expect(e.name).toBe('e');
-	//			expect(f.name).toBe('f');
-	//			expect(g.name).toBe('g');
-	//			expect(h.name).toBe('h');
-	//		});
-	//
-	//		it("start out not selected", () => {
-	//			expectAllUnselected();
-	//		});
-	//
-	//		it("can be selected: 'select'", () => {
-	//			g.select();
-	//			expect(e.selected).toBeFalsy();
-	//			expect(f.selected).toBeFalsy();
-	//			expect(g.selected).toBeTruthy();
-	//			expect(h.selected).toBeFalsy();
-	//		});
-	//
-	//		it("can be selected: 'if(true)'", () => {
-	//			g.if(true);
-	//			expect(e.selected).toBeFalsy();
-	//			expect(f.selected).toBeFalsy();
-	//			expect(g.selected).toBeTruthy();
-	//			expect(h.selected).toBeFalsy();
-	//		});
-	//
-	//		it("can automatically be selected when other features are: 'if' by reference", () => {
-	//			e.if(f);
-	//			f.if(g);
-	//			g.if(h);
-	//			expectAllUnselected();
-	//			g.select();
-	//			expect(e.selected).toBeTruthy();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//			expect(h.selected).toBeFalsy();
-	//		});
-	//
-	//		it("can automatically be selected when other features are: 'if' by name", () => {
-	//			e.if('f');
-	//			f.if('g');
-	//			g.if('h');
-	//			expectAllUnselected();
-	//			g.select();
-	//			expect(e.selected).toBeTruthy();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//			expect(h.selected).toBeFalsy();
-	//		});
-	//
-	//		it("can throw an error when constraints on other features are not met: 'onlyIf' by reference", () => {
-	//			f.onlyIf(g);
-	//			expectAllUnselected();
-	//			f.select();
-	//			expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
-	//			g.select();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can throw an error when constraints on other features are not met: 'onlyIf' by name", () => {
-	//			f.onlyIf('g');
-	//			expectAllUnselected();
-	//			f.select();
-	//			expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
-	//			g.select();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can automatically select other features when selected: 'selects' by reference", () => {
-	//			e.selects(e);
-	//			f.selects(g);
-	//			g.selects(h);
-	//			expectAllUnselected();
-	//			f.select();
-	//			expect(e.selected).toBeFalsy();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//			expect(h.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can automatically select other features when selected: 'selects' by name", () => {
-	//			e.selects('e');
-	//			f.selects('g');
-	//			g.selects('h');
-	//			expectAllUnselected();
-	//			f.select();
-	//			expect(e.selected).toBeFalsy();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//			expect(h.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can throw an error when constraints on other features are not met: 'requiredBy' by reference", () => {
-	//			f.requiredBy(g);
-	//			expectAllUnselected();
-	//			g.select();
-	//			expect(() => g.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: g });
-	//			f.select();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can throw an error when constraints on other features are not met: 'requiredBy' by name", () => {
-	//			f.requiredBy('g');
-	//			expectAllUnselected();
-	//			g.select();
-	//			expect(() => g.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: g });
-	//			f.select();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can automatically select other features when selected: 'iff' (1) by reference", () => {
-	//			f.iff(g);
-	//			expectAllUnselected();
-	//			g.select();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can automatically select other features when selected: 'iff' (1) by name", () => {
-	//			f.iff('g');
-	//			expectAllUnselected();
-	//			g.select();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can automatically select other features when selected: 'iff' (2) by reference", () => {
-	//			f.iff(g);
-	//			expectAllUnselected();
-	//			f.select();
-	//			expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
-	//			g.select();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//		});
-	//
-	//		it("can automatically select other features when selected: 'iff' (2) by name", () => {
-	//			f.iff('g');
-	//			expectAllUnselected();
-	//			f.select();
-	//			expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
-	//			g.select();
-	//			expect(f.selected).toBeTruthy();
-	//			expect(g.selected).toBeTruthy();
-	//		});
-	//
-	//	});
-	//
-	//
-	//});
-	//
-	//
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//
-	//
-	//describe("variation points", () => {
-	//
-	//	it("have a DeltaJs method to indicate them in the domain-specific code: 'vp'", () => {
-	//		expect(typeof deltaJs.vp).toBe('function');
-	//	});
-	//
-	//	it("have a DeltaJs method to operate on them: 'operation'", () => {
-	//		expect(typeof deltaJs.operation).toBe('function');
-	//	});
-	//
-	//	it("have a DeltaJs proxy to operate on them: 'do'", () => {
-	//		expect(typeof deltaJs.do).toBe('function');
-	//		expect(typeof deltaJs.do()).toBe('function');
-	//	});
-	//
-	//	it("pass a value through unchanged if no operations are prepared for them", () => {
-	//		var x = deltaJs.vp('x', 'old value');
-	//		expect(x).toBe('old value');
-	//	});
-	//
-	//	it("apply deltas to a value for which deltas are prepared (1)", () => {
-	//		deltaJs.do('delta-name', { feature: false }).replace('x', 'new x value');
-	//		var x = deltaJs.vp('x', 'old x value');
-	//		var y = deltaJs.vp('y', 'old y value');
-	//		expect(x).toBe('new x value');
-	//		expect(y).toBe('old y value');
-	//	});
-	//
-	//	it("apply deltas to a value for which deltas are prepared (2)", () => {
-	//		deltaJs.do('w', { feature: false }).add('obj', { keyW: "valW" });
-	//		deltaJs.do('x', { feature: false, after: ['w'] }).add('obj.keyX', 'valX');
-	//		deltaJs.do('y', { feature: false, after: ['w'] }).add('obj.keyY', 'valY');
-	//		deltaJs.do('z', { feature: false, after: ['x', 'y'] }).modify('obj')
-	//				.replace('keyX', 'valXZ')
-	//				.replace('keyY', 'valYZ');
-	//		var obj = deltaJs.vp('obj');
-	//		expect(obj).toEqual({
-	//			keyW: "valW",
-	//			keyX: "valXZ",
-	//			keyY: "valYZ"
-	//		});
-	//	});
-	//
-	//});
-	//
-	//
-	//describe("application conditions", () => {
-	//
-	//	var F, G, H;
-	//	var w, x, y, z;
-	//
-	//	beforeEach(() => {
-	//		F = deltaJs.newFeature('F');
-	//		G = deltaJs.newFeature('G');
-	//		H = deltaJs.newFeature('H');
-	//		w = deltaJs.do('w');
-	//		x = deltaJs.do('x');
-	//		y = deltaJs.do('y');
-	//		z = deltaJs.do('z');
-	//	});
-	//
-	//	it("can, based on which features are selected, apply or not apply a delta", () => {
-	//
-	//		/* deltas, normally declared independently */
-	//		w({ iff: ['F'] }).add('obj.w', 'w-value');
-	//		x({ iff: ['F', 'G'] }).add('obj.x', 'x-value');
-	//		y({ iff: ['F', 'H'] }).add('obj.y', 'y-value');
-	//		z({ feature: false }).add('obj.z', 'z-value');
-	//
-	//		/* the desired features, selected in a central location */
-	//		deltaJs.select(['F', 'H']);
-	//
-	//		/* a variation point, indicated throughout the domain specific code */
-	//		var obj = deltaJs.vp('obj', {});
-	//
-	//		/* as a consequence of the the above, 'obj' is expected to be as follows */
-	//		expect(obj).toEqual({
-	//			w: 'w-value',
-	//			// not x, because 'G' was not selected
-	//			y: 'y-value',
-	//			z: 'z-value'
-	//		});
-	//
-	//	});
-	//
-	//});
-	//
-	//
-	//describe("deltas and features", () => {
-	//
-	//	var w, x, y, z;
-	//
-	//	beforeEach(() => {
-	//		w = deltaJs.do('w');
-	//		x = deltaJs.do('x');
-	//		y = deltaJs.do('y');
-	//		z = deltaJs.do('z');
-	//	});
-	//
-	//	it("can be declared eponymous: together in one shot to share the same name and a one-to-one relationship", () => {
-	//
-	//		/* deltas, normally declared independently */
-	//		w.add('obj.w', 'w-value');
-	//		x.add('obj.x', 'x-value');
-	//		y.add('obj.y', 'y-value');
-	//
-	//
-	//		/* the desired features, selected in a central location */
-	//		deltaJs.select(['w', 'x']);
-	//
-	//
-	//		/* a variation point, indicated throughout the domain specific code */
-	//		var obj = deltaJs.vp('obj', {});
-	//
-	//
-	//		/* as a consequence of the the above, 'obj' is expected to be as follows */
-	//		expect(obj).toEqual({
-	//			w: 'w-value',
-	//			x: 'x-value',
-	//			// not y, because it was not selected
-	//		});
-	//
-	//	});
-	//
-	//	it("–if they are eponymous– are both effected by the 'resolves' option", () => {
-	//
-	//		/* deltas, normally declared independently */
-	//		x.add('obj.x', 'x-value');
-	//		y.add('obj.y', 'y-value');
-	//		z({ resolves: ['x', 'y'] })
-	//				.replace('obj.y', 'z-value');
-	//
-	//		/* the desired features, selected in a central location */
-	//		deltaJs.select(['x', 'y']);
-	//
-	//		/* a variation point, indicated throughout the domain specific code */
-	//		var obj = deltaJs.vp('obj', {});
-	//
-	//		/* as a consequence of the the above, 'obj' is expected to be as follows */
-	//		expect(obj).toEqual({
-	//			x: 'x-value',
-	//			y: 'z-value'
-	//		});
-	//
-	//	});
-	//
-	//	it("–if they are eponymous– are both effected by the 'requires' option", () => {
-	//
-	//		/* deltas, normally declared independently */
-	//		x.add('obj.x', 'x-value');
-	//		y.add('obj.y', 'y-value');
-	//		z({ requires: ['x', 'y'] })
-	//				.replace('obj.y', 'z-value');
-	//
-	//		/* the desired features, selected in a central location */
-	//		deltaJs.select(['z']);
-	//
-	//		/* a variation point, indicated throughout the domain specific code */
-	//		var obj = deltaJs.vp('obj', {});
-	//
-	//		/* as a consequence of the the above, 'obj' is expected to be as follows */
-	//		expect(obj).toEqual({
-	//			x: 'x-value',
-	//			y: 'z-value'
-	//		});
-	//
-	//	});
-	//
-	//});
-	//
-	//
-	//
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	describe("features", () => {
+
+		it("have a class to represent them", () => {
+			expect(typeof deltaJs.Feature).toBe('function');
+		});
+
+		it("have a DeltaJs method to declare them", () => {
+			expect(typeof deltaJs.newFeature).toBe('function');
+		});
+
+		it("have a DeltaJs object in which they are stored", () => {
+			expect(deltaJs.features).toEqual(any(Object));
+			expect(deltaJs.features['f']).toBeUndefined();
+			var f = deltaJs.newFeature('f');
+			expect(f).toEqual(any(deltaJs.Feature));
+			expect(deltaJs.features['f']).toBe(f);
+		});
+
+		it("can be instantiated", () => {
+			var f = deltaJs.newFeature('f');
+			expect(f).toBe(deltaJs.features['f']);
+			expect(f).toEqual(any(deltaJs.Feature));
+		});
+
+		describe("that are instantiated", () => {
+			var e, f, g, h;
+			beforeEach(() => {
+				e = deltaJs.newFeature('e');
+				f = deltaJs.newFeature('f');
+				g = deltaJs.newFeature('g');
+				h = deltaJs.newFeature('h');
+			});
+			function expectAllUnselected() {
+				expect(e.selected).toBeFalsy();
+				expect(f.selected).toBeFalsy();
+				expect(g.selected).toBeFalsy();
+				expect(h.selected).toBeFalsy();
+			}
+
+			it("know their name", () => {
+				expect(e.name).toBe('e');
+				expect(f.name).toBe('f');
+				expect(g.name).toBe('g');
+				expect(h.name).toBe('h');
+			});
+
+			it("start out not selected", () => {
+				expectAllUnselected();
+			});
+
+			it("can be selected: 'select'", () => {
+				g.select();
+				expect(e.selected).toBeFalsy();
+				expect(f.selected).toBeFalsy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeFalsy();
+			});
+
+			it("can be selected: 'if(true)'", () => {
+				g.if(true);
+				expect(e.selected).toBeFalsy();
+				expect(f.selected).toBeFalsy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeFalsy();
+			});
+
+			it("can automatically be selected when other features are: 'if' by reference", () => {
+				e.if(f);
+				f.if(g);
+				g.if(h);
+				expectAllUnselected();
+				g.select();
+				expect(e.selected).toBeTruthy();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeFalsy();
+			});
+
+			it("can automatically be selected when other features are: 'if' by name", () => {
+				e.if('f');
+				f.if('g');
+				g.if('h');
+				expectAllUnselected();
+				g.select();
+				expect(e.selected).toBeTruthy();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeFalsy();
+			});
+
+			it("can throw an error when constraints on other features are not met: 'onlyIf' by reference", () => {
+				f.onlyIf(g);
+				expectAllUnselected();
+				f.select();
+				expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+			it("can throw an error when constraints on other features are not met: 'onlyIf' by name", () => {
+				f.onlyIf('g');
+				expectAllUnselected();
+				f.select();
+				expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+			it("can automatically select other features when selected: 'selects' by reference", () => {
+				e.selects(e);
+				f.selects(g);
+				g.selects(h);
+				expectAllUnselected();
+				f.select();
+				expect(e.selected).toBeFalsy();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeTruthy();
+			});
+
+			it("can automatically select other features when selected: 'selects' by name", () => {
+				e.selects('e');
+				f.selects('g');
+				g.selects('h');
+				expectAllUnselected();
+				f.select();
+				expect(e.selected).toBeFalsy();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+				expect(h.selected).toBeTruthy();
+			});
+
+			it("can throw an error when constraints on other features are not met: 'requiredBy' by reference", () => {
+				f.requiredBy(g);
+				expectAllUnselected();
+				g.select();
+				expect(() => g.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: g });
+				f.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+			it("can throw an error when constraints on other features are not met: 'requiredBy' by name", () => {
+				f.requiredBy('g');
+				expectAllUnselected();
+				g.select();
+				expect(() => g.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: g });
+				f.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+			it("can automatically select other features when selected: 'iff' (1) by reference", () => {
+				f.iff(g);
+				expectAllUnselected();
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+			it("can automatically select other features when selected: 'iff' (1) by name", () => {
+				f.iff('g');
+				expectAllUnselected();
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+			it("can automatically select other features when selected: 'iff' (2) by reference", () => {
+				f.iff(g);
+				expectAllUnselected();
+				f.select();
+				expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+			it("can automatically select other features when selected: 'iff' (2) by name", () => {
+				f.iff('g');
+				expectAllUnselected();
+				f.select();
+				expect(() => f.selected).toThrowSpecific(DeltaJs.ConstraintFailure, { feature: f });
+				g.select();
+				expect(f.selected).toBeTruthy();
+				expect(g.selected).toBeTruthy();
+			});
+
+		});
+
+	});
+
+	describe("variation points", () => {
+
+		it("have a DeltaJs method to indicate them in the domain-specific code: 'vp'", () => {
+			expect(deltaJs.vp).toEqual(any(Function));
+		});
+
+		it("have a DeltaJs proxy to operate on them: 'do'", () => {
+			expect(deltaJs.do).toEqual(any(Function));
+			expect(deltaJs.do()).toEqual(any(deltaJs.Proxy));
+		});
+
+		it("pass a value through unchanged if no operations are prepared for them", () => {
+			var x = deltaJs.vp('x', 'old value');
+			expect(x).toBe('old value');
+		});
+
+		it("apply deltas to a value for which deltas are prepared (1)", () => {
+			deltaJs.do('delta-name', { feature: false }).replace('x', 'new x value');
+			var x = deltaJs.vp('x', 'old x value');
+			var y = deltaJs.vp('y', 'old y value');
+			expect(x).toBe('new x value');
+			expect(y).toBe('old y value');
+		});
+
+		it("apply deltas to a value for which deltas are prepared (2)", () => {
+			deltaJs.do('w', { feature: false }).add('obj', { keyW: "valW" });
+			deltaJs.do('x', { feature: false, after: ['w'] }).add('obj.keyX', 'valX');
+			deltaJs.do('y', { feature: false, after: ['w'] }).add('obj.keyY', 'valY');
+			deltaJs.do('z', { feature: false, after: ['x', 'y'] }).modify('obj')
+					.replace('keyX', 'valXZ')
+					.replace('keyY', 'valYZ');
+			var obj = deltaJs.vp('obj');
+			expect(obj).toEqual({
+				keyW: "valW",
+				keyX: "valXZ",
+				keyY: "valYZ"
+			});
+		});
+
+	});
+
+	describe("application conditions", () => {
+
+		var F, G, H;
+		var w, x, y, z;
+
+		beforeEach(() => {
+			F = deltaJs.newFeature('F');
+			G = deltaJs.newFeature('G');
+			H = deltaJs.newFeature('H');
+			w = deltaJs.do('w');
+			x = deltaJs.do('x');
+			y = deltaJs.do('y');
+			z = deltaJs.do('z');
+		});
+
+		it("can, based on which features are selected, apply or not apply a delta", () => {
+
+			/* deltas, normally declared independently */
+			w.do({ iff: ['F'] }).add('obj.w', 'w-value');
+			x.do({ iff: ['F', 'G'] }).add('obj.x', 'x-value');
+			y.do({ iff: ['F', 'H'] }).add('obj.y', 'y-value');
+			z.do({ feature: false }).add('obj.z', 'z-value');
+
+			/* the desired features, selected in a central location */
+			deltaJs.select(['F', 'H']);
+
+			/* a variation point, indicated throughout the domain specific code */
+			var obj = deltaJs.vp('obj', {});
+
+			/* as a consequence of the the above, 'obj' is expected to be as follows */
+			expect(obj).toEqual({
+				w: 'w-value',
+				// not x, because 'G' was not selected
+				y: 'y-value',
+				z: 'z-value'
+			});
+
+		});
+
+	});
+
+	describe("deltas and features", () => {
+
+		var w, x, y, z;
+
+		beforeEach(() => {
+			w = deltaJs.do('w');
+			x = deltaJs.do('x');
+			y = deltaJs.do('y');
+			z = deltaJs.do('z');
+		});
+
+		it("can be declared eponymous: together in one shot to share the same name and a one-to-one relationship", () => {
+
+			/* deltas, normally declared independently */
+			w.add('obj.w', 'w-value');
+			x.add('obj.x', 'x-value');
+			y.add('obj.y', 'y-value');
+
+			/* the desired features, selected in a central location */
+			deltaJs.select(['w', 'x']);
+
+			/* a variation point, indicated throughout the domain specific code */
+			var obj = deltaJs.vp('obj', {});
+
+			/* as a consequence of the the above, 'obj' is expected to be as follows */
+			expect(obj).toEqual({
+				w: 'w-value',
+				x: 'x-value',
+				// not y, because it was not selected
+			});
+
+		});
+
+		it("–if they are eponymous– are both effected by the 'resolves' option", () => {
+
+			/* deltas, normally declared independently */
+			x.add('obj.x', 'x-value');
+			y.add('obj.y', 'y-value');
+			z.do({ resolves: ['x', 'y'] })
+					.replace('obj.y', 'z-value');
+
+			/* the desired features, selected in a central location */
+			deltaJs.select(['x', 'y']);
+
+			/* a variation point, indicated throughout the domain specific code */
+			var obj = deltaJs.vp('obj', {});
+
+			/* as a consequence of the the above, 'obj' is expected to be as follows */
+			expect(obj).toEqual({
+				x: 'x-value',
+				y: 'z-value'
+			});
+
+		});
+
+		it("–if they are eponymous– are both effected by the 'requires' option", () => {
+
+			/* deltas, normally declared independently */
+			x.add('obj.x', 'x-value');
+			y.add('obj.y', 'y-value');
+			z.do({ requires: ['x', 'y'] })
+					.replace('obj.y', 'z-value');
+
+			/* the desired features, selected in a central location */
+			deltaJs.select(['z']);
+
+			/* a variation point, indicated throughout the domain specific code */
+			var obj = deltaJs.vp('obj', {});
+
+			/* as a consequence of the the above, 'obj' is expected to be as follows */
+			expect(obj).toEqual({
+				x: 'x-value',
+				y: 'z-value'
+			});
+
+		});
+
+	});
 
 });

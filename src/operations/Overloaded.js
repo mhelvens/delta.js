@@ -6,12 +6,9 @@ import {MultipleOverloadsApplicationError,
 		MultipleOverloadsCompositionError} from '../Error.js';
 
 
-export default (deltaJs) => {
-	if (U.isDefined(deltaJs.Delta.Overloaded)) { return }
-
+export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
 
 	defineDelta(deltaJs);
-
 
 	deltaJs.newOperationType('Overloaded', class Overloaded extends deltaJs.Delta {
 
@@ -75,8 +72,8 @@ export default (deltaJs) => {
 
 
 	deltaJs.newComposition((d1, d2) => (
-		d1 instanceof deltaJs.Delta.Overloaded ||
-		d2 instanceof deltaJs.Delta.Overloaded
+	d1 instanceof deltaJs.Delta.Overloaded ||
+	d2 instanceof deltaJs.Delta.Overloaded
 	), (d1, d2) => {
 		var D1 = d1 instanceof deltaJs.Delta.Overloaded ? d1.overloads : [d1];
 		var D2 = d2 instanceof deltaJs.Delta.Overloaded ? d2.overloads : [d2];
@@ -92,4 +89,4 @@ export default (deltaJs) => {
 		return result;
 	});
 
-};
+});

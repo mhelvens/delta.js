@@ -5,8 +5,7 @@ import defineBasicOperations from './basicOperations.js';
 import defineProxy           from './Proxy.js';
 
 
-export default (deltaJs) => {
-	if (U.isDefined(deltaJs.Delta.PutIntoFunction)) { return }
+export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoFunction', () => {
 
 
 	defineBasicOperations(deltaJs);
@@ -90,4 +89,4 @@ export default (deltaJs) => {
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 
-};
+});

@@ -5,9 +5,7 @@ import defineBasicOperations                    from './basicOperations.js';
 import defineProxy                              from './Proxy.js';
 
 
-export default (deltaJs) => {
-	if (U.isDefined(deltaJs.Delta.PutIntoArray)) { return }
-
+export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoArray', () => {
 
 	defineBasicOperations(deltaJs);
 	defineProxy          (deltaJs);
@@ -37,19 +35,19 @@ export default (deltaJs) => {
 			var arr = target.value;
 			this.values.forEach(({method, value}) => {
 				switch (method) {
-					case 'prepend': {
-						arr.unshift(value);
-					} break;
-					case 'insert': {
-						// 'insert' doesn't *have* to use a random position. Any position will do.
-						//  E.g., its implementation could just be the same as for 'append'.
-						//  Nonetheless, we use a random position to force the tests to be permissive.
-						var position = Math.floor(Math.random() * (arr.length + 1));
-						arr.splice(position, 0, value);
-					} break;
-					case 'append': {
-						arr.push(value);
-					} break;
+				case 'prepend': {
+					arr.unshift(value);
+				} break;
+				case 'insert': {
+					// 'insert' doesn't *have* to use a random position. Any position will do.
+					//  E.g., its implementation could just be the same as for 'append'.
+					//  Nonetheless, we use a random position to force the tests to be permissive.
+					var position = Math.floor(Math.random() * (arr.length + 1));
+					arr.splice(position, 0, value);
+				} break;
+				case 'append': {
+					arr.push(value);
+				} break;
 				}
 			});
 		}
@@ -74,4 +72,4 @@ export default (deltaJs) => {
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 
-};
+});

@@ -56,9 +56,6 @@ export default class DeltaJs {
 		U.assert(U.isUndefined(this.Delta[name]),
 			`The '${name}' operation type already exists.`);
 
-		/* 'this' alias */
-		var thisDeltaJs = this;
-
 		/* store the operation class */
 		this.Delta[name] = DeltaClass;
 
@@ -108,13 +105,5 @@ export default class DeltaJs {
 		this.ContainerProxy.newProxyMethod(method, handler);
 	}
 
-
-	/** {@public}{@method}
-	 * @param precondition {(DeltaJs#Delta, DeltaJs#Delta) => Boolean} - can these deltas be composed this way?
-	 * @param compose      {(DeltaJs#Delta, DeltaJs#Delta) => DeltaJs#Delta} - should be side-effect free
-	 */
-	newComposition(precondition, compose) {
-		this.Delta.newComposition(precondition, compose);
-	}
 
 }

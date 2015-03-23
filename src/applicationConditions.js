@@ -3,44 +3,35 @@ import U from './misc.js';
 
 
 export default (deltaJs) => {
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (deltaJs._applicationConditionsImplemented) { return }
-	deltaJs._applicationConditionsImplemented = true;
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	U.oncePer(deltaJs, 'application conditions', () => {
 
+		U.extend(deltaJs.Delta.prototype, {
 
-	U.extend(deltaJs.Delta.prototype, {
+			get applicationCondition() { return this._applicationCondition },
+			set applicationCondition(ac) { this._applicationCondition = ac },
 
-		get applicationCondition() { return this._applicationCondition },
-		set applicationCondition(ac) { this._applicationCondition = ac },
+			get selected() {
+				return U.isUndefined(this.applicationCondition) || this.applicationCondition.selected;
+			}
 
-		get selected() {
-			return U.isUndefined(this.applicationCondition) || this.applicationCondition.selected;
-		}
+		});
 
 	});
+	U.oncePer(deltaJs.constructor, 'application conditions', () => {
 
+		U.extend(deltaJs.constructor.prototype, {
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (U.isDefined(deltaJs.constructor._applicationConditionsImplemented)) { return }
-	deltaJs.constructor._applicationConditionsImplemented = true;
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			select(...features) {
+				features.forEach((feature) => {
+					if (Array.isArray(feature)) {
+						this.select(...feature);
+					} else {
+						this.features[feature].select();
+					}
+				});
+			}
 
-
-	U.extend(deltaJs.constructor.prototype, {
-
-		select(...features) {
-			features.forEach((feature) => {
-				if (Array.isArray(feature)) {
-					this.select(...feature);
-				} else {
-					this.features[feature].select();
-				}
-			});
-		}
+		});
 
 	});
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 };
