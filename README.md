@@ -62,7 +62,7 @@ bower install delta.js
 npm install delta.js
 ```
 
-## Import `DeltaJs`
+## Importing `DeltaJs`
 
 The delta.js package offers a [UMD](https://github.com/umdjs/umd) API, so it supports
 AMD ([RequireJS](http://requirejs.org/)), CommonJS and script-tags:
