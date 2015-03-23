@@ -225,6 +225,44 @@ describe("DeltaJs instance", function () {
 					expectError(DeltaJs.ApplicationError)
 				]]);
 
+				itCan("update an existing field in an object using the old value", [[
+					{ foo: "bar" },
+					() => { delta.subDeltas['foo'] = new deltaJs.Delta.Update(old => `${old}-BAS`) },
+					{ foo: "bar-BAS" }
+				], [
+					{ key: "val", foo: "bar" },
+					() => { delta.subDeltas['foo'] = new deltaJs.Delta.Update(old => `${old}-BAS`) },
+					{ key: "val", foo: "bar-BAS" }
+				], [
+					{ obj: { foo: "bar" } },
+					() => {
+						delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+							foo: new deltaJs.Delta.Update(old => `${old}-BAS`)
+						});
+					},
+					{ obj: { foo: "bar-BAS" } }
+				], [
+					{ obj: { key: "val", foo: "bar" } },
+					() => {
+						delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+							foo: new deltaJs.Delta.Update(old => `${old}-BAS`)
+						});
+					},
+					{ obj: { key: "val", foo: "bar-BAS" } }
+				], [
+					{ fn(x) { return `(${x})` } },
+					() => {
+						delta.subDeltas['fn'] = new deltaJs.Delta.Update(old => x => `-${old(x)}-`);
+					},
+					(obj) => {
+						expect(obj.fn('message')).toEqual('-(message)-');
+					}
+				], [
+					{ foo: "bar" },
+					() => { delta.subDeltas['absentKey'] = new deltaJs.Delta.Update(old => `${old}-BAS`) },
+					expectError(DeltaJs.ApplicationError)
+				]]);
+
 			});
 
 		});
@@ -518,6 +556,58 @@ describe("DeltaJs instance", function () {
 					delta = delta1.composedWith(delta2);
 				},
 				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+			], [
+				{ key: "val" },
+				() => {
+					delta1.subDeltas['foo'] = new deltaJs.Delta.Add("oldValue");
+					delta2.subDeltas['foo'] = new deltaJs.Delta.Update(v => `${v}-newValue`);
+					delta = delta1.composedWith(delta2);
+				},
+				{ key: "val", foo: "oldValue-newValue" }
+			], [
+				{ key: "val", foo: { bar: "bas" } },
+				() => {
+					delta1.subDeltas['foo'] = new deltaJs.Delta.Update(v => `${v}-newValue`);
+					delta2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					delta = delta1.composedWith(delta2);
+				},
+				{ key: "val" }
+			], [
+				{ key: "val", foo: "initialValue" },
+				() => {
+					delta1.subDeltas['foo'] = new deltaJs.Delta.Update(v => `${v}-oldValue`);
+					delta2.subDeltas['foo'] = new deltaJs.Delta.Update(v => `${v}-newValue`);
+					delta = delta1.composedWith(delta2);
+				},
+				{ key: "val", foo: "initialValue-oldValue-newValue" }
+			]]);
+
+			// NOTE: We're not expecting Update on an undefined value to throw an error,
+			//       because Update shouldn't have such a precondition. However, that's not
+			//       implemented yet, so the correct behavior isn't tested yet either.
+			// NOTE: Composition between Modify and Update is not implemented yet, but should
+			//       test as specified in the 'xitCan' below:
+
+			xitCan("correctly modify objects when the composition is valid (not yet implemented)", [[
+				{ key: "val", foo: { bar1: "bas1" } },
+				() => {
+					delta1.subDeltas['foo'] = new deltaJs.Delta.Modify({
+						bar2: new deltaJs.Delta.Add("bas2")
+					});
+					delta2.subDeltas['foo'] = new deltaJs.Delta.Update(v => ({ BAR: `${v.bar}-${v.bar2}` }));
+					delta = delta1.composedWith(delta2);
+				},
+				{ key: "val", foo: { BAR: "bas1-bas2" } }
+			], [
+				{ key: "val", foo: "bas1" },
+				() => {
+					delta2.subDeltas['foo'] = new deltaJs.Delta.Update(v => ({ bar1: v }));
+					delta1.subDeltas['foo'] = new deltaJs.Delta.Modify({
+						bar2: new deltaJs.Delta.Add("bas2")
+					});
+					delta = delta1.composedWith(delta2);
+				},
+				{ key: "val", foo: { bar1: "bas1", bar2: "bas2" } }
 			]]);
 
 			itCan("throw an error when the composition is detectably invalid", [

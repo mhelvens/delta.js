@@ -70,6 +70,8 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoArray', () => {
 		return new deltaJs.Delta.PutIntoArray([...d1.values, ...d2.values]);
 	});
 
+	// TODO: composition with Update
+
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 
 });

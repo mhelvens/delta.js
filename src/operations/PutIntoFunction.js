@@ -87,6 +87,8 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoFunction', () => {
 		return new deltaJs.Delta.PutIntoFunction([...d1.values, ...d2.values]);
 	});
 
+	// TODO: composition with Update
+
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 
 });
