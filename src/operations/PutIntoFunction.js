@@ -91,9 +91,8 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoFunction', () => {
 	deltaJs.newComposition( t('PutIntoFunction', 'Forbid'         ), false                                        );
 	deltaJs.newComposition( t('PutIntoFunction', 'Replace'        ), d('Replace', ({p2}) => p2)                   );
 	deltaJs.newComposition( t('PutIntoFunction', 'Update'         ), true                                         );
-	deltaJs.newComposition( t('PutIntoFunction', 'PutIntoFunction'), (d1, d2) => {
-		return new deltaJs.Delta.PutIntoFunction([...d1.values, ...d2.values]);
-	});
+	deltaJs.newComposition( t('PutIntoFunction', 'PutIntoFunction'), (d1, d2) =>
+		new deltaJs.Delta.PutIntoFunction([...d1.values, ...d2.values]));
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 
