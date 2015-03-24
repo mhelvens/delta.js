@@ -20,7 +20,6 @@ export default (deltaJs) => U.oncePer(deltaJs, 'basic operations', () => {
 	/* declaring the basic operation types **********************************************/
 	deltaJs.newOperationType('NoOp', class NoOp extends deltaJs.Delta {});
 	deltaJs.newOperationType('Add', class Add extends deltaJs.Delta {
-		//constructor(...args) { super(...args) }
 		precondition(target) { return target instanceof WritableTarget && U.isUndefined(target.value) }
 		applyTo(target) { target.value = this.arg }
 	});
@@ -46,30 +45,47 @@ export default (deltaJs) => U.oncePer(deltaJs, 'basic operations', () => {
 
 	/* composition - introducing 'Add' **************************************************/
 	deltaJs.newComposition( t('Add', 'Modify'), d('Add', ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Modify', 'Add'), false                                    );
+	deltaJs.newComposition( t('Add', 'Add'   ), false                                    );
 
 	/* composition - introducing 'Remove' ***********************************************/
 	deltaJs.newComposition( t('Modify', 'Remove'), d('Remove')                );
 	deltaJs.newComposition( t('Add'   , 'Remove'), d('Forbid')                );
+	deltaJs.newComposition( t('Remove', 'Modify'), false                      );
 	deltaJs.newComposition( t('Remove', 'Add'   ), d('Replace', ({p2}) => p2) );
+	deltaJs.newComposition( t('Remove', 'Remove'), false                      );
 
 	/* composition - introducing 'Forbid' ***********************************************/
+	deltaJs.newComposition( t('Modify', 'Forbid'), false                  );
+	deltaJs.newComposition( t('Add'   , 'Forbid'), false                  );
 	deltaJs.newComposition( t('Remove', 'Forbid'), d('Remove')            );
+	deltaJs.newComposition( t('Forbid', 'Modify'), false                  );
 	deltaJs.newComposition( t('Forbid', 'Add'   ), d('Add', ({p2}) => p2) );
+	deltaJs.newComposition( t('Forbid', 'Remove'), false                  );
 	deltaJs.newComposition( t('Forbid', 'Forbid'), d('Forbid')            );
 
 	/* composition - introducing 'Replace' **********************************************/
 	deltaJs.newComposition( t('Modify' , 'Replace'), d('Replace', ({p2}) => p2)                   );
 	deltaJs.newComposition( t('Add'    , 'Replace'), d('Add',     ({p2}) => p2)                   );
+	deltaJs.newComposition( t('Remove' , 'Replace'), false                                        );
+	deltaJs.newComposition( t('Forbid' , 'Replace'), false                                        );
 	deltaJs.newComposition( t('Replace', 'Modify' ), d('Replace', ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Replace', 'Add'    ), false                                        );
 	deltaJs.newComposition( t('Replace', 'Remove' ), d('Remove')                                  );
+	deltaJs.newComposition( t('Replace', 'Forbid' ), false                                        );
 	deltaJs.newComposition( t('Replace', 'Replace'), d('Replace', ({p2}) => p2)                   );
 
 	/* composition - introducing 'Update' ***********************************************/
+	deltaJs.newComposition( t('Modify' , 'Update' ), true                                         );
 	deltaJs.newComposition( t('Add'    , 'Update' ), d('Add',     ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Remove' , 'Update' ), true                                         );
+	deltaJs.newComposition( t('Forbid' , 'Update' ), true                                         );
 	deltaJs.newComposition( t('Replace', 'Update' ), d('Replace', ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Update' , 'Modify' ), true                                         );
+	deltaJs.newComposition( t('Update' , 'Add'    ), true    /* if Update leaves 'undefined'*/    );
 	deltaJs.newComposition( t('Update' , 'Remove' ), d('Remove')                                  );
+	deltaJs.newComposition( t('Update' , 'Forbid' ), true    /* if Update leaves 'undefined'*/    );
 	deltaJs.newComposition( t('Update' , 'Replace'), d('Replace', ({p2}) => p2)                   );
 	deltaJs.newComposition( t('Update' , 'Update' ), d('Update',  ({p1, p2}) => v => p2(p1(v)))   );
-	// TODO: allow more kinds of compositions with Update
 
 });

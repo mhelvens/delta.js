@@ -168,13 +168,7 @@ export default (deltaJs) => U.oncePer(deltaJs, 'DeltaModel', () => {
 	deltaJs.newComposition((d1, d2) => (
 		d1 instanceof deltaJs.Delta.DeltaModel ||
 		d2 instanceof deltaJs.Delta.DeltaModel
-	), (d1, d2) => {
-		var result = new deltaJs.Delta.DeltaModel();
-		result.graph.addNewVertex(1, d1);
-		result.graph.addNewVertex(2, d2);
-		result.graph.addNewEdge(1, 2);
-		return result;
-	});
+	), true);
 
 });
 

@@ -79,15 +79,21 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoFunction', () => {
 
 
 	/* composition - introducing 'PutIntoFunction' **************************************************/
+	deltaJs.newComposition( t('Modify'         , 'PutIntoFunction'), false                                        );
 	deltaJs.newComposition( t('Add'            , 'PutIntoFunction'), d('Add',     ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Remove'         , 'PutIntoFunction'), false                                        );
+	deltaJs.newComposition( t('Forbid'         , 'PutIntoFunction'), false                                        );
 	deltaJs.newComposition( t('Replace'        , 'PutIntoFunction'), d('Replace', ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Update'         , 'PutIntoFunction'), true                                         );
+	deltaJs.newComposition( t('PutIntoFunction', 'Modify'         ), false                                        );
+	deltaJs.newComposition( t('PutIntoFunction', 'Add'            ), false                                        );
 	deltaJs.newComposition( t('PutIntoFunction', 'Remove'         ), d('Remove')                                  );
+	deltaJs.newComposition( t('PutIntoFunction', 'Forbid'         ), false                                        );
 	deltaJs.newComposition( t('PutIntoFunction', 'Replace'        ), d('Replace', ({p2}) => p2)                   );
+	deltaJs.newComposition( t('PutIntoFunction', 'Update'         ), true                                         );
 	deltaJs.newComposition( t('PutIntoFunction', 'PutIntoFunction'), (d1, d2) => {
 		return new deltaJs.Delta.PutIntoFunction([...d1.values, ...d2.values]);
 	});
-
-	// TODO: composition with Update
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 

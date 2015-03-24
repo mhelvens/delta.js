@@ -71,6 +71,7 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
 	});
 
 
+	/* composition */
 	deltaJs.newComposition((d1, d2) => (
 	d1 instanceof deltaJs.Delta.Overloaded ||
 	d2 instanceof deltaJs.Delta.Overloaded

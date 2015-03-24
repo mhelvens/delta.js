@@ -62,15 +62,21 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoArray', () => {
 
 
 	/* composition *******************************************************************************/
-	deltaJs.newComposition( t('Add'    ,      'PutIntoArray'), d('Add',     ({d2, p1}) => d2.appliedTo(p1)) );
-	deltaJs.newComposition( t('Replace',      'PutIntoArray'), d('Replace', ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Modify'      , 'PutIntoArray'), false                                        );
+	deltaJs.newComposition( t('Add'         , 'PutIntoArray'), d('Add',     ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Remove'      , 'PutIntoArray'), false                                        );
+	deltaJs.newComposition( t('Forbid'      , 'PutIntoArray'), false                                        );
+	deltaJs.newComposition( t('Replace'     , 'PutIntoArray'), d('Replace', ({d2, p1}) => d2.appliedTo(p1)) );
+	deltaJs.newComposition( t('Update'      , 'PutIntoArray'), true                                         );
+	deltaJs.newComposition( t('PutIntoArray', 'Modify'      ), false                                        );
+	deltaJs.newComposition( t('PutIntoArray', 'Add'         ), false                                        );
 	deltaJs.newComposition( t('PutIntoArray', 'Remove'      ), d('Remove')                                  );
+	deltaJs.newComposition( t('PutIntoArray', 'Forbid'      ), false                                        );
 	deltaJs.newComposition( t('PutIntoArray', 'Replace'     ), d('Replace', ({p2}) => p2)                   );
+	deltaJs.newComposition( t('PutIntoArray', 'Update'      ), true                                         );
 	deltaJs.newComposition( t('PutIntoArray', 'PutIntoArray'), (d1, d2) => {
 		return new deltaJs.Delta.PutIntoArray([...d1.values, ...d2.values]);
 	});
-
-	// TODO: composition with Update
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
 

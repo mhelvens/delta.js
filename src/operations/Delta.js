@@ -79,7 +79,7 @@ export default (deltaJs) => {
 
 			/** {@public}{@static}{@method}
 			 * @param precondition {(DeltaJs#Delta, DeltaJs#Delta) => Boolean} - can these deltas be composed this way?
-			 * @param compose      {(DeltaJs#Delta, DeltaJs#Delta) => DeltaJs#Delta} - should be side-effect free
+			 * @param compose {Boolean|((DeltaJs#Delta, DeltaJs#Delta) => DeltaJs#Delta)} - false, or a side-effect free function
 			 */
 			static newComposition(precondition, compose) {
 				deltaJs.Delta._compositions.push({precondition, compose});
@@ -106,12 +106,24 @@ export default (deltaJs) => {
 						}
 					});
 
-					/* throw an error on failure */
-					if (!success) { throw new CompositionError(d1, d2) }
+					/* throw an error if 'false' was found rather than a function*/
+					if (composeFn === false || !success) { throw new CompositionError(d1, d2) }
+
+					/*  if no composition function is found, use a linear delta model  */
+					/*  to 'naively' have one delta apply after another                */
+					if (composeFn === true) {
+						composeFn = (d1, d2) => {
+							var result = new deltaJs.Delta.DeltaModel();
+							result.graph.addNewVertex(1, d1);
+							result.graph.addNewVertex(2, d2);
+							result.graph.addNewEdge(1, 2);
+							return result;
+						};
+						// TODO: make a new dedicated delta type for this; DeltaModel is overkill
+					}
 
 					/* return the result on success */
 					result = composeFn(d1, d2);
-
 				});
 
 				return result;

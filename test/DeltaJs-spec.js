@@ -572,35 +572,33 @@ describe("DeltaJs instance", function () {
 					delta = delta1.composedWith(delta2);
 				},
 				{ key: "val", foo: "initialValue-oldValue-newValue" }
-			]]);
-
-			// NOTE: We're not expecting Update on an undefined value to throw an error,
-			//       because Update shouldn't have such a precondition. However, that's not
-			//       implemented yet, so the correct behavior isn't tested yet either.
-			// NOTE: Composition between Modify and Update is not implemented yet, but should
-			//       test as specified in the 'xitCan' below:
-
-			xitCan("correctly modify objects when the composition is valid (not yet implemented)", [[
+			], [
 				{ key: "val", foo: { bar1: "bas1" } },
 				() => {
 					delta1.subDeltas['foo'] = new deltaJs.Delta.Modify({
 						bar2: new deltaJs.Delta.Add("bas2")
 					});
-					delta2.subDeltas['foo'] = new deltaJs.Delta.Update(v => ({ BAR: `${v.bar}-${v.bar2}` }));
+					delta2.subDeltas['foo'] = new deltaJs.Delta.Update(v => ({ BAR: `${v.bar1}-${v.bar2}` }));
 					delta = delta1.composedWith(delta2);
 				},
 				{ key: "val", foo: { BAR: "bas1-bas2" } }
 			], [
 				{ key: "val", foo: "bas1" },
 				() => {
-					delta2.subDeltas['foo'] = new deltaJs.Delta.Update(v => ({ bar1: v }));
-					delta1.subDeltas['foo'] = new deltaJs.Delta.Modify({
+					delta1.subDeltas['foo'] = new deltaJs.Delta.Update(v => ({ bar1: v }));
+					delta2.subDeltas['foo'] = new deltaJs.Delta.Modify({
 						bar2: new deltaJs.Delta.Add("bas2")
 					});
 					delta = delta1.composedWith(delta2);
 				},
 				{ key: "val", foo: { bar1: "bas1", bar2: "bas2" } }
 			]]);
+
+			// NOTE: We're not expecting Update on an undefined value to throw an error,
+			//       because Update shouldn't have such a precondition. However, that's not
+			//       implemented yet, so the correct behavior isn't tested yet either.
+
+			itCan("correctly modify objects when the composition is valid (not yet implemented)", []);
 
 			itCan("throw an error when the composition is detectably invalid", [
 				() => {
@@ -1774,8 +1772,8 @@ describe("DeltaJs instance", function () {
 					dm.do('X', { after: ['Z'] }).add('keyX', "value X");
 					dm.do('Y', { after: ['X'] }).add('keyY', "value Y");
 					dm.do('Z', { after: ['Y'] }).add('keyZ', "value Z");
-				},
-				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" }) // it's about the last connection that makes the cycle
+				}, // it's about the last connection that connects the cycle:
+				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
 			]]);
 
 			xitCan("throw an error if there is an unresolved conflict", [[
@@ -1876,8 +1874,6 @@ describe("DeltaJs instance", function () {
 					);
 				}
 			]]);
-
-
 
 		});
 
@@ -1982,8 +1978,6 @@ describe("DeltaJs instance", function () {
 			]]);
 
 		});
-
-
 
 	});
 
@@ -2211,8 +2205,8 @@ describe("DeltaJs instance", function () {
 			deltaJs.do('x', { feature: false, after: ['w'] }).add('obj.keyX', "valX");
 			deltaJs.do('y', { feature: false, after: ['w'] }).add('obj.keyY', "valY");
 			deltaJs.do('z', { feature: false, after: ['x', 'y'] }).modify('obj')
-					.replace('keyX', "valXZ")
-					.replace('keyY', "valYZ");
+				.replace('keyX', "valXZ")
+				.replace('keyY', "valYZ");
 			var obj = deltaJs.vp('obj');
 			expect(obj).toEqual({
 				keyW: "valW",
@@ -2241,10 +2235,10 @@ describe("DeltaJs instance", function () {
 		it("can, based on which features are selected, apply or not apply a delta", () => {
 
 			/* deltas, normally declared independently */
-			w.do({ iff: ['F'] }).add('obj.w', 'w-value');
+			w.do({ iff: ['F']      }).add('obj.w', 'w-value');
 			x.do({ iff: ['F', 'G'] }).add('obj.x', 'x-value');
 			y.do({ iff: ['F', 'H'] }).add('obj.y', 'y-value');
-			z.do({ feature: false }).add('obj.z', 'z-value');
+			z.do({ feature: false  }).add('obj.z', 'z-value');
 
 			/* the desired features, selected in a central location */
 			deltaJs.select(['F', 'H']);
@@ -2303,7 +2297,7 @@ describe("DeltaJs instance", function () {
 			x.add('obj.x', 'x-value');
 			y.add('obj.y', 'y-value');
 			z.do({ resolves: ['x', 'y'] })
-					.replace('obj.y', 'z-value');
+				.replace('obj.y', 'z-value');
 
 			/* the desired features, selected in a central location */
 			deltaJs.select(['x', 'y']);
@@ -2325,7 +2319,7 @@ describe("DeltaJs instance", function () {
 			x.add('obj.x', 'x-value');
 			y.add('obj.y', 'y-value');
 			z.do({ requires: ['x', 'y'] })
-					.replace('obj.y', 'z-value');
+				.replace('obj.y', 'z-value');
 
 			/* the desired features, selected in a central location */
 			deltaJs.select(['z']);
