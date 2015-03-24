@@ -1,4 +1,4 @@
-import U from './misc.js';
+import U, {assert, isDefined} from './util.js';
 
 
 export default class Path {
@@ -6,7 +6,7 @@ export default class Path {
 	constructor(str = "") {
 		///////////////////////  11111  22222222222  33  //
 		var match = str.match(/^([.#]?)(\w*|\(\w+\))(.*)$/);
-		U.assert(match, `The path string '${str}' is not well formed.`);
+		assert(match, `The path string '${str}' is not well formed.`);
 		var [, lead, prop, rest] = match;
 		if (lead === '#') {
 			// The # separator is used in the JsDoc sense, and is translated to '.(instance).'
@@ -30,9 +30,9 @@ export default class Path {
 
 	toString() {
 		var result = "";
-		if (U.isDefined(this.prop)) {
+		if (isDefined(this.prop)) {
 			result += this.prop;
-			if (U.isDefined(this.rest)) {
+			if (isDefined(this.rest)) {
 				result += "." + this.rest.toString();
 			}
 		}

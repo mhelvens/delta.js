@@ -1,14 +1,16 @@
 /* import internal stuff */
-import U from '../misc.js';
-import defineDelta from './Delta.js';
+import define_Delta from './Delta_class.js';
+import U, {indent, oncePer} from './util.js';
 import {MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError,
-		MultipleOverloadsCompositionError} from '../Error.js';
+		MultipleOverloadsCompositionError} from './Error.js';
 
 
-export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
+export default oncePer('Overloaded', (deltaJs) => {
 
-	defineDelta(deltaJs);
+
+	define_Delta(deltaJs);
+
 
 	deltaJs.newOperationType('Overloaded', class Overloaded extends deltaJs.Delta {
 
@@ -16,7 +18,6 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
 			super(...args);
 			this.overloads = this.arg || [];
 		}
-
 
 		/** {@public}{@abstract}{@method}{@nosideeffects}
 		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
@@ -26,7 +27,6 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
 			result.overloads = this.overloads.map(delta => delta.clone());
 			return result;
 		}
-
 
 		/** {@public}{@method}
 		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
@@ -56,7 +56,6 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
 			}
 		}
 
-
 		/** {@public}{@method}
 		 * @param options {object?}
 		 * @return {string}
@@ -64,7 +63,7 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
 		toString(options = {}) {
 			var str = super.toString(options);
 			var overloads = this.overloads.map((delta) => delta.toString(options)).join('\n');
-			str += '\n' + U.indent(overloads, 4);
+			str += '\n' + indent(overloads, 4);
 			return str;
 		}
 
@@ -73,8 +72,8 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
 
 	/* composition */
 	deltaJs.newComposition((d1, d2) => (
-	d1 instanceof deltaJs.Delta.Overloaded ||
-	d2 instanceof deltaJs.Delta.Overloaded
+		d1 instanceof deltaJs.Delta.Overloaded ||
+		d2 instanceof deltaJs.Delta.Overloaded
 	), (d1, d2) => {
 		var D1 = d1 instanceof deltaJs.Delta.Overloaded ? d1.overloads : [d1];
 		var D2 = d2 instanceof deltaJs.Delta.Overloaded ? d2.overloads : [d2];
@@ -89,5 +88,6 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Overloaded', () => {
 		if (result.overloads.length === 0) { throw new MultipleOverloadsCompositionError(d1, d2, errors) }
 		return result;
 	});
+
 
 });

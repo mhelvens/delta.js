@@ -3,20 +3,20 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import U                                        from './misc.js';
+import {extend, assert, isUndefined}            from './util.js';
 import Path                                     from './Path.js';
 import {ReadableTarget, WritableTarget, rt, wt} from './Target.js';
-import defineDelta                              from './operations/Delta.js';
-import defineOverloaded                         from './operations/Overloaded.js';
-import defineModify                             from './operations/Modify.js';
-import defineBasicOperations                    from './operations/basicOperations.js';
-import definePutIntoArray                       from './operations/PutIntoArray.js';
-import definePutIntoFunction                    from './operations/PutIntoFunction.js';
-import defineDeltaModel                         from './operations/DeltaModel.js';
-import defineFeatures                           from './features.js';
-import defineVariationPoints                    from './variationPoints.js';
-import defineApplicationConditions              from './applicationConditions.js';
-import defineProxy                              from './operations/Proxy.js';
+import define_Delta                             from './Delta_class.js';
+import define_Overloaded                        from './Overloaded.js';
+import define_Modify                            from './Modify.js';
+import define_basicOperations                   from './basicOperations.js';
+import define_PutIntoArray                      from './PutIntoArray.js';
+import define_PutIntoFunction                   from './PutIntoFunction.js';
+import define_DeltaModel                        from './DeltaModel.js';
+import define_features                          from './features.js';
+import define_variationPoints                   from './variationPoints.js';
+import define_applicationConditions             from './applicationConditions.js';
+import define_ContainerProxy                    from './ContainerProxy.js';
 
 
 /** {@public}{@class}
@@ -29,31 +29,32 @@ import defineProxy                              from './operations/Proxy.js';
  */
 export default class DeltaJs {
 
+
 	constructor() {
-		defineDelta                (this);
-		defineProxy                (this);
-		defineOverloaded           (this);
-		defineModify               (this);
-		defineBasicOperations      (this);
-		definePutIntoArray         (this);
-		definePutIntoFunction      (this);
-		defineDeltaModel           (this);
-		defineFeatures             (this);
-		defineVariationPoints      (this);
-		defineApplicationConditions(this);
+		define_ContainerProxy       (this);
+		define_Delta                (this);
+		define_Overloaded           (this);
+		define_Modify               (this);
+		define_basicOperations      (this);
+		define_PutIntoArray         (this);
+		define_PutIntoFunction      (this);
+		define_DeltaModel           (this);
+		define_features             (this);
+		define_variationPoints      (this);
+		define_applicationConditions(this);
 	}
 
 
 	/** {@public}{@method}
-	 * @param name        {string}   - name of the new operation type
-	 * @param DeltaClass  {Function} - the new operation class
+	 * @param name       {string}   - name of the new operation type
+	 * @param DeltaClass {Function} - the new operation class
 	 * @param ProxyClass {?Function} - the optional custom Proxy subclass for this operation-type
 	 */
 	newOperationType(name, DeltaClass, ProxyClass) {
 		/* sanity checks */
-		U.assert(name[0] === name[0].toUpperCase(),
+		assert(name[0] === name[0].toUpperCase(),
 			`Delta operation classes must have a name starting with a capital letter - '${name}' does not.`);
-		U.assert(U.isUndefined(this.Delta[name]),
+		assert(isUndefined(this.Delta[name]),
 			`The '${name}' operation type already exists.`);
 
 		/* store the operation class */
@@ -66,7 +67,7 @@ export default class DeltaJs {
 		var givenApplyTo = DeltaClass.prototype.applyTo || (()=>{});
 
 		/* augment the class prototype */
-		U.extend(DeltaClass.prototype, {
+		extend(DeltaClass.prototype, {
 			applyTo(target, options = {}) {
 				/* should this delta only be applied for a specific feature selection? */
 				if (!this.selected) { return }

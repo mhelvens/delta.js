@@ -1,18 +1,16 @@
 /* import internal stuff */
-import U from './misc.js';
-import defineDeltaModel from './operations/DeltaModel.js';
+import {extend, oncePer} from './util.js';
+import define_DeltaModel from './DeltaModel.js';
 
-export default (deltaJs) => {
-	U.oncePer(deltaJs, 'variation points', () => {
 
-		defineDeltaModel(deltaJs);
+export default oncePer('variation points', (deltaJs) => {
 
-		deltaJs._deltaModelProxy = new deltaJs.Delta.DeltaModel().do();
 
-	});
-	U.oncePer(deltaJs.constructor, 'variation points', () => {
+	oncePer(deltaJs.constructor, 'variation points', () => {
 
-		U.extend(deltaJs.constructor.prototype, {
+		define_DeltaModel(deltaJs);
+
+		extend(deltaJs.constructor.prototype, {
 
 			/** {@public}{@method}
 			 * This method indicates a variation point.
@@ -43,4 +41,9 @@ export default (deltaJs) => {
 		});
 
 	});
-};
+
+
+	deltaJs._deltaModelProxy = new deltaJs.Delta.DeltaModel().do();
+
+
+});

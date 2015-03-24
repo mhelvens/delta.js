@@ -1,22 +1,16 @@
 /* import internal stuff */
-import U                                        from '../misc.js';
-import {WritableTarget, ReadableTarget, rt, wt} from '../Target.js';
-import defineBasicOperations                    from './basicOperations.js';
-import defineProxy                              from './Proxy.js';
+import U, {isDefined, t, define_d, oncePer} from './util.js';
+import define_Modify                        from './Modify.js';
+import define_basicOperations               from './basicOperations.js';
+import define_Proxy                         from './Proxy.js';
 
 
-export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoArray', () => {
-
-	defineBasicOperations(deltaJs);
-	defineProxy          (deltaJs);
+export default oncePer('PutIntoArray', (deltaJs) => {
 
 
-	/* convenience definitions for the application and composition functions below */
-	function t(type1, type2) { return (d1, d2) => (d1.type === type1 && d2.type === type2) }
-	function d(type, fn) {
-		if (typeof fn === 'string') { fn = ((v) => (o) => o[v])(fn) }
-		return (d1, d2) => new deltaJs.Delta[type](fn && fn({d1, d2, p1: d1.arg, p2: d2.arg}));
-	}
+	define_Modify         (deltaJs);
+	define_basicOperations(deltaJs);
+	define_Proxy          (deltaJs);
 
 
 	/* declaring the array operation type ***********************************************/
@@ -30,7 +24,7 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoArray', () => {
 			result.values = [...this.values];
 			return result;
 		}
-		precondition(target) { return U.isDefined(target.value) && Array.isArray(target.value) }
+		precondition(target) { return isDefined(target.value) && Array.isArray(target.value) }
 		applyTo(target) {
 			var arr = target.value;
 			this.values.forEach(({method, value}) => {
@@ -62,6 +56,7 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoArray', () => {
 
 
 	/* composition *******************************************************************************/
+	var d = define_d(deltaJs);
 	deltaJs.newComposition( t('Modify'      , 'PutIntoArray'), false                                        );
 	deltaJs.newComposition( t('Add'         , 'PutIntoArray'), d('Add',     ({d2, p1}) => d2.appliedTo(p1)) );
 	deltaJs.newComposition( t('Remove'      , 'PutIntoArray'), false                                        );
@@ -78,5 +73,6 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoArray', () => {
 		new deltaJs.Delta.PutIntoArray([...d1.values, ...d2.values]));
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
+
 
 });

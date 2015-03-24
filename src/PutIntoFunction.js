@@ -1,23 +1,17 @@
 /* import internal stuff */
-import U                     from '../misc.js';
-import {WritableTarget}      from '../Target.js';
-import defineBasicOperations from './basicOperations.js';
-import defineProxy           from './Proxy.js';
+import {isUndefined, isDefined, t, define_d, oncePer} from './util.js';
+import {WritableTarget}                               from './Target.js';
+import define_Modify                                  from './Modify.js';
+import define_BasicOperations                         from './basicOperations.js';
+import define_Proxy                                   from './Proxy.js';
 
 
-export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoFunction', () => {
+export default oncePer('PutIntoFunction', (deltaJs) => {
 
 
-	defineBasicOperations(deltaJs);
-	defineProxy          (deltaJs);
-
-
-	/* convenience definitions for the application and composition functions below */
-	function t(type1, type2) { return (d1, d2) => (d1.type === type1 && d2.type === type2) }
-	function d(type, fn) {
-		if (typeof fn === 'string') { fn = ((v) => (o) => o[v])(fn) }
-		return (d1, d2) => new deltaJs.Delta[type](fn && fn({d1, d2, p1: d1.arg, p2: d2.arg}));
-	}
+	define_Modify         (deltaJs);
+	define_BasicOperations(deltaJs);
+	define_Proxy          (deltaJs);
 
 
 	/* declaring the function operation type */
@@ -32,11 +26,11 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoFunction', () => {
 			return result;
 		}
 		precondition(target) {
-			return U.isDefined(target.value) && typeof target.value === 'function' &&
-				(U.isDefined(target.value._DeltaJs_functions) || target instanceof WritableTarget);
+			return isDefined(target.value) && typeof target.value === 'function' &&
+				(isDefined(target.value._DeltaJs_functions) || target instanceof WritableTarget);
 		}
 		applyTo(target) {
-			if (U.isUndefined(target.value._DeltaJs_functions)) {
+			if (isUndefined(target.value._DeltaJs_functions)) {
 				var originalFn = target.value;
 				var newFn = function (...args) {
 					var result;
@@ -79,6 +73,7 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoFunction', () => {
 
 
 	/* composition - introducing 'PutIntoFunction' **************************************************/
+	var d = define_d(deltaJs);
 	deltaJs.newComposition( t('Modify'         , 'PutIntoFunction'), false                                        );
 	deltaJs.newComposition( t('Add'            , 'PutIntoFunction'), d('Add',     ({d2, p1}) => d2.appliedTo(p1)) );
 	deltaJs.newComposition( t('Remove'         , 'PutIntoFunction'), false                                        );
@@ -95,5 +90,6 @@ export default (deltaJs) => U.oncePer(deltaJs, 'PutIntoFunction', () => {
 		new deltaJs.Delta.PutIntoFunction([...d1.values, ...d2.values]));
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
+
 
 });

@@ -3,50 +3,17 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import U                            from '../misc.js';
-import Path                         from '../Path.js';
-import defineDelta                  from './Delta.js';
-import defineOverloaded             from './Overloaded.js';
-import {MultipleActiveProxiesError} from '../Error.js';
+import {extend, a, isUndefined, oncePer} from './util.js';
+import Path                              from './Path.js';
+import define_Overloaded                 from './Overloaded.js';
+import define_Proxy                      from './Proxy.js';
+import {MultipleActiveProxiesError}      from './Error.js';
 
 
-// TODO: Bake in delta model functionality
-// DONE: 'one Proxy active at a time' (cannot use earlier ones after new ones have been used)
-// TODO: Basic application of deltas
-// TODO: Composition in order to generate error messages
-// TODO: Error messages based on syntactic conflicts in delta models
+export default oncePer('ContainerProxy', (deltaJs) => {
 
 
-export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
-
-	defineDelta(deltaJs);
-
-	deltaJs.Proxy = class Proxy {
-
-		constructor({parent, delta} = {}) {
-			this._parent = parent;
-			this._active = true;
-			this._delta = delta;
-		}
-
-		delta() { return this._delta; }
-
-		get active() { return this._active }
-
-		deactivate() { this._active = false }
-
-	};
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	/* a Proxy class for non-container operation types */
-	class BasicProxy extends deltaJs.Proxy {}
-	deltaJs.BasicProxy = BasicProxy;
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	define_Proxy(deltaJs);
 
 
 	/* a Proxy class for container operation types like Modify and DeltaModel */
@@ -77,7 +44,7 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
 			var current = this.childProxy(key);
 
 			/* get / create delta proxy */
-			var ProxyClass = delta.constructor.Proxy || deltaJs.BasicProxy;
+			var ProxyClass = delta.constructor.Proxy || deltaJs.Proxy;
 			var proxy = new ProxyClass({ delta, parent: this });
 
 			/* return the current proxy if it, and the current proxy, are both Modify.Proxy */
@@ -96,10 +63,10 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
 		childKeys() { return Object.keys(this._children) }
 
 
-		childProxies(key) { return U.a(this._children, key) }
+		childProxies(key) { return a(this._children, key) }
 
 
-		childProxy(key) { return U.a(this._children, key)[this._children[key].length-1] }
+		childProxy(key) { return a(this._children, key)[this._children[key].length-1] }
 
 
 		childDelta(key) {
@@ -123,6 +90,9 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
 		}
 
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		_do(method, doArgs) {
 			/* is this proxy active? */
 			if (!this.active) { throw new MultipleActiveProxiesError() }
@@ -142,6 +112,9 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
 			/* return the right Proxy instance for chaining */
 			return (proxy instanceof deltaJs.ContainerProxy) ? proxy : this;
 		}
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 		//noinspection JSCommentMatchesSignature
@@ -171,6 +144,9 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
 		}
 
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		/** {@public}{@abstract}{@method}
 		 * Create a delta based on a method-name and argument-list.
 		 * If the method-name is overloaded, you'll automatically get
@@ -181,11 +157,11 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
 		 * @return {DeltaJs#Delta}
 		 */
 		static _newDeltaByMethod(method, args) {
-			defineOverloaded(deltaJs);
 			var newDeltas = deltaJs.ContainerProxy._methodHandlers[method].map(handler => handler(...args));
 			if (newDeltas.length === 1) {
 				return newDeltas[0];
 			} else { // newDeltas.length > 1
+				define_Overloaded(deltaJs);
 				return new deltaJs.Delta.Overloaded(newDeltas);
 			}
 		}
@@ -198,35 +174,19 @@ export default (deltaJs) => U.oncePer(deltaJs, 'Proxy', () => {
 		static newProxyMethod(method, handler) {
 
 			/* automatically populate the Proxy class with new operation method */
-			if (U.isUndefined(deltaJs.ContainerProxy.prototype[method])) {
+			if (isUndefined(deltaJs.ContainerProxy.prototype[method])) {
 				deltaJs.ContainerProxy.prototype[method] = function (...args) {
 					return this._do(method, args);
 				};
 			}
 
 			/* register handlers for each method */
-			U.a(deltaJs.ContainerProxy, '_methodHandlers', method).push(handler);
+			a(deltaJs.ContainerProxy, '_methodHandlers', method).push(handler);
 
 		}
+
 
 	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	U.extend(deltaJs.Delta.prototype, {
-
-		/** {@public}{@method}
-		 * @param args {*[]}
-		 * @return {DeltaJs#Proxy}
-		 */
-		do(...args) {
-			var ProxyClass = this.constructor.Proxy;
-			if (!ProxyClass) {
-				throw new Error(`Calling 'do' on delta type '${this.type}', which has no Proxy interface.`);
-			}
-			return new ProxyClass({ delta: this }).do(...args);
-		}
-
-	});
 
 });

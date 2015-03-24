@@ -1,26 +1,13 @@
 /* import internal stuff */
-import U from './misc.js';
+import {extend, isUndefined, oncePer} from './util.js';
 
 
-export default (deltaJs) => {
-	U.oncePer(deltaJs, 'application conditions', () => {
+export default oncePer('application conditions', (deltaJs) => {
 
-		U.extend(deltaJs.Delta.prototype, {
 
-			get applicationCondition() { return this._applicationCondition },
-			set applicationCondition(ac) { this._applicationCondition = ac },
+	oncePer(deltaJs.constructor, 'application conditions', () => {
 
-			get selected() {
-				return U.isUndefined(this.applicationCondition) || this.applicationCondition.selected;
-			}
-
-		});
-
-	});
-	U.oncePer(deltaJs.constructor, 'application conditions', () => {
-
-		U.extend(deltaJs.constructor.prototype, {
-
+		extend(deltaJs.constructor.prototype, {
 			select(...features) {
 				features.forEach((feature) => {
 					if (Array.isArray(feature)) {
@@ -30,8 +17,16 @@ export default (deltaJs) => {
 					}
 				});
 			}
-
 		});
 
 	});
-};
+
+
+	extend(deltaJs.Delta.prototype, {
+		get applicationCondition() { return this._applicationCondition },
+		set applicationCondition(ac) { this._applicationCondition = ac },
+		get selected() { return isUndefined(this.applicationCondition) || this.applicationCondition.selected }
+	});
+
+
+});
