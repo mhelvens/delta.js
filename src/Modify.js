@@ -11,6 +11,7 @@ export default oncePer('Modify', (deltaJs) => {
 	define_ContainerProxy(deltaJs);
 
 
+	//noinspection JSUnusedLocalSymbols
 	deltaJs.newOperationType('Modify', class Modify extends deltaJs.Delta {
 
 		constructor(...args) {
@@ -86,7 +87,7 @@ export default oncePer('Modify', (deltaJs) => {
 
 		/** {@public}{@method}
 		 * @param delta   {DeltaJs#Delta}
-		 * @param options {Object}
+		 * @param options {{path: Path}}
 		 * @return {DeltaJs#Proxy} - the deepest proxy created for this operation
 		 */
 		addOperation(delta, options) {

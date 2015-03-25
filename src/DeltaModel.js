@@ -16,6 +16,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 	define_ContainerProxy(deltaJs);
 
 
+	//noinspection JSUnusedLocalSymbols
 	deltaJs.newOperationType('DeltaModel', class DeltaModel extends deltaJs.Delta {
 
 		constructor(...args) {
@@ -103,7 +104,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/** {@public}{@method}
 		 * @param delta   {DeltaJs#Delta}
-		 * @param options {Object}
+		 * @param options {{path: Path, name: string, feature: boolean}}
 		 * @return {DeltaJs#Proxy}
 		 */
 		addOperation(delta, options) {
@@ -112,7 +113,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			/* create application condition and optional eponymous linked feature */
 			if (!this._childApplicationConditions[name]) {
 				let appCond;
-				if (feature) { appCond = deltaJs.newFeature(  name,            options                             ) }
+				if (feature) { appCond = deltaJs.newFeature(  name,            options                           ) }
 				else         { appCond = deltaJs.newFeature( `delta__${name}`, extend({ hidden: true }, options) ) }
 				if (isDefined(options['resolves'])) {
 					appCond.if(options['resolves']);
