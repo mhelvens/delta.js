@@ -54,6 +54,24 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			return str;
 		}
 
+		/** {@public}{@method}
+		 *
+		 */
+		conflicts() {
+			/* clone the graph */
+			var g = this.graph.clone();
+
+			/* source and sink keys */
+			var source = 'source', sink = 'sink';
+			while (g.hasVertex(source)) { source = `${source}'` }
+			while (g.hasVertex(sink))   { sink   = `${sink}'`   }
+
+			/* source and sink nodes */
+
+
+		}
+
+
 		// TODO: add precondition method which checks 'source' deltas
 
 	}, class DeltaModelProxy extends deltaJs.ContainerProxy {
