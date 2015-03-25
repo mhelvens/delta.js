@@ -1,7 +1,8 @@
 /* import internal stuff */
-import U, {extend, oncePer}                 from './util.js';
+import {extend, oncePer}                    from './util.js';
 import {ReadableTarget, wt}                 from './Target.js';
 import {ApplicationError, CompositionError} from './Error.js';
+import define_Composed                      from './Composed.js';
 
 
 export default oncePer('Delta', (deltaJs) => {
@@ -25,7 +26,7 @@ export default oncePer('Delta', (deltaJs) => {
 	deltaJs.Delta = class Delta {
 
 		constructor(...args) {
-			this.id = ++Delta._nextID;
+			this.id = ++deltaJs.Delta._nextID;
 			this.args = args;
 		}
 
@@ -100,7 +101,6 @@ export default oncePer('Delta', (deltaJs) => {
 		 */
 		static composed(...deltas) {
 			var result = new deltaJs.Delta.NoOp();
-
 			deltas.forEach((delta) => {
 				var d1 = result,
 				    d2 = delta || new deltaJs.Delta.NoOp();
@@ -120,26 +120,22 @@ export default oncePer('Delta', (deltaJs) => {
 				/*  if no composition function is found, use a linear delta model  */
 				/*  to 'naively' have one delta apply after another                */
 				if (composeFn === true) {
-					composeFn = (d1, d2) => {
-						var result = new deltaJs.Delta.DeltaModel();
-						result.graph.addNewVertex(1, d1);
-						result.graph.addNewVertex(2, d2);
-						result.graph.addNewEdge(1, 2);
-						return result;
-					};
-					// TODO: make a new dedicated delta type for this; DeltaModel is overkill
+					composeFn = (d1, d2) => new deltaJs.Delta.Composed([d1, d2]);
 				}
 
 				/* return the result on success */
 				result = composeFn(d1, d2);
 			});
-
 			return result;
 		}
 
 	};
 	deltaJs.Delta._nextID = 0;
 	deltaJs.Delta._compositions  = []; // [{precondition, composeFn}]
+
+
+	/* define deltaJs.Delta.Composed for use in compositions */
+	define_Composed(deltaJs);
 
 
 });
