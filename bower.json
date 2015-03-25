@@ -11,8 +11,5 @@
 	"license": "MIT",
 	"dependencies": {
 		"js-graph": "^0.5.0"
-	},
-	"devDependencies": {
-		"jquery": "~2.1.1"
 	}
 }
