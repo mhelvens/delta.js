@@ -1,8 +1,8 @@
 /* import internal stuff */
-import U, {isDefined, t, define_d, oncePer} from './util.js';
-import define_Modify                        from './Modify.js';
-import define_basicOperations               from './basicOperations.js';
-import define_Proxy                         from './Proxy.js';
+import {isDefined, t, define_d, oncePer, arraysEqual} from './util.js';
+import define_Modify                                  from './Modify.js';
+import define_basicOperations                         from './basicOperations.js';
+import define_Proxy                                   from './Proxy.js';
 
 
 export default oncePer('PutIntoArray', (deltaJs) => {
@@ -15,16 +15,25 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 
 	/* declaring the array operation type ***********************************************/
 	deltaJs.newOperationType('PutIntoArray', class PutIntoArray extends deltaJs.Delta {
+
 		constructor(...args) {
 			super(...args);
 			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : [];
 		}
+
 		clone() {
 			var result = super.clone();
 			result.values = [...this.values];
 			return result;
 		}
+
+		equals(other) {
+			return arraysEqual(this.values, other.values,
+				(a, b) => a.method === b.method && a.value && b.value);
+		}
+
 		precondition(target) { return isDefined(target.value) && Array.isArray(target.value) }
+
 		applyTo(target) {
 			var arr = target.value;
 			this.values.forEach(({method, value}) => {
@@ -45,7 +54,9 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 				}
 			});
 		}
+
 		get methods() { return [] }
+
 	});
 
 

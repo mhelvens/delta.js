@@ -3,11 +3,11 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import {extend, isDefined, indent, oncePer} from './util.js';
-import Path                                 from './Path.js';
-import define_Modify                        from './Modify.js';
-import define_ContainerProxy                from './ContainerProxy.js';
-import {ApplicationOrderCycle}              from './Error.js';
+import {extend, isDefined, indent, oncePer, o, graphDescendants} from './util.js';
+import Path                                    from './Path.js';
+import define_Modify                           from './Modify.js';
+import define_ContainerProxy                   from './ContainerProxy.js';
+import {ApplicationOrderCycle}                 from './Error.js';
 
 
 export default oncePer('DeltaModel', (deltaJs) => {
@@ -31,6 +31,40 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				result.graph.setVertex(id, delta.clone());
 			});
 			return result;
+		}
+
+		equals(other) {
+			var g1 = this .graph.transitiveReduction();
+			var g2 = other.graph.transitiveReduction();
+			var result = true;
+			g1.eachVertex((n1, d1) => {
+				if (g2.vertexValue(n1).equals(d1)) {
+					result = false;
+					return false;
+				}
+			});
+			if (!result) { return false }
+			g2.eachVertex((n2, d2) => {
+				if (g1.vertexValue(n2).equals(d2)) {
+					result = false;
+					return false;
+				}
+			});
+			if (!result) { return false }
+			g1.eachEdge((n1From, n1To) => {
+				if (g2.hasEdge(n1From, n1To)) {
+					result = false;
+					return false;
+				}
+			});
+			if (!result) { return false }
+			g1.eachEdge((n2From, n2To) => {
+				if (g1.hasEdge(n2From, n2To)) {
+					result = false;
+					return false;
+				}
+			});
+			return result; // TODO: move 'equals' method to the js-graph library (and make more efficient)
 		}
 
 		applyTo(target, options = {}) {
@@ -63,15 +97,81 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			var g = this.graph.clone();
 
 			/* source and sink keys */
-			var source = 'source', sink = 'sink';
-			while (g.hasVertex(source)) { source = `${source}'` }
-			while (g.hasVertex(sink))   { sink   = `${sink}'`   }
+			var sink = '(sink)';
+			while (g.hasVertex(sink)) { sink = `${sink}'` }
 
-			/* source and sink nodes */
+			/* create sink vertex, connect it to all other vertices */
+			g.addNewVertex(sink, null);
+			g.eachVertex((name) => {
+				g.setVertex(name, null);
+				if (name !== sink) { g.ensureEdge(name, sink) }
+			});
+
+			/* transitive reduction */
+			g = g.transitiveReduction();
+
+			/* for each delta, gather its ancestors and register through which predecessor they may be reached */
+			var resolutions = {}; // first -> second -> possible-resolving-delta -> true
+			var getResolutionsIn = (name) => {
+				if (g.vertexValue(name)) { return }
+
+				/* find ancestors */
+				var ancestors = {};
+				g.predecessors(name).forEach((pred) => {
+					getResolutionsIn(pred);
+					ancestors[pred] = { [pred]: true };
+					var predAncestors = g.vertexValue(pred);
+					extend(ancestors[pred], ...Object.keys(predAncestors).map(ppred => predAncestors[ppred]));
+				});
+				g.setVertex(name, ancestors);
+
+				/* find 'incomparable' deltas, plus the first delta that is 'greater' than both */
+				Object.keys(ancestors).forEach((pred1) => {
+					Object.keys(ancestors).forEach((pred2) => {
+						if (pred1 >= pred2) { return } // make sure pred1 < pred2
+						var ancs1 = extend({}, ancestors[pred1]);
+						var ancs2 = extend({}, ancestors[pred2]);
+						Object.keys(ancs1).forEach((anc1) => {
+							Object.keys(ancs2).forEach((anc2) => {
+								if (anc1 === anc2) {
+									delete ancs1[anc1];
+									delete ancs2[anc2];
+								}
+							});
+						});
+						Object.keys(ancs1).forEach((anc1) => {
+							Object.keys(ancs2).forEach((anc2) => {
+								o(resolutions, ...[anc1, anc2].sort())[name] = true;
+							});
+						});
+					});
+				});
+			};
+			getResolutionsIn(sink);
 
 
+			var result = [];
+			Object.keys(resolutions).forEach((first) => {
+				Object.keys(resolutions[first]).forEach((second) => {
+					var x = this.graph.vertexValue(first);
+					var y = this.graph.vertexValue(second);
+					if (!x.composedWith(y).equals(y.composedWith(x))) {
+						result.push({ deltas: [x, y] });
+						// TODO: see if conflicts are resolved:
+						//graphDescendants(g, firstResolver).forEach((resolver) => {
+						//
+						//});
+					}
+				});
+			});
+
+
+			// TODO: remove test code
+			console.log(JSON.stringify(result, null, 4));
+
+
+			return result;
 		}
-
 
 		// TODO: add precondition method which checks 'source' deltas
 

@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {extend, indent, t, oncePer} from './util.js';
+import {extend, indent, t, oncePer, objectsEqual} from './util.js';
 import Path                         from './Path.js';
 import {wt}                         from './Target.js';
 import define_ContainerProxy        from './ContainerProxy.js';
@@ -20,7 +20,7 @@ export default oncePer('Modify', (deltaJs) => {
 			extend(this.subDeltas, this.arg || {});
 		}
 
-		/** {@public}{@abstract}{@method}{@nosideeffects}
+		/** {@public}{@method}{@nosideeffects}
 		 * @return {DeltaJs#Delta.Modify} - a clone of this delta
 		 */
 		clone() {
@@ -29,6 +29,10 @@ export default oncePer('Modify', (deltaJs) => {
 				result.subDeltas[prop] = this.subDeltas[prop].clone();
 			});
 			return result;
+		}
+
+		equals(other) {
+			return objectsEqual(this.subDeltas, other.subDeltas, (d1, d2) => d1.equals(d2));
 		}
 
 		/** {@public}{@method}
@@ -44,7 +48,7 @@ export default oncePer('Modify', (deltaJs) => {
 			Object.keys(this.subDeltas).forEach((prop) => {
 				if (!options.restrictToProperty || options.restrictToProperty === prop) {
 					this.subDeltas[prop].applyTo(wt(target.value, prop),
-							extend({}, options, { restrictToProperty: null }));
+						extend({}, options, { restrictToProperty: null }));
 				}
 			});
 		}

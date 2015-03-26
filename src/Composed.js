@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {indent, oncePer}       from './util.js';
+import {indent, oncePer, arraysEqual} from './util.js';
 
 
 export default oncePer('Composed', (deltaJs) => {
@@ -20,6 +20,10 @@ export default oncePer('Composed', (deltaJs) => {
 			var result = super.clone();
 			result._components = this._components.map((delta) => delta.clone());
 			return result;
+		}
+
+		equals(other) {
+			return arraysEqual(this._components, other._components, (d1, d2) => d1.equals(d2));
 		}
 
 		applyTo(target, options = {}) {

@@ -1875,6 +1875,26 @@ describe("DeltaJs instance", function () {
 				}
 			]]);
 
+
+
+
+			it("TEST", () => {
+				dm.do('1'                       ).replace('o.x', 'value1');
+				dm.do('2'                       ).replace('o.x', 'value2');
+				dm.do('3'                       ).modify('o');
+				dm.do('4', { after: ['1']      }).modify('o');
+				dm.do('5', { after: ['1']      }).modify('o');
+				dm.do('6', { after: ['2', '3'] }).modify('o');
+				dm.do('7', { after: ['4']      }).modify('o');
+				dm.do('8', { after: ['5', '6'] }).modify('o');
+
+				dm.delta().conflicts();
+			});
+
+
+
+
+
 		});
 
 

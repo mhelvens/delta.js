@@ -1,6 +1,3 @@
-import U from './util.js';
-
-
 export class ReadableTarget {
 	constructor(value) { this._val = value }
 	getValue() { return this._val }

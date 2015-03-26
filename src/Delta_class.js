@@ -57,8 +57,8 @@ export default oncePer('Delta', (deltaJs) => {
 		}
 
 		/** {@public}{@method}{@nosideeffects}
-		 * @param  value   {*}       - any given value
-		 * @param  options {object?} - the (optional) options for this delta application
+		 * @param value   {*}       - any given value
+		 * @param options {object?} - the (optional) options for this delta application
 		 * @return {*} - the value resulting in this delta being applied to the given `value`
 		 */
 		appliedTo(value, options = {}) {

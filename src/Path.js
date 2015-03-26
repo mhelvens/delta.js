@@ -1,4 +1,4 @@
-import U, {assert, isDefined} from './util.js';
+import {assert, isDefined} from './util.js';
 
 
 export default class Path {

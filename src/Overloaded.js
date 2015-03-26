@@ -1,6 +1,6 @@
 /* import internal stuff */
-import define_Delta from './Delta_class.js';
-import U, {indent, oncePer} from './util.js';
+import define_Delta                   from './Delta_class.js';
+import {indent, oncePer, arraysEqual} from './util.js';
 import {MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError,
 		MultipleOverloadsCompositionError} from './Error.js';
@@ -19,13 +19,17 @@ export default oncePer('Overloaded', (deltaJs) => {
 			this.overloads = this.arg || [];
 		}
 
-		/** {@public}{@abstract}{@method}{@nosideeffects}
+		/** {@public}{@method}{@nosideeffects}
 		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
 		 */
 		clone() {
 			var result = super.clone();
 			result.overloads = this.overloads.map(delta => delta.clone());
 			return result;
+		}
+
+		equals(other) {
+			return arraysEqual(this.overloads, other.overloads, (d1, d2) => d1.equals(d2));
 		}
 
 		/** {@public}{@method}

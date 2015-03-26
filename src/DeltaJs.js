@@ -3,7 +3,7 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import {extend, assert, isUndefined}            from './util.js';
+import {extend, assert, isUndefined, isDefined, arraysEqual} from './util.js';
 import Path                                     from './Path.js';
 import {ReadableTarget, WritableTarget, rt, wt} from './Target.js';
 import define_Delta                             from './Delta_class.js';
@@ -65,6 +65,7 @@ export default class DeltaJs {
 
 		/* fetch the given applyTo function (if any) which will be slightly modified */
 		var givenApplyTo = DeltaClass.prototype.applyTo || (()=>{});
+		var givenEquals  = DeltaClass.prototype.equals;
 
 		/* augment the class prototype */
 		extend(DeltaClass.prototype, {
@@ -83,6 +84,14 @@ export default class DeltaJs {
 
 				/* OK, then apply it if a method to do so was included in the operation */
 				givenApplyTo.call(this, target, options);
+			},
+			equals(other) {
+				if (this.type !== other.type) { return false }
+				if (isDefined(givenEquals)) {
+					return givenEquals.call(this, other);
+				} else {
+					return arraysEqual(this.args, other.args);
+				}
 			},
 			type: name
 		});

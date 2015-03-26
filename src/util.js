@@ -13,7 +13,7 @@ export function extend(obj1, ...rest) {
 }
 
 
-export function dfault(object, ...rest) {
+function dfault(object, ...rest) {
 	var keys = rest.slice(0, -1);
 	var def = rest[rest.length-1];
 	if (keys.length === 0) { return object }
@@ -23,11 +23,7 @@ export function dfault(object, ...rest) {
 	}
 	return last[keys[keys.length-1]];
 }
-
-
 export function o(object, ...keys) { return dfault(object, ...keys, {}) }
-
-
 export function a(object, ...keys) { return dfault(object, ...keys, []) }
 
 
@@ -91,7 +87,31 @@ export var define_d = (deltaJs) => (type, fn) => {
 };
 
 
+export function arraysEqual(a, b, eq=(x,y)=>x===y) {
+	if (a.length !== b.length) { return false }
+	for (let i = 0; i < a.length; ++i) {
+		if (!eq(a[i], b[i])) { return false }
+	}
+	return true;
+}
 
 
+export function objectsEqual(a, b, eq=(x,y)=>x===y) {
+	var aKeys = Object.keys(a);
+	var bKeys = Object.keys(b);
+	if (aKeys.length !== bKeys.length) { return false }
+	aKeys.sort();
+	bKeys.sort();
+	for (let i = 0; i < aKeys.length; ++i) {
+		if (aKeys[i] !== bKeys[i])         { return false }
+		if (!eq(a[aKeys[i]], b[bKeys[i]])) { return false }
+	}
+	return true;
+}
 
 
+export function graphDescendants(graph, key) {
+	return Object.keys((function succDescendants(key) {
+		return extend({ [key]: true }, ...graph.successors(key).map(succ => succDescendants(succ)));
+	})(key));
+}

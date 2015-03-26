@@ -1,9 +1,9 @@
 /* import internal stuff */
-import {isUndefined, isDefined, t, define_d, oncePer} from './util.js';
-import {WritableTarget}                               from './Target.js';
-import define_Modify                                  from './Modify.js';
-import define_BasicOperations                         from './basicOperations.js';
-import define_Proxy                                   from './Proxy.js';
+import {isUndefined, isDefined, t, define_d, oncePer, arraysEqual} from './util.js';
+import {WritableTarget}                                            from './Target.js';
+import define_Modify                                               from './Modify.js';
+import define_BasicOperations                                      from './basicOperations.js';
+import define_Proxy                                                from './Proxy.js';
 
 
 export default oncePer('PutIntoFunction', (deltaJs) => {
@@ -16,19 +16,28 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 
 	/* declaring the function operation type */
 	deltaJs.newOperationType('PutIntoFunction', class PutIntoFunction extends deltaJs.Delta {
+
 		constructor(...args) {
 			super(...args);
 			this.values = this.arg ? (Array.isArray(this.arg) ? this.arg : [this.arg]) : [];
 		}
+
 		clone() {
 			var result = super.clone();
 			result.values = [...this.values];
 			return result;
 		}
+
+		equals(other) {
+			return arraysEqual(this.values, other.values,
+				(a, b) => a.method === b.method && a.value && b.value);
+		}
+
 		precondition(target) {
 			return isDefined(target.value) && typeof target.value === 'function' &&
 				(isDefined(target.value._DeltaJs_functions) || target instanceof WritableTarget);
 		}
+
 		applyTo(target) {
 			if (isUndefined(target.value._DeltaJs_functions)) {
 				var originalFn = target.value;
@@ -62,7 +71,9 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 				}
 			});
 		}
+
 		get methods() { return [] }
+
 	});
 
 
