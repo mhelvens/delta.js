@@ -135,15 +135,15 @@ export default oncePer('features', (deltaJs) => {
 
 	/* restrictions and connections */
 	const FEATURE_CONNECTIONS = [
-		[ 'if',         [_addIf, _addRequiredBy]             ], // this selected by other
-		[ 'onlyIf',     [_addOnlyIf]                         ], // error if this but not other
-		[ 'selects',    [_addSelects, _addOnlyIf]            ], // other selected by this
-		[ 'requiredBy', [_addRequiredBy]                     ], // error if other but not this
-		[ 'iff',        [_addIf, _addRequiredBy, _addOnlyIf] ]  // if and onlyIf
+		[ 'if',         [_addIf]             ], // this selected by other
+		[ 'onlyIf',     [_addOnlyIf]         ], // error if this but not other
+		[ 'selects',    [_addSelects]        ], // other selected by this
+		[ 'requiredBy', [_addRequiredBy]     ], // error if other but not this
+		[ 'iff',        [_addIf, _addOnlyIf] ]  // if and onlyIf
 	];
-	deltaJs.Feature.prototype.addOption = function (name, value) {
-		FEATURE_CONNECTIONS.forEach(([n, methods]) => {
-			if (name === n) {
+	deltaJs.Feature.prototype.addOption = function (optionName, value) {
+		FEATURE_CONNECTIONS.forEach(([connectionName, methods]) => {
+			if (optionName === connectionName) {
 				methods.forEach((method) => { method(this.name, value) });
 			}
 		});

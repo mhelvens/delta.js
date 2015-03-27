@@ -2093,7 +2093,7 @@ describe("DeltaJs instance", function () {
 			});
 
 			it("can automatically select other features when selected: 'selects' by reference", () => {
-				e.selects(e);
+				e.selects(f);
 				f.selects(g);
 				g.selects(h);
 				expectAllUnselected();
@@ -2105,7 +2105,7 @@ describe("DeltaJs instance", function () {
 			});
 
 			it("can automatically select other features when selected: 'selects' by name", () => {
-				e.selects('e');
+				e.selects('f');
 				f.selects('g');
 				g.selects('h');
 				expectAllUnselected();
@@ -2170,6 +2170,12 @@ describe("DeltaJs instance", function () {
 				g.select();
 				expect(f.selected).toBeTruthy();
 				expect(g.selected).toBeTruthy();
+			});
+
+			it("will not throw an error when constraints on other features are properly met (regression 1)", () => {
+				g.if(['f', 'h']);
+				f.if(true);
+				expect(() => f.selected).not.toThrow();
 			});
 
 		});
