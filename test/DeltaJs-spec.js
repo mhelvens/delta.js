@@ -1,52 +1,44 @@
 'use strict';
 
 
-describe("DeltaJs constructor", function () {
+describe("DeltaJs constructor", () => {
 
-	it("is present", function () {
+	it("is present", () => {
 		expect(DeltaJs).toEqual(any(Function));
 	});
 
-	it("never throws any exception", function () {
-		expect(function () {
-			return new DeltaJs();
-		}).not.toThrow();
+	it("never throws any exception", () => {
+		expect(() => new DeltaJs()).not.toThrow();
 	});
 
-	it("returns an object of type DeltaJs", function () {
-		var deltaJs = new DeltaJs();
-		expect(deltaJs).toEqual(any(DeltaJs));
+	it("returns an object of type DeltaJs", () => {
+		expect(new DeltaJs()).toEqual(any(DeltaJs));
 	});
 
 });
 
 
-describe("DeltaJs instance", function () {
+describe("DeltaJs instance -", function () {
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	/* from here on, every test starts with a fresh DeltaJs instance */
 	var deltaJs;
 	beforeEach(() => {
 		deltaJs = new DeltaJs();
 	});
 
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function ExpectedError(type, content) {
-		this.type = type;
-		this.content = content;
-	}
+	/* declare a delta variable accessible to every test */
+	var delta; // the itCan test is done on this 'delta' variable
 
-	function expectError(type, content) { return new ExpectedError(type, content) }
-
-	var _afterAction;
-	beforeEach(() => {
-		_afterAction = ()=>{};
-	});
-	function afterAction(fn) {
-		_afterAction = fn;
-	}
-
+	/*  a convenience function for testing that delta through 'triples',        */
+	/*  a nice notation for a bunch of similar tests specified in three parts:  */
+	/*  (1) precondition: some value before applying the delta                  */
+	/*  (2) action: building up the delta                                       */
+	/*  (3) postcondition: the value after delta-application, or an expected    */
+	/*      error, or any custom set of assertions                              */
 	function _itCan(fn) {
 		return function (description, triples) {
 			var counter = 0;
@@ -56,7 +48,7 @@ describe("DeltaJs instance", function () {
 					var rootObj = typeof pre === 'function' ? pre() : pre;
 
 					/* creating the delta through the given code */
-					if (post instanceof ExpectedError && post.type !== DeltaJs.ApplicationError) {
+					if (post instanceof ExpectedError && !(post.type.prototype instanceof DeltaJs.ApplicationError)) {
 						expect(() => {
 							action();
 							_afterAction();
@@ -66,7 +58,7 @@ describe("DeltaJs instance", function () {
 						_afterAction();
 
 						/* applying the delta to the given 'pre' value */
-						if (post instanceof ExpectedError && post.type === DeltaJs.ApplicationError) {
+						if (post instanceof ExpectedError) {
 							expect(() => { delta.applyTo(rootObj) }).toThrowSpecific(post.type, post.content);
 						} else {
 							delta.applyTo(rootObj);
@@ -81,19 +73,21 @@ describe("DeltaJs instance", function () {
 			});
 		};
 	}
-
-	var delta; // the itCan test is done on this 'delta' variable
 	var itCan  = _itCan(it);
 	var xitCan = _itCan(xit);
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/* a function for specifying any code to be run after each action but before applying the delta */
+	var _afterAction;
+	beforeEach(() => { _afterAction = ()=>{} });
+	function afterAction(fn) { _afterAction = fn }
 
-	/* set up a few functions that can be tracked */
-	var callLog;
-	var fA = (...args) => { callLog.push(['fA', args]) };
-	var fB = (...args) => { callLog.push(['fB', args]) };
-	var fC = (...args) => { callLog.push(['fC', args]) };
-	beforeEach(() => { callLog = [] });
+	/* a way to specify an expected error thrown */
+	function ExpectedError(type, content) {
+		this.type = type;
+		this.content = content;
+	}
+	function expectError(type, content) { return new ExpectedError(type, content) }
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -148,7 +142,7 @@ describe("DeltaJs instance", function () {
 			], [
 				{ key: "val" },
 				() => { delta.subDeltas['key'] = new deltaJs.Delta.Add("bar") },
-				expectError(DeltaJs.ApplicationError)
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("remove an existing field from an object", [[
@@ -178,7 +172,7 @@ describe("DeltaJs instance", function () {
 			], [
 				{ foo: "bar" },
 				() => { delta.subDeltas['absentKey'] = new deltaJs.Delta.Remove() },
-				expectError(DeltaJs.ApplicationError)
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("forbid a field from being in an object", [[
@@ -196,7 +190,7 @@ describe("DeltaJs instance", function () {
 			], [
 				{ key: "val", foo: "bar" },
 				() => { delta.subDeltas['key'] = new deltaJs.Delta.Forbid() },
-				expectError(DeltaJs.ApplicationError)
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("replace an existing field in an object", [[
@@ -226,7 +220,7 @@ describe("DeltaJs instance", function () {
 			], [
 				{ foo: "bar" },
 				() => { delta.subDeltas['absentKey'] = new deltaJs.Delta.Replace("BAS") },
-				expectError(DeltaJs.ApplicationError)
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("update an existing field in an object using the old value", [[
@@ -321,7 +315,7 @@ describe("DeltaJs instance", function () {
 					});
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val" },
 				() => {
@@ -374,7 +368,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val", foo: "whatever" },
 				() => {
@@ -390,7 +384,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val", foo: "whatever" },
 				() => {
@@ -406,7 +400,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val" },
 				() => {
@@ -422,7 +416,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val" },
 				() => {
@@ -438,7 +432,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden (twice), but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden (twice), but was present
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
@@ -454,7 +448,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val" },
 				() => {
@@ -470,7 +464,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
@@ -490,7 +484,7 @@ describe("DeltaJs instance", function () {
 					});
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val", level1: "oldValue" },
 				() => {
@@ -533,7 +527,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
@@ -549,7 +543,7 @@ describe("DeltaJs instance", function () {
 					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
 					delta = d1.composedWith(d2);
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val" },
 				() => {
@@ -782,10 +776,6 @@ describe("DeltaJs instance", function () {
 
 		});
 
-
-
-
-
 	});
 
 
@@ -794,92 +784,89 @@ describe("DeltaJs instance", function () {
 
 	describe("delta proxies", () => {
 
+		// These tests basically do the algebraic tests again, but we are building the deltas through a proxy.
 
-		var d;
+		var proxy;
 		beforeEach(() => {
+			proxy = new deltaJs.Delta.Modify().do();
 			afterAction(() => {
-				delta = d.delta();
+				delta = proxy.delta();
 			});
 		});
 
-
 		describe("object operations", () => {
-
-			beforeEach(() => {
-				d = new deltaJs.Delta.Modify().do();
-			});
 
 			itCan("add a new field to an object", [[
 				{},
-				() => { d.add('foo', "bar") },
+				() => { proxy.add('foo', "bar") },
 				{ foo: "bar" }
 			], [
 				{ key: "val" },
-				() => { d.add('foo', "bar") },
+				() => { proxy.add('foo', "bar") },
 				{ key: "val", foo: "bar" }
 			], [
 				{ key: "val" },
-				() => { d.add('key', "bar") },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.add('key', "bar") },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("remove an existing field from an object", [[
 				{ foo: "bar" },
-				() => { d.remove('foo') },
+				() => { proxy.remove('foo') },
 				{}
 			], [
 				{ key: "val", foo: "bar" },
-				() => { d.remove('foo') },
+				() => { proxy.remove('foo') },
 				{ key: "val" }
 			], [
 				{ foo: "bar" },
-				() => { d.remove('key') },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.remove('key') },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("forbid a field from being in an object", [[
 				{ foo: "bar" },
-				() => { d.forbid('key') },
+				() => { proxy.forbid('key') },
 				{ foo: "bar" }
 			], [
 				{ key: "val", foo: "bar" },
-				() => { d.forbid('key') },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.forbid('key') },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("replace an existing field in an object", [[
 				{ foo: "bar" },
-				() => { d.replace('foo', "BAS") },
+				() => { proxy.replace('foo', "BAS") },
 				{ foo: "BAS" }
 			], [
 				{ key: "val", foo: "bar" },
-				() => { d.replace('foo', "BAS") },
+				() => { proxy.replace('foo', "BAS") },
 				{ key: "val", foo: "BAS" }
 			], [
 				{ foo: "bar" },
-				() => { d.replace('key', "BAS") },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.replace('key', "BAS") },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("update an existing field in an object using the old value", [[
 				{ foo: "bar" },
-				() => { d.update('foo', old => `${old}-BAS`) },
+				() => { proxy.update('foo', old => `${old}-BAS`) },
 				{ foo: "bar-BAS" }
 			], [
 				{ key: "val", foo: "bar" },
-				() => { d.update('foo', old => `${old}-BAS`) },
+				() => { proxy.update('foo', old => `${old}-BAS`) },
 				{ key: "val", foo: "bar-BAS" }
 			], [
 				{ obj: { foo: "bar" } },
-				() => { d.update('obj.foo', old => `${old}-BAS`) },
+				() => { proxy.update('obj.foo', old => `${old}-BAS`) },
 				{ obj: { foo: "bar-BAS" } }
 			], [
 				{ obj: { key: "val", foo: "bar" } },
-				() => { d.update('obj.foo', old => `${old}-BAS`) },
+				() => { proxy.update('obj.foo', old => `${old}-BAS`) },
 				{ obj: { key: "val", foo: "bar-BAS" } }
 			], [
 				{ fn(x) { return `(${x})` } },
-				() => { d.update('fn', old => x => `-${old(x)}-`) },
+				() => { proxy.update('fn', old => x => `-${old(x)}-`) },
 				(obj) => { expect(obj.fn("message")).toEqual("-(message)-") }
 			]]);
 
@@ -889,302 +876,412 @@ describe("DeltaJs instance", function () {
 
 		});
 
-
 		describe("composite object operations", () => {
-
-			beforeEach(() => {
-				d = new deltaJs.Delta.Modify().do();
-			});
 
 			itCan("correctly modify objects when the composition is valid", [[
 				{ key: "val" },
 				() => {
-					d.add('foo1', "bar1");
-					d.add('foo2', "bar2");
+					proxy.add('foo1', "bar1");
+					proxy.add('foo2', "bar2");
 				},
 				{ key: "val", foo1: "bar1", foo2: "bar2" }
 			], [
 				{ key: "val", key1: "val1", key2: "val2" },
 				() => {
-					d.remove('key1');
-					d.remove('key2');
+					proxy.remove('key1');
+					proxy.remove('key2');
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d.forbid('foo1');
-					d.forbid('foo2');
+					proxy.forbid('foo1');
+					proxy.forbid('foo2');
 				},
 				{ key: "val" }
 			], [
 				{ key1: "val1", key2: "val2" },
 				() => {
-					d.replace('key1', "VAL1");
-					d.replace('key2', "VAL2");
+					proxy.replace('key1', "VAL1");
+					proxy.replace('key2', "VAL2");
 				},
 				{ key1: "VAL1", key2: "VAL2" }
 			], [
 				{ key: "val" },
 				() => {
-					d.add('foo', {});
-					d.modify('foo').add('bar', "bas");
+					proxy.add('foo', {});
+					proxy.modify('foo').add('bar', "bas");
 				},
 				{ key: "val", foo: { bar: "bas" } }
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
-					d.add('foo', {});
-					d.modify('foo').add('bar', "bas");
+					proxy.add('foo', {});
+					proxy.modify('foo').add('bar', "bas");
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val" },
 				() => {
 					// a more complex / deep version of 'add' composed with 'modify'
-					d.add('level1', { level2: {} });
-					d.add('level1.level2.sideLevel', "final");
-					d.modify('level1.level2').add('level3', {});
-					d.modify('level1').modify('level2.level3').add('level4', "final");
+					proxy.add('level1', { level2: {} });
+					proxy.add('level1.level2.sideLevel', "final");
+					proxy.modify('level1.level2').add('level3', {});
+					proxy.modify('level1').modify('level2.level3').add('level4', "final");
 				},
 				{ key: "val", level1: { level2: { sideLevel: "final", level3: { level4: "final" } } } }
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d.modify('foo').add('newKey', "newVal");
-					d.remove('foo');
+					proxy.modify('foo').add('newKey', "newVal");
+					proxy.remove('foo');
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d.add('foo', "bar");
-					d.remove('foo');
+					proxy.add('foo', "bar");
+					proxy.remove('foo');
 				},
 				{ key: "val" }
 			], [
 				{ key: "val", foo: "whatever" },
 				() => {
-					d.add('foo', "bar");
-					d.remove('foo');
+					proxy.add('foo', "bar");
+					proxy.remove('foo');
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val", foo: "whatever" },
 				() => {
-					d.remove('foo');
-					d.add('foo', "bar");
+					proxy.remove('foo');
+					proxy.add('foo', "bar");
 				},
 				{ key: "val", foo: "bar" }
 			], [
 				{ key: "val" },
 				() => {
-					d.remove('foo');
-					d.add('foo', "bar");
+					proxy.remove('foo');
+					proxy.add('foo', "bar");
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val", foo: "whatever" },
 				() => {
-					d.remove('foo');
-					d.forbid('foo');
+					proxy.remove('foo');
+					proxy.forbid('foo');
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d.remove('foo');
-					d.forbid('foo');
+					proxy.remove('foo');
+					proxy.forbid('foo');
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val" },
 				() => {
-					d.forbid('foo');
-					d.add('foo', "bar");
+					proxy.forbid('foo');
+					proxy.add('foo', "bar");
 				},
 				{ key: "val", foo: "bar" }
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
-					d.forbid('foo');
-					d.add('foo', "bar");
+					proxy.forbid('foo');
+					proxy.add('foo', "bar");
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val" },
 				() => {
-					d.forbid('foo');
-					d.forbid('foo');
+					proxy.forbid('foo');
+					proxy.forbid('foo');
 				},
 				{ key: "val" }
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
-					d.forbid('foo');
-					d.forbid('foo');
+					proxy.forbid('foo');
+					proxy.forbid('foo');
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden (twice), but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden (twice), but was present
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d.modify('foo');
-					d.replace('foo', "newValue");
+					proxy.modify('foo');
+					proxy.replace('foo', "newValue");
 				},
 				{ key: "val", foo: "newValue" }
 			], [
 				{ key: "val" },
 				() => {
-					d.modify('foo');
-					d.replace('foo', "newValue");
+					proxy.modify('foo');
+					proxy.replace('foo', "newValue");
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val" },
 				() => {
-					d.add('foo', "oldValue");
-					d.replace('foo', "newValue");
+					proxy.add('foo', "oldValue");
+					proxy.replace('foo', "newValue");
 				},
 				{ key: "val", foo: "newValue" }
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d.add('foo', "oldValue");
-					d.replace('foo', "newValue");
+					proxy.add('foo', "oldValue");
+					proxy.replace('foo', "newValue");
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
-					d.replace('foo', {});
-					d.modify('foo').add('bar', "bas");
+					proxy.replace('foo', {});
+					proxy.modify('foo').add('bar', "bas");
 				},
 				{ key: "val", foo: { bar: "bas" } }
 			], [
 				{ key: "val" },
 				() => {
-					d.replace('foo', {});
-					d.modify('foo').add('bar', "bas");
+					proxy.replace('foo', {});
+					proxy.modify('foo').add('bar', "bas");
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val", level1: "oldValue" },
 				() => {
 					// a more complex / deep version of 'replace' composed with 'modify'
-					d.replace('level1', { level2: {} });
-					d.add('level1.level2.sideLevel', "final");
-					d.modify('level1.level2').add('level3', {});
-					d.modify('level1').modify('level2.level3').add('level4', "final");
+					proxy.replace('level1', { level2: {} });
+					proxy.add('level1.level2.sideLevel', "final");
+					proxy.modify('level1.level2').add('level3', {});
+					proxy.modify('level1').modify('level2.level3').add('level4', "final");
 				},
 				{ key: "val", level1: { level2: { sideLevel: "final", level3: { level4: "final" } } } }
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d.replace('foo', "newValue");
-					d.remove('foo');
+					proxy.replace('foo', "newValue");
+					proxy.remove('foo');
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d.replace('foo', "newValue");
-					d.remove('foo');
+					proxy.replace('foo', "newValue");
+					proxy.remove('foo');
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d.replace('foo', "oldValue");
-					d.replace('foo', "newValue");
+					proxy.replace('foo', "oldValue");
+					proxy.replace('foo', "newValue");
 				},
 				{ key: "val", foo: "newValue" }
 			], [
 				{ key: "val" },
 				() => {
-					d.replace('foo', "oldValue");
-					d.replace('foo', "newValue");
+					proxy.replace('foo', "oldValue");
+					proxy.replace('foo', "newValue");
 				},
-				expectError(DeltaJs.ApplicationError) // 'foo' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			]]);
 
 			itCan("throw an error when the composition is detectably invalid", [
 				() => {
-					d.modify('foo');
-					d.add('foo', "bar");
+					proxy.modify('foo');
+					proxy.add('foo', "bar");
 				}, () => {
-					d.add('foo', "bar1");
-					d.add('foo', "bar2");
+					proxy.add('foo', "bar1");
+					proxy.add('foo', "bar2");
 				}, () => {
-					d.remove('foo');
-					d.modify('foo');
+					proxy.remove('foo');
+					proxy.modify('foo');
 				}, () => {
-					d.remove('foo');
-					d.remove('foo');
+					proxy.remove('foo');
+					proxy.remove('foo');
 				}, () => {
-					d.modify('foo');
-					d.forbid('foo');
+					proxy.modify('foo');
+					proxy.forbid('foo');
 				}, () => {
-					d.add('foo', "bar");
-					d.forbid('foo');
+					proxy.add('foo', "bar");
+					proxy.forbid('foo');
 				}, () => {
-					d.forbid('foo');
-					d.modify('foo');
+					proxy.forbid('foo');
+					proxy.modify('foo');
 				}, () => {
-					d.forbid('foo');
-					d.remove('foo');
+					proxy.forbid('foo');
+					proxy.remove('foo');
 				}, () => {
-					d.remove('foo');
-					d.replace('foo', "bar");
+					proxy.remove('foo');
+					proxy.replace('foo', "bar");
 				}, () => {
-					d.forbid('foo');
-					d.replace('foo', "bar");
+					proxy.forbid('foo');
+					proxy.replace('foo', "bar");
 				}, () => {
-					d.replace('foo', "bar1");
-					d.add('foo', "bar2");
+					proxy.replace('foo', "bar1");
+					proxy.add('foo', "bar2");
 				}, () => {
-					d.replace('foo', "bar");
-					d.forbid('foo');
+					proxy.replace('foo', "bar");
+					proxy.forbid('foo');
 				}
 			].map(action => [null, action, expectError(DeltaJs.CompositionError)]));
 
 		});
 
+		describe("proxy-hierarchies", () => {
+
+
+			itCan("always give you the deepest container proxy in your call-chain", [[
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					proxy.modify('obj')         // .
+						.add('foo', "bar")  // .obj
+						.add('bar', "bas"); // .obj
+				},
+				{ obj: { foo: "bar", bar: "bas", sub: { subSub: {} } } }
+			], [
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					proxy.modify('obj')                   // .
+						.add('sub.subSub.foo', "bar") // .obj
+						.add('bar', "bas");           // .obj (even though two implicit modifies were used)
+				},
+				{ obj: { bar: "bas", sub: { subSub: { foo: "bar" } } } }
+			], [
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					proxy.modify('obj.sub')         // .
+						.modify('subSub')       // .obj.sub
+							.add('foo', "bar")  // .obj.sub.subSub
+							.add('bar', "bas"); // .obj.sub.subSub
+				},
+				{ obj: { sub: { subSub: { foo: "bar", bar: "bas" } } } }
+			], [
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					proxy.deltaModel('obj')             // .
+						.do('X')                    // .obj
+							.add('foo', "bar")      // .obj[X]
+					        .modify('sub')          // .obj[X] (note that all .do argument are remembered in the chain)
+								.add('bar', "bas"); // .obj[X].sub
+				},
+				{ obj: { foo: "bar", sub: { bar: "bas", subSub: {} } } }
+			], [
+				{ obj: { sub: { subSub: {} } } },
+				() => {
+					var subD = proxy.modify('obj').add('foo', "bar");
+					subD.add('bar', "bas");
+					proxy.add('key', "val"); // (note that you can use an existing reference to a shallower proxy)
+				},
+				{ key: "val", obj: { foo: "bar", bar: "bas", sub: { subSub: {} } } }
+			]]);
+
+			itCan("can only have one sub-proxy per key active at a time", [[
+				{ obj: { sub: {} } }, // modify -> modify
+				() => {
+					proxy = proxy.modify('obj');
+					var subD = proxy.modify('sub'); // create subD
+					proxy.replace('sub', {});       // deactivate subD
+					subD.add('key', 'value');   // try to use subD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			], [
+				{ obj: { sub: {} } }, // deltaModel -> modify
+				() => {
+					proxy = proxy.deltaModel('obj');
+					var subD = proxy.do('x').modify('sub'); // create subD
+					proxy.do('x').replace('sub', {});       // deactivate subD
+					subD.add('key', "value");           // try to use subD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			], [
+				{ obj: { sub: {} } }, // modify -> delta model
+				() => {
+					proxy = proxy.modify('obj');
+					var subD = proxy.deltaModel('sub');   // create subD
+					proxy.replace('sub', {});             // deactivate subD
+					subD.do('y').add('key', "value"); // try to use subD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			], [
+				{ obj: { sub: {} } }, // delta model -> delta model
+				() => {
+					proxy = proxy.deltaModel('obj');
+					var subD = proxy.do('x').deltaModel('sub'); // create subD
+					proxy.do('x').replace('sub', {});           // deactivate subD
+					subD.do('y').add('key', "value");       // try to use subD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			], [
+				{ obj: { sub: { subSub: {} } } }, // make sure sub-proxies are disabled too
+				() => {
+					proxy = proxy.modify('obj');
+					var subD = proxy.modify('sub');          // create subD
+					var subSubD = subD.modify('subSub'); // create subSubD
+					proxy.replace('sub', {});                // deactivate subD
+					subSubD.add('key', "value");         // try to use subSubD
+				},
+				expectError(DeltaJs.MultipleActiveProxiesError)
+			]]);
+
+		});
+
+	});
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	describe("specialty operation types -", () => {
+
+		// Here, we test the more advanced operation types.
+		// We use a proxy to simplify delta-building.
+
+		var proxy;
+		beforeEach(() => {
+			afterAction(() => {
+				delta = proxy.delta();
+			});
+		});
 
 		describe("array operations", () => {
 
 			beforeEach(() => {
-				d = new deltaJs.Delta.Modify().do();
+				proxy = new deltaJs.Delta.Modify().do();
 			});
 
 			itCan("prepend a new value to an array", [[
 				{ arr: [] },
-				() => { d.prepend('arr', "val") },
+				() => { proxy.prepend('arr', "val") },
 				{ arr: ['val'] }
 			], [
 				{ arr: ['init'] },
-				() => { d.prepend('arr', "val") },
+				() => { proxy.prepend('arr', "val") },
 				{ arr: ['val', 'init'] }
 			], [
 				{ arr: ['init1', 'init2'] },
-				() => { d.prepend('arr', "val") },
+				() => { proxy.prepend('arr', "val") },
 				{ arr: ['val', 'init1', 'init2'] }
 			], [
 				{ arr: 'not an array or a function' },
-				() => { d.prepend('arr', "val") },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.prepend('arr', "val") },
+				expectError(DeltaJs.PreconditionFailure)
 			], [
 				{ key: "val" },
-				() => { d.prepend('arr', "val") },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.prepend('arr', "val") },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("insert a new value into an array", [[
 				{ arr: [] },
-				() => { d.insert('arr', "val") },
+				() => { proxy.insert('arr', "val") },
 				{ arr: ['val'] }
 			], [
 				{ arr: ['init'] },
-				() => { d.insert('arr', "val") },
+				() => { proxy.insert('arr', "val") },
 				(obj) => {
 					expect(obj).toEqualOneOf(
 						{ arr: ['val', 'init'] },
@@ -1193,7 +1290,7 @@ describe("DeltaJs instance", function () {
 				}
 			], [
 				{ arr: ['init1', 'init2'] },
-				() => { d.insert('arr', "val") },
+				() => { proxy.insert('arr', "val") },
 				(obj) => {
 					expect(obj).toEqualOneOf(
 						{ arr: ['val', 'init1', 'init2'] },
@@ -1203,57 +1300,56 @@ describe("DeltaJs instance", function () {
 				}
 			], [
 				{ arr: 'not an array or a function' },
-				() => { d.insert('arr', "val") },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.insert('arr', "val") },
+				expectError(DeltaJs.PreconditionFailure)
 			], [
 				{ key: "val" },
-				() => { d.insert('arr', "val") },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.insert('arr', "val") },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("append a new value to an array", [[
 				{ arr: [] },
-				() => { d.append('arr', "val") },
+				() => { proxy.append('arr', "val") },
 				{ arr: ['val'] }
 			], [
 				{ arr: ['init'] },
-				() => { d.append('arr', "val") },
+				() => { proxy.append('arr', "val") },
 				{ arr: ['init', 'val'] }
 			], [
 				{ arr: ['init1', 'init2'] },
-				() => { d.append('arr', "val") },
+				() => { proxy.append('arr', "val") },
 				{ arr: ['init1', 'init2', 'val'] }
 			], [
 				{ arr: 'not an array or a function' },
-				() => { d.append('arr', "val") },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.append('arr', "val") },
+				expectError(DeltaJs.PreconditionFailure)
 			], [
 				{ key: "val" },
-				() => { d.append('arr', "val") },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.append('arr', "val") },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 		});
 
-
 		describe("composite array operations", () => {
 
 			beforeEach(() => {
-				d = new deltaJs.Delta.Modify().do();
+				proxy = new deltaJs.Delta.Modify().do();
 			});
 
 			itCan("combine multiple array operations", [[
 				{ arr: ['init'] },
 				() => {
-					d.prepend('arr', 1);
-					d.prepend('arr', 2);
+					proxy.prepend('arr', 1);
+					proxy.prepend('arr', 2);
 				},
 				{ arr: [2, 1, 'init'] }
 			], [
 				{ arr: ['init'] },
 				() => {
-					d.prepend('arr', 1);
-					d.insert('arr', 2);
+					proxy.prepend('arr', 1);
+					proxy.insert('arr', 2);
 				},
 				(obj) => {
 					expect(obj).toEqualOneOf(
@@ -1265,27 +1361,27 @@ describe("DeltaJs instance", function () {
 			], [
 				{ arr: ['init'] },
 				() => {
-					d.prepend('arr', 1);
-					d.append('arr', 2);
+					proxy.prepend('arr', 1);
+					proxy.append('arr', 2);
 				},
 				{ arr: [1, 'init', 2] }
 			], [
 				{ arr: ['init'] },
 				() => {
-					d.insert('arr', 1);
-					d.prepend('arr', 2);
+					proxy.insert('arr', 1);
+					proxy.prepend('arr', 2);
 				},
 				(obj) => {
 					expect(obj).toEqualOneOf(
-							{ arr: [2, 1, 'init'] },
-							{ arr: [2, 'init', 1] }
+						{ arr: [2, 1, 'init'] },
+						{ arr: [2, 'init', 1] }
 					);
 				}
 			], [
 				{ arr: ['init'] },
 				() => {
-					d.insert('arr', 1);
-					d.insert('arr', 2);
+					proxy.insert('arr', 1);
+					proxy.insert('arr', 2);
 				},
 				(obj) => {
 					expect(obj).toEqualOneOf(
@@ -1300,27 +1396,27 @@ describe("DeltaJs instance", function () {
 			], [
 				{ arr: ['init'] },
 				() => {
-					d.insert('arr', 1);
-					d.append('arr', 2);
+					proxy.insert('arr', 1);
+					proxy.append('arr', 2);
 				},
 				(obj) => {
 					expect(obj).toEqualOneOf(
-							{ arr: [1, 'init', 2] },
-							{ arr: ['init', 1, 2] }
+						{ arr: [1, 'init', 2] },
+						{ arr: ['init', 1, 2] }
 					);
 				}
 			], [
 				{ arr: ['init'] },
 				() => {
-					d.append('arr', 1);
-					d.prepend('arr', 2);
+					proxy.append('arr', 1);
+					proxy.prepend('arr', 2);
 				},
 				{ arr: [2, 'init', 1] }
 			], [
 				{ arr: ['init'] },
 				() => {
-					d.append('arr', 1);
-					d.insert('arr', 2);
+					proxy.append('arr', 1);
+					proxy.insert('arr', 2);
 				},
 				(obj) => {
 					expect(obj).toEqualOneOf(
@@ -1332,8 +1428,8 @@ describe("DeltaJs instance", function () {
 			], [
 				{ arr: ['init'] },
 				() => {
-					d.append('arr', 1);
-					d.append('arr', 2);
+					proxy.append('arr', 1);
+					proxy.append('arr', 2);
 				},
 				{ arr: ['init', 1, 2] }
 			]]);
@@ -1341,152 +1437,157 @@ describe("DeltaJs instance", function () {
 			itCan("combine array operations with other types of operations or throw an error if invalid", [[
 				{ key: "val" },
 				() => {
-					d.add('arr', ['init']);
-					d.append('arr', "val");
+					proxy.add('arr', ['init']);
+					proxy.append('arr', "val");
 				},
 				{ key: "val", arr: ['init', 'val'] }
 			], [
 				{ key: "val" },
 				() => {
-					d.add('arr', 'not an array');
-					d.append('arr', "val");
+					proxy.add('arr', 'not an array');
+					proxy.append('arr', "val");
 				},
 				expectError(DeltaJs.CompositionError) // 'arr', left by the 'add' operation, has to be an array
 			], [
 				{ key: "val", arr: "whatever" },
 				() => {
-					d.add('arr', ['init']);
-					d.append('arr', "val");
+					proxy.add('arr', ['init']);
+					proxy.append('arr', "val");
 				},
-				expectError(DeltaJs.ApplicationError) // 'arr' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'arr' is forbidden, but was present
 			], [
 				{ key: "val", arr: "whatever" },
 				() => {
-					d.replace('arr', ['init']);
-					d.append('arr', "val");
+					proxy.replace('arr', ['init']);
+					proxy.append('arr', "val");
 				},
 				{ key: "val", arr: ['init', 'val'] }
 			], [
 				{ key: "val", arr: "whatever" },
 				() => {
-					d.replace('arr', 'not an array');
-					d.append('arr', "val");
+					proxy.replace('arr', 'not an array');
+					proxy.append('arr', "val");
 				},
 				expectError(DeltaJs.CompositionError) // 'arr', left by the 'replace' operation, has to be an array
 			], [
 				{ key: "val" },
 				() => {
-					d.replace('arr', ['init']);
-					d.append('arr', "val");
+					proxy.replace('arr', ['init']);
+					proxy.append('arr', "val");
 				},
-				expectError(DeltaJs.ApplicationError) // 'arr' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'arr' is mandatory, but was absent
 			], [
 				{ key: "val", arr: ['init'] },
 				() => {
-					d.append('arr', "val");
-					d.remove('arr');
+					proxy.append('arr', "val");
+					proxy.remove('arr');
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d.append('arr', "val");
-					d.remove('arr');
+					proxy.append('arr', "val");
+					proxy.remove('arr');
 				},
-				expectError(DeltaJs.ApplicationError) // 'arr' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'arr' is mandatory, but was absent
 			], [
 				{ key: "val", arr: ['init'] },
 				() => {
-					d.append('arr', "val");
-					d.replace('arr', "whatever");
+					proxy.append('arr', "val");
+					proxy.replace('arr', "whatever");
 				},
 				{ key: "val", arr: "whatever" }
 			], [
 				{ key: "val" },
 				() => {
-					d.append('arr', "val");
-					d.replace('arr', "whatever");
+					proxy.append('arr', "val");
+					proxy.replace('arr', "whatever");
 				},
-				expectError(DeltaJs.ApplicationError) // 'arr' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'arr' is mandatory, but was absent
 			]]);
 
 		});
 
+		/* setting up a few functions that can be tracked */
+		var callLog;
+		var fA = (...args) => { callLog.push(['fA', args]) };
+		var fB = (...args) => { callLog.push(['fB', args]) };
+		var fC = (...args) => { callLog.push(['fC', args]) };
+		beforeEach(() => { callLog = [] });
 
 		describe("function operations", () => {
 
 			beforeEach(() => {
-				d = new deltaJs.Delta.Modify().do();
+				proxy = new deltaJs.Delta.Modify().do();
 			});
 
 			itCan("prepend new statements to run inside an existing function", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
-				() => { d.prepend('fn', function (a, b) { fB(this, b, b) }) },
+				() => { proxy.prepend('fn', function (a, b) { fB(this, b, b) }) },
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqual([['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]]);
 				}
 			], [
 				{ fn: 'not a function or an array' },
-				() => { d.prepend('fn', function () {}) },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.prepend('fn', function () {}) },
+				expectError(DeltaJs.PreconditionFailure)
 			], [
 				{ key: "val" },
-				() => { d.prepend('fn', function () {}) },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.prepend('fn', function () {}) },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("insert new statements to run inside an existing function", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
-				() => { d.insert('fn', function (a, b) { fB(this, b, b) }) },
+				() => { proxy.insert('fn', function (a, b) { fB(this, b, b) }) },
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqualOneOf(
-							[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
-							[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
+						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
 					);
 				}
 			], [
 				{ fn: 'not a function or an array' },
-				() => { d.insert('fn', function () {}) },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.insert('fn', function () {}) },
+				expectError(DeltaJs.PreconditionFailure)
 			], [
 				{ key: "val" },
-				() => { d.insert('fn', function () {}) },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.insert('fn', function () {}) },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("append new statements to run inside an existing function", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
-				() => { d.append('fn', function (a, b) { fB(this, b, b) }) },
+				() => { proxy.append('fn', function (a, b) { fB(this, b, b) }) },
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqual([['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]);
 				}
 			], [
 				{ fn: 'not a function or an array' },
-				() => { d.append('fn', function () {}) },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.append('fn', function () {}) },
+				expectError(DeltaJs.PreconditionFailure)
 			], [
 				{ key: "val" },
-				() => { d.append('fn', function () {}) },
-				expectError(DeltaJs.ApplicationError)
+				() => { proxy.append('fn', function () {}) },
+				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 		});
 
-
 		describe("composite function operations", () => {
 
 			beforeEach(() => {
-				d = new deltaJs.Delta.Modify().do();
+				proxy = new deltaJs.Delta.Modify().do();
 			});
 
 			itCan("combine multiple function operations", [[
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.prepend('fn', function (a, b) { fB(this, b, b) });
-					d.prepend('fn', function (a, b) { fC(this, b, a) });
+					proxy.prepend('fn', function (a, b) { fB(this, b, b) });
+					proxy.prepend('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
@@ -1495,22 +1596,22 @@ describe("DeltaJs instance", function () {
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.prepend('fn', function (a, b) { fB(this, b, b) });
-					d.insert('fn', function (a, b) { fC(this, b, a) });
+					proxy.prepend('fn', function (a, b) { fB(this, b, b) });
+					proxy.insert('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqualOneOf(
-							[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
-							[['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]]],
-							[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]]
+						[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+						[['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]]],
+						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]]
 					);
 				}
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.prepend('fn', function (a, b) { fB(this, b, b) });
-					d.append('fn', function (a, b) { fC(this, b, a) });
+					proxy.prepend('fn', function (a, b) { fB(this, b, b) });
+					proxy.append('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
@@ -1519,51 +1620,51 @@ describe("DeltaJs instance", function () {
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.insert('fn', function (a, b) { fB(this, b, b) });
-					d.prepend('fn', function (a, b) { fC(this, b, a) });
+					proxy.insert('fn', function (a, b) { fB(this, b, b) });
+					proxy.prepend('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqualOneOf(
-							[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
-							[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
+						[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+						[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
 					);
 				}
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.insert('fn', function (a, b) { fB(this, b, b) });
-					d.insert('fn', function (a, b) { fC(this, b, a) });
+					proxy.insert('fn', function (a, b) { fB(this, b, b) });
+					proxy.insert('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqualOneOf(
-							[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
-							[['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]]],
-							[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]],
-							[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]],
-							[['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]]],
-							[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
+						[['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+						[['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]]],
+						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]],
+						[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]],
+						[['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]]],
+						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
 					);
 				}
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.insert('fn', function (a, b) { fB(this, b, b) });
-					d.append('fn', function (a, b) { fC(this, b, a) });
+					proxy.insert('fn', function (a, b) { fB(this, b, b) });
+					proxy.append('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqualOneOf(
-							[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]],
-							[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
+						[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]]],
+						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
 					);
 				}
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.append('fn', function (a, b) { fB(this, b, b) });
-					d.prepend('fn', function (a, b) { fC(this, b, a) });
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.prepend('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
@@ -1572,22 +1673,22 @@ describe("DeltaJs instance", function () {
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.append('fn', function (a, b) { fB(this, b, b) });
-					d.insert('fn', function (a, b) { fC(this, b, a) });
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.insert('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
 					expect(callLog).toEqualOneOf(
-							[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]],
-							[['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]]],
-							[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
+						[['fC', [obj, 2, 1]], ['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]],
+						[['fA', [obj, 1, 3]], ['fC', [obj, 2, 1]], ['fB', [obj, 2, 2]]],
+						[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]], ['fC', [obj, 2, 1]]]
 					);
 				}
 			], [
 				{ fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.append('fn', function (a, b) { fB(this, b, b) });
-					d.append('fn', function (a, b) { fC(this, b, a) });
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.append('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
@@ -1598,8 +1699,8 @@ describe("DeltaJs instance", function () {
 			itCan("combine function operations with other types of operations or throw an error if invalid", [[
 				{ key: "val" },
 				() => {
-					d.add('fn', function (a, b, c) { fA(this, a, c) });
-					d.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.add('fn', function (a, b, c) { fA(this, a, c) });
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
@@ -1609,22 +1710,22 @@ describe("DeltaJs instance", function () {
 			], [
 				{ key: "val" },
 				() => {
-					d.add('fn', 'not a function or an array');
-					d.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.add('fn', 'not a function or an array');
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
 				},
 				expectError(DeltaJs.CompositionError) // 'fn', left by the 'add' operation, has to be an array
 			], [
 				{ key: "val", fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.add('fn', function (a, b, c) { fA(this, a, c) });
-					d.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.add('fn', function (a, b, c) { fA(this, a, c) });
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
 				},
-				expectError(DeltaJs.ApplicationError) // 'fn' is forbidden, but was present
+				expectError(DeltaJs.PreconditionFailure) // 'fn' is forbidden, but was present
 			], [
 				{ key: "val", fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.replace('fn', function (a, b) { fB(this, b, b) });
-					d.append('fn', function (a, b) { fC(this, b, a) });
+					proxy.replace('fn', function (a, b) { fB(this, b, b) });
+					proxy.append('fn', function (a, b) { fC(this, b, a) });
 				},
 				(obj) => {
 					obj.fn(1, 2, 3);
@@ -1634,55 +1735,54 @@ describe("DeltaJs instance", function () {
 			], [
 				{ key: "val", fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.replace('fn', 'not a function or an array');
-					d.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.replace('fn', 'not a function or an array');
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
 				},
 				expectError(DeltaJs.CompositionError) // 'fn', left by the 'replace' operation, has to be an array
 			], [
 				{ key: "val" },
 				() => {
-					d.replace('fn', function (a, b, c) { fA(this, a, c) });
-					d.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.replace('fn', function (a, b, c) { fA(this, a, c) });
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
 				},
-				expectError(DeltaJs.ApplicationError) // 'fn' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'fn' is mandatory, but was absent
 			], [
 				{ key: "val", fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.append('fn', function (a, b) { fB(this, b, b) });
-					d.remove('fn');
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.remove('fn');
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d.append('fn', function (a, b) { fB(this, b, b) });
-					d.remove('fn');
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.remove('fn');
 				},
-				expectError(DeltaJs.ApplicationError) // 'fn' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'fn' is mandatory, but was absent
 			], [
 				{ key: "val", fn(a, b, c) { fA(this, a, c) } },
 				() => {
-					d.append('fn', function (a, b) { fB(this, b, b) });
-					d.replace('fn', "whatever");
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.replace('fn', "whatever");
 				},
 				{ key: "val", fn: "whatever" }
 			], [
 				{ key: "val" },
 				() => {
-					d.append('fn', function (a, b) { fB(this, b, b) });
-					d.replace('fn', "whatever");
+					proxy.append('fn', function (a, b) { fB(this, b, b) });
+					proxy.replace('fn', "whatever");
 				},
-				expectError(DeltaJs.ApplicationError) // 'fn' is mandatory, but was absent
+				expectError(DeltaJs.PreconditionFailure) // 'fn' is mandatory, but was absent
 			]]);
 
 		});
 
-
-		describe("the delta model operation", () => {
+		describe("delta model operations", () => {
 
 			var dm;
 			beforeEach(() => {
-				dm = d = new deltaJs.Delta.DeltaModel().do();
+				dm = proxy = new deltaJs.Delta.DeltaModel().do();
 			});
 
 			itCan("be a middle-man for a single other delta", [[
@@ -1758,8 +1858,8 @@ describe("DeltaJs instance", function () {
 					(obj) => {
 						obj.fn(1, 2, 3);
 						expect(callLog).toEqualOneOf(
-								[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
-								[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
+							[['fB', [obj, 2, 2]], ['fA', [obj, 1, 3]]],
+							[['fA', [obj, 1, 3]], ['fB', [obj, 2, 2]]]
 						);
 					}
 				], [
@@ -1908,14 +2008,7 @@ describe("DeltaJs instance", function () {
 				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
 			]]);
 
-			xitCan("throw an error if there is an unresolved conflict", [[
-				{},
-				() => {
-					dm.do('X').add('key', "X value");
-					dm.do('Y').add('key', "Y value");
-				},
-				expectError(DeltaJs.UnresolvedDeltaConflict)
-			], [
+			itCan("throw an error if there is an unresolved conflict", [[
 				{ key: 'original value' },
 				() => {
 					dm.do('X').replace('key', "X value");
@@ -2007,131 +2100,99 @@ describe("DeltaJs instance", function () {
 				}
 			]]);
 
-
-
-
-			it("TEST", () => {
-				dm.do('1'                       ).replace('o.x', 'value1');
-				dm.do('2'                       ).replace('o.x', 'value2');
-				dm.do('3'                       ).modify('o');
-				dm.do('4', { after: ['1']      }).modify('o');
-				dm.do('5', { after: ['1']      }).modify('o');
-				dm.do('6', { after: ['2', '3'] }).modify('o');
-				dm.do('7', { after: ['4']      }).modify('o');
-				dm.do('8', { after: ['5', '6'] }).modify('o');
-
-				dm.delta().conflicts();
-			});
-
-
-
-
-
-		});
-
-
-		describe("proxy-hierarchies", () => {
-
-			beforeEach(() => {
-				d = new deltaJs.Delta.Modify().do();
-			});
-
-			itCan("always give you the deepest container proxy in your call-chain", [[
-				{ obj: { sub: { subSub: {} } } },
+			itCan("work fine if all conflicts are resolved", [[
+				{ key: 'original value' },
 				() => {
-					d.modify('obj')         // .
-						.add('foo', "bar")  // .obj
-						.add('bar', "bas"); // .obj
+					dm.do('X')                       .replace('key', "X value");
+					dm.do('Y')                       .replace('key', "Y value");
+					dm.do('Z', { after: ['X', 'Y'] }).replace('key', "Z value");
 				},
-				{ obj: { foo: "bar", bar: "bas", sub: { subSub: {} } } }
+				{ key: "Z value" }
 			], [
-				{ obj: { sub: { subSub: {} } } },
+				{ key: [] },
 				() => {
-					d.modify('obj')                   // .
-						.add('sub.subSub.foo', "bar") // .obj
-						.add('bar', "bas");           // .obj (even though two implicit modifies were used)
+					dm.do('X')                       .prepend('key', "X value");
+					dm.do('Y')                       .prepend('key', "Y value");
+					dm.do('Z', { after: ['X', 'Y'] }).replace('key', "Z value");
 				},
-				{ obj: { bar: "bas", sub: { subSub: { foo: "bar" } } } }
+				{ key: "Z value" }
 			], [
-				{ obj: { sub: { subSub: {} } } },
+				{ key: [] },
 				() => {
-					d.modify('obj.sub')         // .
-						.modify('subSub')       // .obj.sub
-							.add('foo', "bar")  // .obj.sub.subSub
-							.add('bar', "bas"); // .obj.sub.subSub
+					dm.do('X')                       .append('key', "X value");
+					dm.do('Y')                       .append('key', "Y value");
+					dm.do('Z', { after: ['X', 'Y'] }).replace('key', "Z value");
 				},
-				{ obj: { sub: { subSub: { foo: "bar", bar: "bas" } } } }
+				{ key: "Z value" }
 			], [
-				{ obj: { sub: { subSub: {} } } },
+				{ key() {} },
 				() => {
-					d.deltaModel('obj')             // .
-						.do('X')                    // .obj
-							.add('foo', "bar")      // .obj[X]
-					        .modify('sub')          // .obj[X] (note that all .do argument are remembered in the chain)
-								.add('bar', "bas"); // .obj[X].sub
+					dm.do('X')                       .prepend('key', function () { console.log("something") });
+					dm.do('Y')                       .prepend('key', function () { console.log("something") });
+					dm.do('Z', { after: ['X', 'Y'] }).replace('key', "Z value");
 				},
-				{ obj: { foo: "bar", sub: { bar: "bas", subSub: {} } } }
+				{ key: "Z value" }
 			], [
-				{ obj: { sub: { subSub: {} } } },
+				{ key() {} },
 				() => {
-					var subD = d.modify('obj').add('foo', "bar");
-					subD.add('bar', "bas");
-					d.add('key', "val"); // (note that you can use an existing reference to a shallower proxy)
+					dm.do('X')                       .append('key', function () { console.log("something") });
+					dm.do('Y')                       .append('key', function () { console.log("something") });
+					dm.do('Z', { after: ['X', 'Y'] }).replace('key', "Z value");
 				},
-				{ key: "val", obj: { foo: "bar", bar: "bas", sub: { subSub: {} } } }
+				{ key: "Z value" }
 			]]);
 
-			itCan("can only have one sub-proxy per key active at a time", [[
-				{ obj: { sub: {} } }, // modify -> modify
+			itCan("throw an error if there are multiple unresolved conflicts (larger example)", [[
+				{ o: { x: 'value-x-0', y: 'value-y-0' } },
 				() => {
-					d = d.modify('obj');
-					var subD = d.modify('sub'); // create subD
-					d.replace('sub', {});       // deactivate subD
-					subD.add('key', 'value');   // try to use subD
+					dm.do('1'                       ).replace('o.y', 'value-y-1');
+					dm.do('2'                       ).replace('o.x', 'value-x-2');
+					dm.do('3'                       ).replace('o.x', 'value-x-3');
+					dm.do('4', { after: ['1']      }).modify('o');
+					dm.do('5', { after: ['1']      }).modify('o');
+					dm.do('6', { after: ['2', '3'] }).replace('o.y', 'value-y-6');
+					dm.do('7', { after: ['4']      }).modify('o');
+					dm.do('8', { after: ['5', '6'] }).modify('o');
 				},
-				expectError(DeltaJs.MultipleActiveProxiesError)
-			], [
-				{ obj: { sub: {} } }, // deltaModel -> modify
+				expectError(DeltaJs.UnresolvedDeltaConflict)
+			]]);
+
+			itCan("throw an error if there are still unresolved conflicts, even though some conflicts are resolved (larger example)", [[
+				{ o: { x: 'value-x-0', y: 'value-y-0' } },
 				() => {
-					d = d.deltaModel('obj');
-					var subD = d.do('x').modify('sub'); // create subD
-					d.do('x').replace('sub', {});       // deactivate subD
-					subD.add('key', "value");           // try to use subD
+					dm.do('1'                       ).replace('o.y', 'value-y-1');
+					dm.do('2'                       ).replace('o.x', 'value-x-2');
+					dm.do('3'                       ).replace('o.x', 'value-x-3');
+					dm.do('4', { after: ['1']      }).modify('o');
+					dm.do('5', { after: ['1']      }).modify('o');
+					dm.do('6', { after: ['2', '3'] }).replace('o.y', 'value-y-6').replace('o.x', 'value-x-6');
+					dm.do('7', { after: ['4']      }).modify('o');
+					dm.do('8', { after: ['5', '6'] }).modify('o');
 				},
-				expectError(DeltaJs.MultipleActiveProxiesError)
-			], [
-				{ obj: { sub: {} } }, // modify -> delta model
+				expectError(DeltaJs.UnresolvedDeltaConflict)
+			]]);
+
+			itCan("work fine if all conflicts are resolved (larger example)", [[
+				{ o: { x: 'value-x-0', y: 'value-y-0' } },
 				() => {
-					d = d.modify('obj');
-					var subD = d.deltaModel('sub');   // create subD
-					d.replace('sub', {});             // deactivate subD
-					subD.do('y').add('key', "value"); // try to use subD
+					dm.do('1'                       ).replace('o.y', 'value-y-1');
+					dm.do('2'                       ).replace('o.x', 'value-x-2');
+					dm.do('3'                       ).replace('o.x', 'value-x-3');
+					dm.do('4', { after: ['1']      }).modify('o');
+					dm.do('5', { after: ['1']      }).modify('o');
+					dm.do('6', { after: ['2', '3'] }).replace('o.y', 'value-y-6').replace('o.x', 'value-x-6');
+					dm.do('7', { after: ['4']      }).modify('o');
+					dm.do('8', { after: ['5', '6'] }).replace('o.y', 'value-y-8');
 				},
-				expectError(DeltaJs.MultipleActiveProxiesError)
-			], [
-				{ obj: { sub: {} } }, // delta model -> delta model
-				() => {
-					d = d.deltaModel('obj');
-					var subD = d.do('x').deltaModel('sub'); // create subD
-					d.do('x').replace('sub', {});           // deactivate subD
-					subD.do('y').add('key', "value");       // try to use subD
-				},
-				expectError(DeltaJs.MultipleActiveProxiesError)
-			], [
-				{ obj: { sub: { subSub: {} } } }, // make sure sub-proxies are disabled too
-				() => {
-					d = d.modify('obj');
-					var subD = d.modify('sub');          // create subD
-					var subSubD = subD.modify('subSub'); // create subSubD
-					d.replace('sub', {});                // deactivate subD
-					subSubD.add('key', "value");         // try to use subSubD
-				},
-				expectError(DeltaJs.MultipleActiveProxiesError)
+				{ o: { x: 'value-x-6', y: 'value-y-8' } }
 			]]);
 
 		});
 
 	});
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	describe("features", () => {
@@ -2334,6 +2395,10 @@ describe("DeltaJs instance", function () {
 
 	});
 
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 	describe("variation points", () => {
 
 		it("have a DeltaJs method to indicate them in the domain-specific code: 'vp'", () => {
@@ -2375,6 +2440,10 @@ describe("DeltaJs instance", function () {
 
 	});
 
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 	describe("application conditions", () => {
 
 		var F, G, H;
@@ -2415,6 +2484,10 @@ describe("DeltaJs instance", function () {
 		});
 
 	});
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	describe("deltas and features", () => {
 
@@ -2494,5 +2567,6 @@ describe("DeltaJs instance", function () {
 		});
 
 	});
+
 
 });

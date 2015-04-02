@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {isDefined, t, define_d, oncePer, arraysEqual} from './util.js';
+import {isDefined, t, define_d, oncePer, arraysEqual, arraysHaveSameElements, customIndexOf} from './util.js';
 import define_Modify                                  from './Modify.js';
 import define_basicOperations                         from './basicOperations.js';
 import define_Proxy                                   from './Proxy.js';
@@ -27,9 +27,46 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 			return result;
 		}
 
-		equals(other) {
-			return arraysEqual(this.values, other.values,
-				(a, b) => a.method === b.method && a.value && b.value);
+		refines(other) {
+			/* define operation equality */
+			var eq = (x, y) => x.method === y.method && x.value === y.value;
+
+			/* both need to at least have the same operations (not necessarily in the same order) */
+			if (!arraysHaveSameElements(this.values, other.values, eq)) { return false }
+
+			/* appensions and prepensions need to be in the same order */
+			if (!arraysEqual(
+				this .values.filter(v => v.method === 'append'),
+				other.values.filter(v => v.method === 'append'), eq
+			)) { return false }
+			if (!arraysEqual(
+				this .values.filter(v => v.method === 'prepend'),
+				other.values.filter(v => v.method === 'prepend'), eq
+			)) { return false }
+
+			/* insertions in 'this' cannot come later than their counterparts in 'other', */
+			/* in the sense of appensions and prepensions that have come before it        */
+			var appensionsAndPrepensionsSeen = [];
+			for (var i = 0; i < this.values.length; ++i) {
+				if (this.values[i].method === 'insert') {
+					var ind = customIndexOf(other.values, this.values[i], eq);
+					var appensionsAndPrepensionsToGo = [...appensionsAndPrepensionsSeen];
+					for (var j = 0; j <= ind; ++j) {
+						var indd = customIndexOf(appensionsAndPrepensionsToGo, other.values[j], eq);
+						if (indd > -1) {
+							appensionsAndPrepensionsToGo.splice(indd, 1);
+						}
+					}
+					if (appensionsAndPrepensionsToGo.length > 0) {
+						return false;
+					}
+				} else {
+					appensionsAndPrepensionsSeen.push(this.values[i]);
+				}
+			}
+
+			/* OK, it's a refinement */
+			return true;
 		}
 
 		precondition(target) { return isDefined(target.value) && Array.isArray(target.value) }

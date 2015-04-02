@@ -63,9 +63,12 @@ export default class DeltaJs {
 		/* set the (optional) Proxy class */
 		DeltaClass.Proxy = ProxyClass;
 
-		/* fetch the given applyTo function (if any) which will be slightly modified */
-		var givenApplyTo = DeltaClass.prototype.applyTo || (()=>{});
-		var givenEquals  = DeltaClass.prototype.equals;
+		/* fetch certain given methods (if they exist) that need to be slightly augmented */
+		var givenApplyTo       = DeltaClass.prototype.applyTo || (()=>{});
+		var givenRefines       = DeltaClass.prototype.refines;
+		var givenEquals        = DeltaClass.prototype.equals;
+		var givenCommutesWith  = DeltaClass.prototype.commutesWith;
+		var givenResolves      = DeltaClass.prototype.resolves;
 
 		/* augment the class prototype */
 		extend(DeltaClass.prototype, {
@@ -85,12 +88,38 @@ export default class DeltaJs {
 				/* OK, then apply it if a method to do so was included in the operation */
 				givenApplyTo.call(this, target, options);
 			},
+			refines(other) {
+				if (this.type !== other.type) { return false }
+				if (isDefined(givenRefines)) {
+					return givenRefines.call(this, other);
+				} else {
+					return this.equals(other);
+				}
+			},
 			equals(other) {
 				if (this.type !== other.type) { return false }
 				if (isDefined(givenEquals)) {
 					return givenEquals.call(this, other);
+				} else if (isDefined(givenRefines)) {
+					return this.refines(other) && other.refines(this);
 				} else {
 					return arraysEqual(this.args, other.args);
+				}
+			},
+			commutesWith(other) {
+				if (isDefined(givenCommutesWith)) {
+					return givenCommutesWith.call(this, other);
+				} else {
+					return this.composedWith(other)
+						.equals(other.composedWith(this));
+				}
+			},
+			resolves(d1, d2) {
+				if (isDefined(givenResolves)) {
+					return givenResolves.call(this, d1, d2);
+				} else {
+					return d1.composedWith(d2).composedWith(this)
+						.equals(d2.composedWith(d1).composedWith(this));
 				}
 			},
 			type: name

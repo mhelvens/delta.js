@@ -1,7 +1,7 @@
 /* import internal stuff */
 import {extend, oncePer}                    from './util.js';
 import {ReadableTarget, wt}                 from './Target.js';
-import {ApplicationError, CompositionError} from './Error.js';
+import {PreconditionFailure, CompositionError} from './Error.js';
 import define_Composed                      from './Composed.js';
 
 
@@ -41,16 +41,16 @@ export default oncePer('Delta', (deltaJs) => {
 
 		/** {@private}{@method}
 		 * @param target {DeltaJs.ReadableTarget}
-		 * @return {Boolean|ApplicationError} - `true` if the precondition is satisfied, otherwise
-		 *                                      `false` or an instance of `DeltaJs.ApplicationError`
+		 * @return {Boolean|PreconditionFailure} - `true` if the precondition is satisfied, otherwise
+		 *                                        `false` or an instance of `DeltaJs.PreconditionFailure`
 		 */
 		evaluatePrecondition(target) {
 			if (this.precondition) {
 				var judgment = this.precondition(target);
-				if (judgment instanceof ApplicationError) {
+				if (judgment instanceof PreconditionFailure) {
 					return judgment;
 				} else if (!judgment) {
-					return new ApplicationError(this, target.value);
+					return new PreconditionFailure(this, target.value);
 				}
 			}
 			return true;

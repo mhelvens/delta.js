@@ -1,14 +1,16 @@
-export class ApplicationError extends Error {
+export class ApplicationError extends Error {}
+
+export class PreconditionFailure extends ApplicationError {
 	constructor(delta, value) {
 		super();
-		this.name = 'ApplicationError';
+		this.name = 'PreconditionFailure';
 		this.message = `This delta of type '${delta.type}' cannot apply to this value of type '${typeof value}'.`;
 		this.delta = delta;
 		this.value = value;
 	}
 }
 
-export class MultipleOverloadsApplicationError extends ApplicationError {
+export class MultipleOverloadsApplicationError extends PreconditionFailure {
 	constructor(delta, value, errors = []) {
 		super(delta, value);
 		this.name = 'MultipleOverloadsApplicationError';
@@ -18,11 +20,11 @@ export class MultipleOverloadsApplicationError extends ApplicationError {
 	}
 }
 
-export class NoOverloadsApplicationError extends ApplicationError {
+export class NoOverloadsApplicationError extends PreconditionFailure {
 	constructor(delta, value) {
 		super(delta, value);
 		this.name = 'NoOverloadsApplicationError';
-		this.message = `This delta of type '${delta.type}' has no spcific deltas assigned to it, so it cannot apply to this value of type '${typeof value}.`;
+		this.message = `This delta of type '${delta.type}' has no specific deltas assigned to it, so it cannot apply to this value of type '${typeof value}.`;
 	}
 }
 
@@ -65,13 +67,13 @@ export class ApplicationOrderCycle extends Error {
 	}
 }
 
-export class UnresolvedDeltaConflict extends Error {
-	constructor(deltas) {
+export class UnresolvedDeltaConflict extends ApplicationError {
+	constructor(deltaNames) {
 		super();
 		this.name = 'UnresolvedDeltaConflict';
-		var deltaNames = deltas.map(d => `'${d.name}'`).join(',');
-		this.message = `There is an unresolved conflict between deltas ${deltaNames}.`;
-		this.deltas = deltas;
+		var nameList = deltaNames.slice(0, -1).map(name => `'${name}'`).join(',');
+		this.message = `There is an unresolved conflict between deltas ${nameList} and '${deltaNames[deltaNames.length-1]}'.`;
+		this.deltaNames = deltaNames;
 	}
 }
 

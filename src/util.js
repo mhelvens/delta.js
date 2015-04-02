@@ -87,10 +87,36 @@ export var define_d = (deltaJs) => (type, fn) => {
 };
 
 
+export function customIndexOf(a, value, eq=(x,y)=>x===y) {
+	for (var i = 0; i < a.length; ++i) {
+		if (eq(a[i], value)) { return i }
+	}
+	return -1;
+}
+
+
 export function arraysEqual(a, b, eq=(x,y)=>x===y) {
 	if (a.length !== b.length) { return false }
 	for (let i = 0; i < a.length; ++i) {
 		if (!eq(a[i], b[i])) { return false }
+	}
+	return true;
+}
+
+
+export function arraysHaveSameElements(a, b, eq=(x,y)=>x===y) {
+	if (a.length !== b.length) { return false }
+	var bb = [...b];
+	for (var i = 0; i < a.length; ++i) {
+		var found = false;
+		for (var j = 0; j < bb.length; ++j) {
+			if (eq(a[i], bb[j])) {
+				bb.splice(j, 1);
+				found = true;
+				break;
+			}
+		}
+		if (!found) { return false }
 	}
 	return true;
 }

@@ -4,10 +4,10 @@ import JsGraph from 'js-graph';
 
 /* import internal stuff */
 import {extend, isDefined, indent, oncePer, o, graphDescendants} from './util.js';
-import Path                                    from './Path.js';
-import define_Modify                           from './Modify.js';
-import define_ContainerProxy                   from './ContainerProxy.js';
-import {ApplicationOrderCycle}                 from './Error.js';
+import Path                                             from './Path.js';
+import define_Modify                                    from './Modify.js';
+import define_ContainerProxy                            from './ContainerProxy.js';
+import {ApplicationOrderCycle, UnresolvedDeltaConflict} from './Error.js';
 
 
 export default oncePer('DeltaModel', (deltaJs) => {
@@ -67,7 +67,20 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			return result; // TODO: move 'equals' method to the js-graph library (and make more efficient)
 		}
 
+		_assertNoUnresolvedConflicts() {
+			var conflicts = this.conflicts();
+			conflicts.forEach((conflictInfo) => {
+				if (conflictInfo.conflictResolvingDeltas.length === 0) {
+					throw new UnresolvedDeltaConflict(conflictInfo.conflictingDeltas);
+				}
+			});
+		}
+
 		applyTo(target, options = {}) {
+			/* throw an exception if there are unresolved conflicts */
+			this._assertNoUnresolvedConflicts();
+
+			/* no unresolved conflicts: apply the delta model */
 			this.graph.topologically((name, subDelta) => {
 				subDelta.applyTo(target, options);
 			});
@@ -110,12 +123,10 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			/* transitive reduction */
 			g = g.transitiveReduction();
 
-			/* for each delta, gather its ancestors and register through which predecessor they may be reached */
+			/* find all pairs of 'incomparable' deltas, plus the closest deltas that are 'greater' than both */
 			var resolutions = {}; // first -> second -> possible-resolving-delta -> true
 			var getResolutionsIn = (name) => {
 				if (g.vertexValue(name)) { return }
-
-				/* find ancestors */
 				var ancestors = {};
 				g.predecessors(name).forEach((pred) => {
 					getResolutionsIn(pred);
@@ -124,8 +135,6 @@ export default oncePer('DeltaModel', (deltaJs) => {
 					extend(ancestors[pred], ...Object.keys(predAncestors).map(ppred => predAncestors[ppred]));
 				});
 				g.setVertex(name, ancestors);
-
-				/* find 'incomparable' deltas, plus the first delta that is 'greater' than both */
 				Object.keys(ancestors).forEach((pred1) => {
 					Object.keys(ancestors).forEach((pred2) => {
 						if (pred1 >= pred2) { return } // make sure pred1 < pred2
@@ -149,27 +158,33 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			};
 			getResolutionsIn(sink);
 
-
+			/* out of the incomparable deltas, find those that are actually in conflict, and find any */
 			var result = [];
 			Object.keys(resolutions).forEach((first) => {
 				Object.keys(resolutions[first]).forEach((second) => {
 					var x = this.graph.vertexValue(first);
 					var y = this.graph.vertexValue(second);
-					if (!x.composedWith(y).equals(y.composedWith(x))) {
-						result.push({ deltas: [x, y] });
-						// TODO: see if conflicts are resolved:
-						//graphDescendants(g, firstResolver).forEach((resolver) => {
-						//
-						//});
+					if (!x.commutesWith(y)) {
+						var conflictInfo = {
+							conflictingDeltas:       [first, second],
+							conflictResolvingDeltas: []
+						};
+						Object.keys(resolutions[first][second]).forEach((resolver) => {
+							graphDescendants(g, resolver).forEach((resolver) => {
+								var z = this.graph.vertexValue(resolver);
+								if (resolver !== sink) {
+									if (z.resolves(x, y)) {
+										conflictInfo.conflictResolvingDeltas.push(resolver);
+									}
+								}
+							});
+						});
+						result.push(conflictInfo);
 					}
 				});
 			});
 
-
-			// TODO: remove test code
-			console.log(JSON.stringify(result, null, 4));
-
-
+			/* return the conflict results */
 			return result;
 		}
 
@@ -263,7 +278,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				result.graph.addVertex(name, delta);
 
 				/* application order */
-				[ ...options['resolves']||[], ...options['after']||[], ...options['requires']||[] ].forEach((subName) => {
+				[  ...options['resolves']||[],  ...options['after']||[],  ...options['requires']||[]  ].forEach((subName) => {
 					result.graph.createEdge(subName, name);
 					if (result.graph.hasCycle()) {
 						result.graph.removeExistingEdge(subName, name);

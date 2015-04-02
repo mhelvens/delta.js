@@ -17,12 +17,12 @@ extend(DeltaJs, { Path });
 
 
 /* make Error classes available under the DeltaJs symbol */
-import {ApplicationError, MultipleOverloadsApplicationError,
+import {ApplicationError, PreconditionFailure, MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError, CompositionError,
         MultipleOverloadsCompositionError, ConstraintFailure,
         ApplicationOrderCycle, UnresolvedDeltaConflict,
         MultipleActiveProxiesError} from './Error.js';
-extend(DeltaJs, { ApplicationError, MultipleOverloadsApplicationError,
+extend(DeltaJs, { ApplicationError, PreconditionFailure, MultipleOverloadsApplicationError,
                     NoOverloadsApplicationError, CompositionError,
                     MultipleOverloadsCompositionError, ConstraintFailure,
                     ApplicationOrderCycle, UnresolvedDeltaConflict,
