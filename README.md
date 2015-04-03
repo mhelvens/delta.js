@@ -4,6 +4,7 @@
 
 achieve modularity and separation of concerns through feature-oriented programming
 
+
 ## Description
 
 <img align="right" width="300px" margin="15px" src="./docs/sculptor.jpg" />
