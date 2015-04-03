@@ -86,6 +86,22 @@ var DeltaJs = require('lib/delta.js/dist/delta.js')
 <!-- use DeltaJs -->
 ```
 
+
+###Files
+
+The `dist` directory offers different files for use in different circumstances.
+Use the following table to determine which file to use in your situation.
+
+| File                | Description                                                                   |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `delta.js`          | Requires you to first load `babel/polyfill.js` or `babel/polyfill-browser.js` |
+| `delta.min.js`      | Same as above, but minified                                                   |
+| `delta.full.js`     | Already includes `babel/polyfill.js`; ready for use in any context            |
+| `delta.full.min.js` | Same as above, but minified                                                   |
+
+If you don't know which one you need, you probably want `delta.full.min.js`.
+
+
 ## Using `DeltaJs`
 
 <img align="right" width="300px" margin="15px" src="./docs/selection.jpg" />
@@ -404,10 +420,11 @@ deltaJs.delta('my-delta').modify('my-vp')
 
 Here is an incomplete list of future plans for this library:
 
-* useful error messages based on delta model structure
 * support for changing HTML and CSS with deltas
+* transpiler to resolve deltas at build-time
 
 <div style="clear: both">&nbsp;</div>
+
 
 ## License
 

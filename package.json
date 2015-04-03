@@ -10,7 +10,10 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "js-graph": "~1.1.0-alpha"
+	"babel": "~4"
+  },
+  "dependencies": {
+	"babel": "~4"
   },
   "devDependencies": {
 	"babel": "~4",
@@ -32,10 +35,11 @@
 	"karma-webpack": "~1",
 	"phantomjs-polyfill": "*",
 	"uglifyjs": "~2",
-	"webpack": "~1"
+	"webpack": "~1",
+	"js-graph": "~1.2.0-alpha"
   },
   "scripts": {
-	"build": "mkdir -p dist && cp src/delta.es6.js dist && webpack && uglifyjs dist/delta.js -mo dist/delta.min.js --in-source-map dist/delta.js.map --source-map dist/delta.min.js.map",
+	"build": "mkdir -p dist && webpack && uglifyjs dist/delta.js -mo dist/delta.min.js --in-source-map dist/delta.js.map --source-map dist/delta.min.js.map && uglifyjs dist/delta.full.js -mo dist/delta.full.min.js --in-source-map dist/delta.full.js.map --source-map dist/delta.full.min.js.map",
 	"test": "karma start",
 	"test-ci": "karma start ./karma.ci.conf.js"
   }

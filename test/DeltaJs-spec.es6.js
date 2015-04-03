@@ -1,4 +1,4 @@
-import {any} from './helpers.es6.js';
+import {any}   from './helpers.es6.js';
 import DeltaJs from '../src/delta.es6.js';
 
 
@@ -30,6 +30,7 @@ describe("DeltaJs instance -", () => {
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	/* declare a delta variable accessible to every test */
 	var delta; // the itCan test is done on this 'delta' variable
