@@ -1,6 +1,6 @@
 /* import internal stuff */
-import {extend, a, assert, isUndefined, oncePer} from './util.js';
-import {ConstraintFailure}                       from './Error.js';
+import {extend, a, assert, isUndefined, oncePer} from './util.es6.js';
+import {ConstraintFailure}                       from './Error.es6.js';
 
 
 export default oncePer('features', (deltaJs) => {

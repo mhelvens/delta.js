@@ -1,4 +1,5 @@
-'use strict';
+import {any} from './helpers.es6.js';
+import DeltaJs from '../src/delta.es6.js';
 
 
 describe("DeltaJs constructor", () => {
@@ -18,7 +19,7 @@ describe("DeltaJs constructor", () => {
 });
 
 
-describe("DeltaJs instance -", function () {
+describe("DeltaJs instance -", () => {
 
 
 	/* from here on, every test starts with a fresh DeltaJs instance */

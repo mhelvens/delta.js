@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {extend, isUndefined, oncePer} from './util.js';
+import {extend, isUndefined, oncePer} from './util.es6.js';
 
 
 export default oncePer('application conditions', (deltaJs) => {

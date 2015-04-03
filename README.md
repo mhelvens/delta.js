@@ -1,4 +1,6 @@
 # delta.js
+[![Build Status](http://img.shields.io/travis/mhelvens/delta.js.svg)](https://travis-ci.org/mhelvens/delta.js)
+[![Coverage Status](http://img.shields.io/coveralls/mhelvens/delta.js.svg)](https://coveralls.io/r/mhelvens/delta.js?branch=master)
 
 achieve modularity and separation of concerns through feature-oriented programming
 

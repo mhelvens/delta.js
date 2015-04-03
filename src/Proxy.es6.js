@@ -3,8 +3,8 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import {extend, oncePer} from './util.js';
-import define_Delta      from './Delta_class.js';
+import {extend, oncePer} from './util.es6.js';
+import define_Delta      from './Delta_class.es6.js';
 
 
 export default oncePer('Proxy', (deltaJs) => {

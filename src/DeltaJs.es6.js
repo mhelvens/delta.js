@@ -3,20 +3,20 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import {extend, assert, isUndefined, isDefined, arraysEqual} from './util.js';
-import Path                                     from './Path.js';
-import {ReadableTarget, WritableTarget, rt, wt} from './Target.js';
-import define_Delta                             from './Delta_class.js';
-import define_Overloaded                        from './Overloaded.js';
-import define_Modify                            from './Modify.js';
-import define_basicOperations                   from './basicOperations.js';
-import define_PutIntoArray                      from './PutIntoArray.js';
-import define_PutIntoFunction                   from './PutIntoFunction.js';
-import define_DeltaModel                        from './DeltaModel.js';
-import define_features                          from './features.js';
-import define_variationPoints                   from './variationPoints.js';
-import define_applicationConditions             from './applicationConditions.js';
-import define_ContainerProxy                    from './ContainerProxy.js';
+import {extend, assert, isUndefined, isDefined, arraysEqual} from './util.es6.js';
+import Path                                     from './Path.es6.js';
+import {ReadableTarget, WritableTarget, rt, wt} from './Target.es6.js';
+import define_Delta                             from './Delta_class.es6.js';
+import define_Overloaded                        from './Overloaded.es6.js';
+import define_Modify                            from './Modify.es6.js';
+import define_basicOperations                   from './basicOperations.es6.js';
+import define_PutIntoArray                      from './PutIntoArray.es6.js';
+import define_PutIntoFunction                   from './PutIntoFunction.es6.js';
+import define_DeltaModel                        from './DeltaModel.es6.js';
+import define_features                          from './features.es6.js';
+import define_variationPoints                   from './variationPoints.es6.js';
+import define_applicationConditions             from './applicationConditions.es6.js';
+import define_ContainerProxy                    from './ContainerProxy.es6.js';
 
 
 /** {@public}{@class}

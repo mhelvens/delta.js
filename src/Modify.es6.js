@@ -1,8 +1,8 @@
 /* import internal stuff */
-import {extend, indent, t, oncePer, objectsEqual} from './util.js';
-import Path                         from './Path.js';
-import {wt}                         from './Target.js';
-import define_ContainerProxy        from './ContainerProxy.js';
+import {extend, indent, t, oncePer, objectsEqual} from './util.es6.js';
+import Path                         from './Path.es6.js';
+import {wt}                         from './Target.es6.js';
+import define_ContainerProxy        from './ContainerProxy.es6.js';
 
 
 export default oncePer('Modify', (deltaJs) => {

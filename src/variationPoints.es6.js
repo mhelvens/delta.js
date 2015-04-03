@@ -1,6 +1,6 @@
 /* import internal stuff */
-import {extend, oncePer} from './util.js';
-import define_DeltaModel from './DeltaModel.js';
+import {extend, oncePer} from './util.es6.js';
+import define_DeltaModel from './DeltaModel.es6.js';
 
 
 export default oncePer('variation points', (deltaJs) => {

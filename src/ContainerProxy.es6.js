@@ -3,11 +3,11 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import {extend, a, isUndefined, oncePer} from './util.js';
-import Path                              from './Path.js';
-import define_Overloaded                 from './Overloaded.js';
-import define_Proxy                      from './Proxy.js';
-import {MultipleActiveProxiesError}      from './Error.js';
+import {extend, a, isUndefined, oncePer} from './util.es6.js';
+import Path                              from './Path.es6.js';
+import define_Overloaded                 from './Overloaded.es6.js';
+import define_Proxy                      from './Proxy.es6.js';
+import {MultipleActiveProxiesError}      from './Error.es6.js';
 
 
 export default oncePer('ContainerProxy', (deltaJs) => {

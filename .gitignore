@@ -1,10 +1,4 @@
-**/node_modules
-**/bower_components
-**/.sass-cache
-**/*.css
-**/SpecRunner.html
-**/.idea/workspace.xml
-**/.idea/tasks.xml
-**/.idea/shelf
-.intermediate-output
-test-dist
+/.idea
+/node_modules
+/bower_components
+/coverage

@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {indent, oncePer, arraysEqual} from './util.js';
+import {indent, oncePer, arraysEqual} from './util.es6.js';
 
 
 export default oncePer('Composed', (deltaJs) => {

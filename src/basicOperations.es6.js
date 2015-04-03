@@ -1,8 +1,8 @@
 /* import internal stuff */
-import {isUndefined, isDefined, t, define_d, oncePer} from './util.js';
-import {WritableTarget, ReadableTarget, rt, wt}       from './Target.js';
-import define_Delta                                   from './Delta_class.js';
-import define_Modify                                  from './Modify.js';
+import {isUndefined, isDefined, t, define_d, oncePer} from './util.es6.js';
+import {WritableTarget, ReadableTarget, rt, wt}       from './Target.es6.js';
+import define_Delta                                   from './Delta_class.es6.js';
+import define_Modify                                  from './Modify.es6.js';
 
 
 export default oncePer('basic operations', (deltaJs) => {

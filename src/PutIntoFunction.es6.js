@@ -1,9 +1,9 @@
 /* import internal stuff */
-import {isUndefined, isDefined, t, define_d, oncePer, arraysEqual} from './util.js';
-import {WritableTarget}                                            from './Target.js';
-import define_Modify                                               from './Modify.js';
-import define_BasicOperations                                      from './basicOperations.js';
-import define_Proxy                                                from './Proxy.js';
+import {isUndefined, isDefined, t, define_d, oncePer, arraysEqual} from './util.es6.js';
+import {WritableTarget}                                            from './Target.es6.js';
+import define_Modify                                               from './Modify.es6.js';
+import define_BasicOperations                                      from './basicOperations.es6.js';
+import define_Proxy                                                from './Proxy.es6.js';
 
 
 export default oncePer('PutIntoFunction', (deltaJs) => {

@@ -1,6 +1,0 @@
-{
-    "type": "internal-library",
-	"name": "delta",
-	"file": "delta.js",
-	"var": "DeltaJs"
-}

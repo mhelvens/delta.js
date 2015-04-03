@@ -3,11 +3,11 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import {extend, isDefined, indent, oncePer, o, graphDescendants} from './util.js';
-import Path                                             from './Path.js';
-import define_Modify                                    from './Modify.js';
-import define_ContainerProxy                            from './ContainerProxy.js';
-import {ApplicationOrderCycle, UnresolvedDeltaConflict} from './Error.js';
+import {extend, isDefined, indent, oncePer, o, graphDescendants} from './util.es6.js';
+import Path                                             from './Path.es6.js';
+import define_Modify                                    from './Modify.es6.js';
+import define_ContainerProxy                            from './ContainerProxy.es6.js';
+import {ApplicationOrderCycle, UnresolvedDeltaConflict} from './Error.es6.js';
 
 
 export default oncePer('DeltaModel', (deltaJs) => {

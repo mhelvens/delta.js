@@ -1,8 +1,8 @@
 /* import internal stuff */
-import {extend, oncePer}                    from './util.js';
-import {ReadableTarget, wt}                 from './Target.js';
-import {PreconditionFailure, CompositionError} from './Error.js';
-import define_Composed                      from './Composed.js';
+import {extend, oncePer}                    from './util.es6.js';
+import {ReadableTarget, wt}                 from './Target.es6.js';
+import {PreconditionFailure, CompositionError} from './Error.es6.js';
+import define_Composed                      from './Composed.es6.js';
 
 
 export default oncePer('Delta', (deltaJs) => {

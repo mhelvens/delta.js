@@ -1,4 +1,4 @@
-import {assert, isDefined} from './util.js';
+import {assert, isDefined} from './util.es6.js';
 
 
 export default class Path {

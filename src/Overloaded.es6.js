@@ -1,9 +1,9 @@
 /* import internal stuff */
-import define_Delta                   from './Delta_class.js';
-import {indent, oncePer, arraysEqual} from './util.js';
+import define_Delta                   from './Delta_class.es6.js';
+import {indent, oncePer, arraysEqual} from './util.es6.js';
 import {MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError,
-		MultipleOverloadsCompositionError} from './Error.js';
+		MultipleOverloadsCompositionError} from './Error.es6.js';
 
 
 export default oncePer('Overloaded', (deltaJs) => {
