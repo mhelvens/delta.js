@@ -27,53 +27,44 @@ export default oncePer('DeltaModel', (deltaJs) => {
 		clone() {
 			var result = super.clone();
 			result.graph = this.graph.clone();
-			result.graph.eachVertex((id, delta) => {
+			for (let [id, delta] of result.graph.vertices()) {
 				result.graph.setVertex(id, delta.clone());
-			});
+			}
 			return result;
 		}
 
 		equals(other) {
 			var g1 = this .graph.transitiveReduction();
 			var g2 = other.graph.transitiveReduction();
-			var result = true;
-			g1.eachVertex((n1, d1) => {
-				if (g2.vertexValue(n1).equals(d1)) {
-					result = false;
+			for (let [n1, d1] of g1.vertices()) {
+				if (!g2.vertexValue(n1).equals(d1)) {
 					return false;
 				}
-			});
-			if (!result) { return false }
-			g2.eachVertex((n2, d2) => {
-				if (g1.vertexValue(n2).equals(d2)) {
-					result = false;
+			}
+			for (let [n2, d2] of g2.vertices()) {
+				if (!g1.vertexValue(n2).equals(d2)) {
 					return false;
 				}
-			});
-			if (!result) { return false }
-			g1.eachEdge((n1From, n1To) => {
-				if (g2.hasEdge(n1From, n1To)) {
-					result = false;
+			}
+			for (let [n1From, n1To] of g1.edges()) {
+				if (!g2.hasEdge(n1From, n1To)) {
 					return false;
 				}
-			});
-			if (!result) { return false }
-			g1.eachEdge((n2From, n2To) => {
-				if (g1.hasEdge(n2From, n2To)) {
-					result = false;
+			}
+			for (let [n2From, n2To] of g2.edges()) {
+				if (!g1.hasEdge(n2From, n2To)) {
 					return false;
 				}
-			});
-			return result; // TODO: move 'equals' method to the js-graph library (and make more efficient)
+			}
+			return true;
 		}
 
 		_assertNoUnresolvedConflicts() {
-			var conflicts = this.conflicts();
-			conflicts.forEach((conflictInfo) => {
+			for (let conflictInfo of this.conflicts()) {
 				if (conflictInfo.conflictResolvingDeltas.length === 0) {
 					throw new UnresolvedDeltaConflict(conflictInfo.conflictingDeltas);
 				}
-			});
+			}
 		}
 
 		applyTo(target, options = {}) {
@@ -81,9 +72,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			this._assertNoUnresolvedConflicts();
 
 			/* no unresolved conflicts: apply the delta model */
-			this.graph.topologically((name, subDelta) => {
+			for (let [, subDelta] of this.graph.vertices_topologically()) {
 				subDelta.applyTo(target, options);
-			});
+			}
 		}
 
 		/** {@public}{@method}
@@ -94,9 +85,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			var str = super.toString(options);
 			if (this.graph.vertexCount() > 0) {
 				var deltas = '';
-				this.graph.topologically((name, delta) => {
+				for (let [name, delta] of this.graph.vertices_topologically()) {
 					deltas += `[${name}] ${delta.toString(options)}\n`;
-				});
+				}
 				str += '\n' + indent(deltas, 4);
 			}
 			return str;
@@ -115,10 +106,10 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 			/* create sink vertex, connect it to all other vertices */
 			g.addNewVertex(sink, null);
-			g.eachVertex((name) => {
+			for (let [name] of g.vertices()) {
 				g.setVertex(name, null);
 				if (name !== sink) { g.ensureEdge(name, sink) }
-			});
+			}
 
 			/* transitive reduction */
 			g = g.transitiveReduction();
@@ -128,61 +119,61 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			var getResolutionsIn = (name) => {
 				if (g.vertexValue(name)) { return }
 				var ancestors = {};
-				g.predecessors(name).forEach((pred) => {
+				for (let [pred] of g.verticesTo(name)) {
 					getResolutionsIn(pred);
 					ancestors[pred] = { [pred]: true };
-					var predAncestors = g.vertexValue(pred);
+					let predAncestors = g.vertexValue(pred);
 					extend(ancestors[pred], ...Object.keys(predAncestors).map(ppred => predAncestors[ppred]));
-				});
+				}
 				g.setVertex(name, ancestors);
-				Object.keys(ancestors).forEach((pred1) => {
-					Object.keys(ancestors).forEach((pred2) => {
-						if (pred1 >= pred2) { return } // make sure pred1 < pred2
-						var ancs1 = extend({}, ancestors[pred1]);
-						var ancs2 = extend({}, ancestors[pred2]);
-						Object.keys(ancs1).forEach((anc1) => {
-							Object.keys(ancs2).forEach((anc2) => {
+				for (let pred1 of Object.keys(ancestors)) {
+					for (let pred2 of Object.keys(ancestors)) {
+						if (pred1 >= pred2) { continue } // make sure pred1 < pred2
+						let ancs1 = extend({}, ancestors[pred1]);
+						let ancs2 = extend({}, ancestors[pred2]);
+						for (let anc1 of Object.keys(ancs1)) {
+							for (let anc2 of Object.keys(ancs2)) {
 								if (anc1 === anc2) {
 									delete ancs1[anc1];
 									delete ancs2[anc2];
 								}
-							});
-						});
-						Object.keys(ancs1).forEach((anc1) => {
-							Object.keys(ancs2).forEach((anc2) => {
+							}
+						}
+						for (let anc1 of Object.keys(ancs1)) {
+							for (let anc2 of Object.keys(ancs2)) {
 								o(resolutions, ...[anc1, anc2].sort())[name] = true;
-							});
-						});
-					});
-				});
+							}
+						}
+					}
+				}
 			};
 			getResolutionsIn(sink);
 
 			/* out of the incomparable deltas, find those that are actually in conflict, and find any */
 			var result = [];
-			Object.keys(resolutions).forEach((first) => {
-				Object.keys(resolutions[first]).forEach((second) => {
-					var x = this.graph.vertexValue(first);
-					var y = this.graph.vertexValue(second);
+			for (let first of Object.keys(resolutions)) {
+				for (let second of Object.keys(resolutions[first])) {
+					let x = this.graph.vertexValue(first);
+					let y = this.graph.vertexValue(second);
 					if (!x.commutesWith(y)) {
 						var conflictInfo = {
 							conflictingDeltas:       [first, second],
 							conflictResolvingDeltas: []
 						};
-						Object.keys(resolutions[first][second]).forEach((resolver) => {
+						for (let resolver of Object.keys(resolutions[first][second])) {
 							graphDescendants(g, resolver).forEach((resolver) => {
-								var z = this.graph.vertexValue(resolver);
+								let z = this.graph.vertexValue(resolver);
 								if (resolver !== sink) {
 									if (z.resolves(x, y)) {
 										conflictInfo.conflictResolvingDeltas.push(resolver);
 									}
 								}
 							});
-						});
+						}
 						result.push(conflictInfo);
 					}
-				});
-			});
+				}
+			}
 
 			/* return the conflict results */
 			return result;
@@ -278,13 +269,15 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				result.graph.addVertex(name, delta);
 
 				/* application order */
-				[  ...options['resolves']||[],  ...options['after']||[],  ...options['requires']||[]  ].forEach((subName) => {
+				for (let subName of [ ...options['resolves'] || [],
+				                      ...options['after']    || [],
+				                      ...options['requires'] || [] ]) {
 					result.graph.createEdge(subName, name);
 					if (result.graph.hasCycle()) {
 						result.graph.removeExistingEdge(subName, name);
 						throw new ApplicationOrderCycle(subName, name);
 					}
-				});
+				}
 
 				/* application condition */
 				if (options.feature || this._childApplicationConditions[name].conditional) {
