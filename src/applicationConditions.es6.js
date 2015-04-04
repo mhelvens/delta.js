@@ -9,13 +9,13 @@ export default oncePer('application conditions', (deltaJs) => {
 
 		extend(deltaJs.constructor.prototype, {
 			select(...features) {
-				features.forEach((feature) => {
+				for (let feature of features) {
 					if (Array.isArray(feature)) {
 						this.select(...feature);
 					} else {
 						this.features[feature].select();
 					}
-				});
+				}
 			}
 		});
 

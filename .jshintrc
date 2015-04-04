@@ -20,6 +20,7 @@
   "nonew":     true,
   "forin":     true,
   "evil":      true,
+  "loopfunc":  true,
 
   "predef": [ "requirejs", "define", "jasmine", "describe", "beforeEach", "afterEach", "it", "xit", "expect", "any", "spyOn", "DeltaJs", "P" ]
 }

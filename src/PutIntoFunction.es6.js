@@ -28,6 +28,8 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 			return result;
 		}
 
+		// TODO: refines method instead of equals method (look at PutIntoArray.es6.js)
+
 		equals(other) {
 			return arraysEqual(this.values, other.values,
 				(a, b) => a.method === b.method && a.value && b.value);
@@ -42,18 +44,17 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 			if (isUndefined(target.value._DeltaJs_functions)) {
 				var originalFn = target.value;
 				var newFn = function (...args) {
-					var result;
-					newFn._DeltaJs_functions.forEach((fn) => {
+					let result;
+					for (let fn of newFn._DeltaJs_functions) {
 						result = fn.apply(this, args);
-					});
-					//noinspection JSUnusedAssignment
+					}
 					return result;
 				};
 				newFn._DeltaJs_functions = [function (...args) { originalFn.apply(this, args) }];
 				target.value = newFn;
 			}
 			var arr = target.value._DeltaJs_functions;
-			this.values.forEach(({method, value}) => {
+			for (let {method, value} of this.values) {
 				switch (method) {
 					case 'prepend': {
 						arr.unshift(value);
@@ -69,7 +70,7 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 						arr.push(value);
 					} break;
 				}
-			});
+			}
 		}
 
 		get methods() { return [] }

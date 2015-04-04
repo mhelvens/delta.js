@@ -127,9 +127,9 @@ export default class DeltaJs {
 
 		/* create any given methods with default handler */
 		var lowercaseName = name[0].toLowerCase()+name.slice(1);
-		(DeltaClass.prototype.methods || [lowercaseName]).forEach((method) => {
+		for (let method of DeltaClass.prototype.methods || [lowercaseName]) {
 			this.ContainerProxy.newProxyMethod(method, (...args) => new DeltaClass(...args));
-		});
+		}
 
 		/* return the new class */
 		return DeltaClass;

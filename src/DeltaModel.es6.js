@@ -160,15 +160,15 @@ export default oncePer('DeltaModel', (deltaJs) => {
 							conflictingDeltas:       [first, second],
 							conflictResolvingDeltas: []
 						};
-						for (let resolver of Object.keys(resolutions[first][second])) {
-							graphDescendants(g, resolver).forEach((resolver) => {
+						for (let nearestResolver of Object.keys(resolutions[first][second])) {
+							for (let resolver of graphDescendants(g, nearestResolver)) {
 								let z = this.graph.vertexValue(resolver);
 								if (resolver !== sink) {
 									if (z.resolves(x, y)) {
 										conflictInfo.conflictResolvingDeltas.push(resolver);
 									}
 								}
-							});
+							}
 						}
 						result.push(conflictInfo);
 					}
@@ -261,7 +261,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 		delta() {
 			var result = super.delta();
 			result.graph.clear();
-			this.childKeys().forEach((name) => {
+			for (let name of this.childKeys()) {
 				let options = this._childOptions[name];
 
 				/* delta in the graph */
@@ -270,8 +270,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 				/* application order */
 				for (let subName of [ ...options['resolves'] || [],
-				                      ...options['after']    || [],
-				                      ...options['requires'] || [] ]) {
+					...options['after']    || [],
+					...options['requires'] || [] ]) {
 					result.graph.createEdge(subName, name);
 					if (result.graph.hasCycle()) {
 						result.graph.removeExistingEdge(subName, name);
@@ -283,8 +283,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				if (options.feature || this._childApplicationConditions[name].conditional) {
 					delta.applicationCondition = this._childApplicationConditions[name];
 				}
-
-			});
+			}
 			return result;
 		}
 

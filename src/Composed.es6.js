@@ -27,9 +27,9 @@ export default oncePer('Composed', (deltaJs) => {
 		}
 
 		applyTo(target, options = {}) {
-			this._components.forEach((components) => {
-				components.applyTo(target, options);
-			});
+			for (let delta of this._components) {
+				delta.applyTo(target, options);
+			}
 		}
 
 		/** {@public}{@method}
@@ -40,9 +40,9 @@ export default oncePer('Composed', (deltaJs) => {
 			var str = super.toString(options);
 			if (this._components.length > 0) {
 				var deltas = '';
-				this._components.forEach((delta) => {
+				for (let delta of this._components) {
 					deltas += `• ${delta.toString(options)}\n`;
-				});
+				}
 				str += '\n' + indent(deltas, 4);
 			}
 			return str;
@@ -57,14 +57,14 @@ export default oncePer('Composed', (deltaJs) => {
 			/* flatten Composed that are inside Composed */
 			this._components = (() => {
 				let newComponents = [];
-				this._components.forEach((delta) => {
+				for (let delta of this._components) {
 					if (delta instanceof deltaJs.Delta.Composed) {
 						delta._collapse();
 						newComponents.push(...delta._components);
 					} else {
 						newComponents.push(delta);
 					}
-				});
+				}
 				return newComponents;
 			})();
 

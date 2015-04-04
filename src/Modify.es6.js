@@ -25,9 +25,9 @@ export default oncePer('Modify', (deltaJs) => {
 		 */
 		clone() {
 			var result = super.clone();
-			Object.keys(this.subDeltas).forEach((prop) => {
+			for (let prop of Object.keys(this.subDeltas)) {
 				result.subDeltas[prop] = this.subDeltas[prop].clone();
-			});
+			}
 			return result;
 		}
 
@@ -45,12 +45,12 @@ export default oncePer('Modify', (deltaJs) => {
 		 * @param options {object?}              - the (optional) options for this delta application
 		 */
 		applyTo(target, options = {}) {
-			Object.keys(this.subDeltas).forEach((prop) => {
+			for (let prop of Object.keys(this.subDeltas)) {
 				if (!options.restrictToProperty || options.restrictToProperty === prop) {
 					this.subDeltas[prop].applyTo(wt(target.value, prop),
 						extend({}, options, { restrictToProperty: null }));
 				}
-			});
+			}
 		}
 
 		/** {@public}{@method}
@@ -122,9 +122,9 @@ export default oncePer('Modify', (deltaJs) => {
 		delta() {
 			var result = super.delta();
 			result.subDeltas = {};
-			this.childKeys().forEach((prop) => {
+			for (let prop of this.childKeys()) {
 				result.subDeltas[prop] = this.childDelta(prop);
-			});
+			}
 			return result;
 		}
 
@@ -134,9 +134,9 @@ export default oncePer('Modify', (deltaJs) => {
 	/* composition - introducing 'Modify' ***********************************************/
 	deltaJs.newComposition( t('Modify', 'Modify'), (d1, d2) => {
 		var result = d1.clone();
-		Object.keys(d2.subDeltas).forEach((prop) => {
+		for (let prop of Object.keys(d2.subDeltas)) {
 			result.subDeltas[prop] = deltaJs.Delta.composed(result.subDeltas[prop], d2.subDeltas[prop]);
-		});
+		}
 		return result;
 	});
 

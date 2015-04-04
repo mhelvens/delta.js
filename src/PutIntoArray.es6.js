@@ -47,11 +47,11 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 			/* insertions in 'this' cannot come later than their counterparts in 'other', */
 			/* in the sense of appensions and prepensions that have come before it        */
 			var appensionsAndPrepensionsSeen = [];
-			for (var i = 0; i < this.values.length; ++i) {
+			for (let i = 0; i < this.values.length; ++i) {
 				if (this.values[i].method === 'insert') {
 					var ind = customIndexOf(other.values, this.values[i], eq);
 					var appensionsAndPrepensionsToGo = [...appensionsAndPrepensionsSeen];
-					for (var j = 0; j <= ind; ++j) {
+					for (let j = 0; j <= ind; ++j) {
 						var indd = customIndexOf(appensionsAndPrepensionsToGo, other.values[j], eq);
 						if (indd > -1) {
 							appensionsAndPrepensionsToGo.splice(indd, 1);
@@ -73,23 +73,23 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 
 		applyTo(target) {
 			var arr = target.value;
-			this.values.forEach(({method, value}) => {
+			for (let {method, value} of this.values) {
 				switch (method) {
-				case 'prepend': {
-					arr.unshift(value);
-				} break;
-				case 'insert': {
-					// 'insert' doesn't *have* to use a random position. Any position will do.
-					//  E.g., its implementation could just be the same as for 'append'.
-					//  Nonetheless, we use a random position to force the tests to be permissive.
-					var position = Math.floor(Math.random() * (arr.length + 1));
-					arr.splice(position, 0, value);
-				} break;
-				case 'append': {
-					arr.push(value);
-				} break;
+					case 'prepend': {
+						arr.unshift(value);
+					} break;
+					case 'insert': {
+						// 'insert' doesn't *have* to use a random position. Any position will do.
+						//  E.g., its implementation could just be the same as for 'append'.
+						//  Nonetheless, we use a random position to force the tests to be permissive.
+						var position = Math.floor(Math.random() * (arr.length + 1));
+						arr.splice(position, 0, value);
+					} break;
+					case 'append': {
+						arr.push(value);
+					} break;
 				}
-			});
+			}
 		}
 
 		get methods() { return [] }

@@ -32,9 +32,9 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 
 		deactivate() {
-			Object.keys(this._children).forEach((key) => {
+			for (let key of Object.keys(this._children)) {
 				this.childProxy(key).deactivate();
-			});
+			}
 			super.deactivate();
 		}
 

@@ -49,9 +49,9 @@ export default oncePer('features', (deltaJs) => {
 		}
 	}
 	function _addSelects(feature, otherFeatures) {
-		_normalizeClause(otherFeatures).forEach((other) => {
+		for (let other of _normalizeClause(otherFeatures)) {
 			_addIf(other, feature);
-		});
+		}
 	}
 
 
@@ -69,9 +69,9 @@ export default oncePer('features', (deltaJs) => {
 		}
 	}
 	function _addRequiredBy(feature, otherFeatures) {
-		_normalizeClause(otherFeatures).forEach((other) => {
+		for (let other of _normalizeClause(otherFeatures)) {
 			_addOnlyIf(other, feature);
-		});
+		}
 	}
 
 
@@ -85,7 +85,7 @@ export default oncePer('features', (deltaJs) => {
 		var somethingChanged;
 		do {
 			somethingChanged = false;
-			Object.keys(deltaJs.features).forEach((featureName) => {
+			for (let featureName of Object.keys(deltaJs.features)) {
 				if (!_selected[featureName]) {
 					/* if there are 'if' disjuncts that are selected, this feature is selected */
 					if (isUndefined(_selected[featureName])) { _selected[featureName] = false }
@@ -94,14 +94,14 @@ export default oncePer('features', (deltaJs) => {
 						somethingChanged = true;
 					}
 				}
-			});
+			}
 		} while (somethingChanged);
 
 		/* computation of allowed features */
-		Object.keys(deltaJs.features).forEach((featureName) => {
+		for (let featureName of Object.keys(deltaJs.features)) {
 			/* if there are 'onlyIf' conjuncts that are excluded, this feature is excluded */
 			_allowed[featureName] = (_onlyIf[featureName] || []).every(conj => conj.some(disj => _selected[disj]));
-		});
+		}
 	}
 
 
@@ -115,9 +115,9 @@ export default oncePer('features', (deltaJs) => {
 			this.options = options;
 
 			/* update conditions */
-			Object.keys(options).forEach((option) => {
+			for (let option of Object.keys(options)) {
 				this.addOption(option, options[option]);
-			});
+			}
 		}
 		get selected() {
 			_settleConditions();
@@ -142,17 +142,17 @@ export default oncePer('features', (deltaJs) => {
 		[ 'iff',        [_addIf, _addOnlyIf] ]  // if and onlyIf
 	];
 	deltaJs.Feature.prototype.addOption = function (optionName, value) {
-		FEATURE_CONNECTIONS.forEach(([connectionName, methods]) => {
+		for (let [connectionName, methods] of FEATURE_CONNECTIONS) {
 			if (optionName === connectionName) {
-				methods.forEach((method) => { method(this.name, value) });
+				for (let method of methods) { method(this.name, value) }
 			}
-		});
+		}
 	};
-	FEATURE_CONNECTIONS.forEach(([name]) => {
+	for (let [name] of FEATURE_CONNECTIONS) {
 		deltaJs.Feature.prototype[name] = function (value) {
 			this.addOption(name, value);
 		};
-	});
+	}
 
 
 	/* the features belonging to this DeltaJs instance */

@@ -100,19 +100,21 @@ export default oncePer('Delta', (deltaJs) => {
 		 * @return {DeltaJs#Delta} - the composed delta
 		 */
 		static composed(...deltas) {
-			var result = new deltaJs.Delta.NoOp();
-			deltas.forEach((delta) => {
-				var d1 = result,
-				    d2 = delta || new deltaJs.Delta.NoOp();
+			let result = new deltaJs.Delta.NoOp();
+			for (let delta of deltas) {
+				let d1 = result,
+					d2 = delta || new deltaJs.Delta.NoOp();
 
 				/* use the first composition function for which these deltas satisfy the precondition */
-				var composeFn = ()=>{};
-				var success = Delta._compositions.some(({precondition, compose: fn}) => {
+				let composeFn = ()=>{};
+				let success = false;
+				for (let {precondition, compose} of deltaJs.Delta._compositions) {
 					if (precondition(d1, d2)) {
-						composeFn = fn;
-						return true; // success; break the loop
+						composeFn = compose;
+						success = true;
+						break;
 					}
-				});
+				}
 
 				/* throw an error if 'false' was found rather than a function*/
 				if (composeFn === false || !success) { throw new CompositionError(d1, d2) }
@@ -125,7 +127,7 @@ export default oncePer('Delta', (deltaJs) => {
 
 				/* return the result on success */
 				result = composeFn(d1, d2);
-			});
+			}
 			return result;
 		}
 

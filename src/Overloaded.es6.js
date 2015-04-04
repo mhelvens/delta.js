@@ -83,12 +83,12 @@ export default oncePer('Overloaded', (deltaJs) => {
 		var D2 = d2 instanceof deltaJs.Delta.Overloaded ? d2.overloads : [d2];
 		var result = new deltaJs.Delta.Overloaded();
 		var errors = [];
-		D1.forEach((delta1) => {
-			D2.forEach((delta2) => {
+		for (let delta1 of D1) {
+			for (let delta2 of D2) {
 				try { result.overloads.push(delta1.composedWith(delta2)) }
 				catch (error) { errors.push(error) }
-			});
-		});
+			}
+		}
 		if (result.overloads.length === 0) { throw new MultipleOverloadsCompositionError(d1, d2, errors) }
 		return result;
 	});

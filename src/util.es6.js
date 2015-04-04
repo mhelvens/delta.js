@@ -2,18 +2,16 @@
 /*  of the other objects, from left to right, and returns  */
 /*  the first passed object                                */
 export function extend(obj1, ...rest) {
-	rest.forEach((obj) => {
-		for (var key in obj) {
-			if (obj.hasOwnProperty(key)) {
-				Object.defineProperty(obj1, key, Object.getOwnPropertyDescriptor(obj, key));
-			}
+	for (let obj of rest) {
+		for (let key of Object.keys(obj)) {
+			Object.defineProperty(obj1, key, Object.getOwnPropertyDescriptor(obj, key));
 		}
-	});
+	}
 	return obj1;
 }
 
 
-function dfault(object, ...rest) {
+function _default(object, ...rest) {
 	var keys = rest.slice(0, -1);
 	var def = rest[rest.length-1];
 	if (keys.length === 0) { return object }
@@ -23,8 +21,8 @@ function dfault(object, ...rest) {
 	}
 	return last[keys[keys.length-1]];
 }
-export function o(object, ...keys) { return dfault(object, ...keys, {}) }
-export function a(object, ...keys) { return dfault(object, ...keys, []) }
+export function o(object, ...keys) { return _default(object, ...keys, {}) }
+export function a(object, ...keys) { return _default(object, ...keys, []) }
 
 
 /* a simple `assert` function, to express a condition that is expected to be true */
