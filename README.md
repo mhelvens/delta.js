@@ -45,8 +45,7 @@ applied by a preprocessor. This will be supported by a future version.
 
 <img align="right" width="300px" margin="15px" src="./docs/foundation.jpg" />
 
-This library depends only on
-[js-graph](https://github.com/mhelvens/js-graph).
+This library depends only on the [Babel ES6 polyfill](https://babeljs.io/docs/usage/polyfill/). For your convenience, a delta.js version is provided with this polyfill already baked in, but you also have the option of providing it yourself.
 
 
 ### Install using Bower
@@ -56,6 +55,9 @@ This library depends only on
 ```shell
 bower install delta.js
 ```
+
+Unfortunately, the Babel polyfill is [not distributed through Bower](https://github.com/babel/babel/issues/315). So you'll have to either use the version of delta.js with the polyfill baked in, or you'll have to get the polyfill from someplace else, like NPM.
+
 
 ### Install using NPM
 
@@ -92,12 +94,10 @@ var DeltaJs = require('lib/delta.js/dist/delta.js')
 The `dist` directory offers different files for use in different circumstances.
 Use the following table to determine which file to use in your situation.
 
-| File                | Description                                                                   |
-| ------------------- | ----------------------------------------------------------------------------- |
-| `delta.js`          | Requires you to first load `babel/polyfill.js` or `babel/polyfill-browser.js` |
-| `delta.min.js`      | Same as above, but minified                                                   |
-| `delta.full.js`     | Already includes `babel/polyfill.js`; ready for use in any context            |
-| `delta.full.min.js` | Same as above, but minified                                                   |
+| File                | Description                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `delta.js`, `delta.min.js`          | requires you to load `babel/polyfill.js` or `babel/polyfill-browser.js` yourself |
+| `delta.full.js`, `delta.full.min.js`     | already includes `babel/polyfill.js`; ready for use in any context |
 
 If you don't know which one you need, you probably want `delta.full.min.js`.
 
