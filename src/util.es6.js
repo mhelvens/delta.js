@@ -155,6 +155,6 @@ export function objectsEqual(a, b, eq=(x,y)=>x===y) {
 
 export function graphDescendants(graph, key) {
 	return Object.keys((function succDescendants(key) {
-		return extend({ [key]: true }, ...graph.successors(key).map(succ => succDescendants(succ)));
+		return extend({ [key]: true }, ...[...graph.verticesFrom(key)].map(([succ]) => succDescendants(succ)));
 	})(key));
 }
