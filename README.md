@@ -184,12 +184,7 @@ points have separate namespaces. In other words: you may give a delta and a vari
 point the same name. (Thought if you find yourself doing this often, you may not have
 fully understood the point of delta.js.)
 
-* **Note**: For the sake of simplicity, you may assume that deltas and features are the same thing.
-More advanced users may have reasons to see them as separate entities by providing
-the option `feature: false`, but because this option defaults to `true`, the code
-above defines both a feature and a delta with the name `'cool-feature'`, and links
-them one-to-one. For basic usage, you don't need to be aware of this, and may treat
-features and deltas as interchangeable concepts.*
+<table><tr><td><b>Note</b>: For the sake of simplicity, you may assume that deltas and features are the same thing. More advanced users may have reasons to see them as separate entities by providing the option <code>feature: false</code>, but because this option defaults to <code>true</code>, the code above defines both a feature and a delta with the name <code>'cool-feature'</code>, and links them one-to-one. Usually, you don't need to be aware of this, and may treat features and deltas as interchangeable concepts.</table>
 
 
 #### Predicates
@@ -281,8 +276,8 @@ The `key` is then usually referred to as a *path*.
 This also works for the all the other operations below. It implicitly
 constructs a `.modify` chain to reach the right-most key.
 
-* **Note**: because of this shorthand notation, property names that actually
-contain the `.` character are not supported (at least for now).*
+<table><tr><td><b>Note</b>: Because of this shorthand notation, property names that actually
+contain the <code>.</code> character are not supported (at least for now). If there is any need for this to change, please open a <a href="https://github.com/mhelvens/delta.js/issues/new">GitHub issue</a>.</table>
 
 When you've targeted the proper object, you can use the operations described
 below to make specific changes to its properties.
