@@ -75,7 +75,7 @@ AMD ([RequireJS](http://requirejs.org/)), CommonJS and script-tags:
 ```javascript
 requirejs(['lib/delta.js/dist/delta.js'], function (DeltaJs) {
     // use DeltaJs
-}
+});
 ```
 
 ```javascript
