@@ -94,12 +94,12 @@ var DeltaJs = require('lib/delta.js/dist/delta.js')
 The `dist` directory offers different files for use in different circumstances.
 Use the following table to determine which file to use in your situation.
 
-| File                | Description                                                                            |
-| ------------------- | -------------------------------------------------------------------------------------- |
-| `delta.js`, `delta.min.js`          | requires you to load `babel/polyfill.js` or `babel/polyfill-browser.js` yourself |
-| `delta.full.js`, `delta.full.min.js`     | already includes `babel/polyfill.js`; ready for use in any context |
+| File                          | Description                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| `delta.js`,<br>`delta.min.js` | requires you to load the [Babel polyfill](https://babeljs.io/docs/usage/polyfill/) yourself |
+| `delta.full.js`,<br>`delta.full.min.js` | already includes Babel polyfill |
 
-If you don't know which one you need, you probably want `delta.full.min.js`.
+If you don't know which you need, you probably want `delta.full.min.js`, because it will work out-of-the-box. But it is generally more elegant to load the polyfill yourself, especially if you use other libraries that depend on it.
 
 
 ## Using `DeltaJs`
