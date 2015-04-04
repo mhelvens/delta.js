@@ -36,15 +36,15 @@ export default oncePer('features', (deltaJs) => {
 
 
 	/* code for the mutual selection of features */
-	var _if = {}; // feature -> (arrays of arrays; disjunctive normal form)
-	var _selected = {}; // feature -> Boolean
+	var _if       = new Map(); // feature -> (arrays of arrays; disjunctive normal form)
+	var _selected = new Map(); // feature -> Boolean
 	function _addIf(feature, disjunct = []) {
 		_conditionsUnsettled = true;
 		if (disjunct === true) {
-			_selected[feature] = true;
+			_selected.set(feature, true);
 		} else if (disjunct === false) {
 			// change nothing
-		} else if (_if[feature] !== true) {
+		} else if (_if.get(feature) !== true) {
 			a(_if, feature).push(_normalizeClause(disjunct));
 		}
 	}
@@ -56,15 +56,15 @@ export default oncePer('features', (deltaJs) => {
 
 
 	/* code for constraints between features (enforced by errors) */
-	var _onlyIf = {}; // feature -> (arrays of arrays; conjunctive normal form)
-	var _allowed = {}; // feature -> Boolean
+	var _onlyIf  = new Map(); // feature -> (arrays of arrays; conjunctive normal form)
+	var _allowed = new Map(); // feature -> Boolean
 	function _addOnlyIf(feature, conjunct = []) {
 		_conditionsUnsettled = true;
 		if (conjunct === false) {
-			_allowed[feature] = false;
+			_allowed.set(feature, false);
 		} else if (conjunct === true) {
 			// change nothing
-		} else if (_onlyIf[feature] !== false) {
+		} else if (_onlyIf.get(feature) !== false) {
 			a(_onlyIf, feature).push(_normalizeClause(conjunct));
 		}
 	}
@@ -86,11 +86,11 @@ export default oncePer('features', (deltaJs) => {
 		do {
 			somethingChanged = false;
 			for (let featureName of Object.keys(deltaJs.features)) {
-				if (!_selected[featureName]) {
+				if (!_selected.get(featureName)) {
 					/* if there are 'if' disjuncts that are selected, this feature is selected */
-					if (isUndefined(_selected[featureName])) { _selected[featureName] = false }
-					if ((_if[featureName] || []).some(disj => disj.every(conj => _selected[conj]))) {
-						_selected[featureName] = true;
+					if (_selected.has(featureName)) { _selected.set(featureName, false) }
+					if ((_if.get(featureName) || []).some(disj => disj.every(conj => _selected.get(conj)))) {
+						_selected.set(featureName, true);
 						somethingChanged = true;
 					}
 				}
@@ -100,7 +100,7 @@ export default oncePer('features', (deltaJs) => {
 		/* computation of allowed features */
 		for (let featureName of Object.keys(deltaJs.features)) {
 			/* if there are 'onlyIf' conjuncts that are excluded, this feature is excluded */
-			_allowed[featureName] = (_onlyIf[featureName] || []).every(conj => conj.some(disj => _selected[disj]));
+			_allowed.set(featureName, (_onlyIf.get(featureName) || []).every(conj => conj.some(disj => _selected.get(disj))));
 		}
 	}
 
@@ -121,12 +121,12 @@ export default oncePer('features', (deltaJs) => {
 		}
 		get selected() {
 			_settleConditions();
-			if (_selected[this.name] && !_allowed[this.name]) {
+			if (_selected.get(this.name) && !_allowed.get(this.name)) {
 				throw new ConstraintFailure(this);
 			}
-			return _selected[this.name];
+			return _selected.get(this.name);
 		}
-		get condition()   { return _if[this.name]                   }
+		get condition()   { return _if.get(this.name)               }
 		get conditional() { return a(_if,     this.name).length > 0 }
 		get restricted()  { return a(_onlyIf, this.name).length > 0 }
 		select() { this.if(true) }

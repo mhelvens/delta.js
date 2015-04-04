@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {extend, indent, t, oncePer, objectsEqual} from './util.es6.js';
+import {extend, indent, t, oncePer, mapEqual} from './util.es6.js';
 import Path                         from './Path.es6.js';
 import {wt}                         from './Target.es6.js';
 import define_ContainerProxy        from './ContainerProxy.es6.js';
@@ -16,8 +16,7 @@ export default oncePer('Modify', (deltaJs) => {
 
 		constructor(...args) {
 			super(...args);
-			this.subDeltas = {};
-			extend(this.subDeltas, this.arg || {});
+			this.subDeltas = new Map(this.arg && Object.keys(this.arg).map(key => [key, this.arg[key]]));
 		}
 
 		/** {@public}{@method}{@nosideeffects}
@@ -25,14 +24,14 @@ export default oncePer('Modify', (deltaJs) => {
 		 */
 		clone() {
 			var result = super.clone();
-			for (let prop of Object.keys(this.subDeltas)) {
-				result.subDeltas[prop] = this.subDeltas[prop].clone();
+			for (let [key, delta] of this.subDeltas) {
+				result.subDeltas.set(key, delta.clone());
 			}
 			return result;
 		}
 
 		equals(other) {
-			return objectsEqual(this.subDeltas, other.subDeltas, (d1, d2) => d1.equals(d2));
+			return mapEqual(this.subDeltas, other.subDeltas, (d1, d2) => d1.equals(d2));
 		}
 
 		/** {@public}{@method}
@@ -45,9 +44,9 @@ export default oncePer('Modify', (deltaJs) => {
 		 * @param options {object?}              - the (optional) options for this delta application
 		 */
 		applyTo(target, options = {}) {
-			for (let prop of Object.keys(this.subDeltas)) {
+			for (let [prop, delta] of this.subDeltas) {
 				if (!options.restrictToProperty || options.restrictToProperty === prop) {
-					this.subDeltas[prop].applyTo(wt(target.value, prop),
+					delta.applyTo(wt(target.value, prop),
 						extend({}, options, { restrictToProperty: null }));
 				}
 			}
@@ -59,10 +58,9 @@ export default oncePer('Modify', (deltaJs) => {
 		 */
 		toString(options = {}) {
 			var str = super.toString(options);
-			if (Object.keys(this.subDeltas).length > 0) {
-				var deltas = Object
-						.keys(this.subDeltas)
-						.map((p) => this.subDeltas[p].toString(extend({}, options, { targetProp: p })))
+			if (this.subDeltas.size > 0) {
+				var deltas = this.subDeltas.entries()
+						.map(([prop, delta]) => delta.toString(extend({}, options, { targetProp: prop })))
 						.join('\n');
 				str += '\n' + indent(deltas, 4);
 			}
@@ -82,7 +80,7 @@ export default oncePer('Modify', (deltaJs) => {
 			var options = {};
 			do {
 				if (rawArgs.length === 0) { throw new Error(`The argument list for this Modify.Proxy method is insufficient.`) }
-				var arg = rawArgs.shift();
+				let arg = rawArgs.shift();
 				if (typeof arg === 'string') { options.path = arg     }
 				else                         { extend(options, arg) }
 			} while (!options.path);
@@ -121,9 +119,8 @@ export default oncePer('Modify', (deltaJs) => {
 		 */
 		delta() {
 			var result = super.delta();
-			result.subDeltas = {};
 			for (let prop of this.childKeys()) {
-				result.subDeltas[prop] = this.childDelta(prop);
+				result.subDeltas.set(prop, this.childDelta(prop));
 			}
 			return result;
 		}
@@ -134,8 +131,8 @@ export default oncePer('Modify', (deltaJs) => {
 	/* composition - introducing 'Modify' ***********************************************/
 	deltaJs.newComposition( t('Modify', 'Modify'), (d1, d2) => {
 		var result = d1.clone();
-		for (let prop of Object.keys(d2.subDeltas)) {
-			result.subDeltas[prop] = deltaJs.Delta.composed(result.subDeltas[prop], d2.subDeltas[prop]);
+		for (let prop of d2.subDeltas.keys()) {
+			result.subDeltas.set(prop, deltaJs.Delta.composed(result.subDeltas.get(prop), d2.subDeltas.get(prop)));
 		}
 		return result;
 	});

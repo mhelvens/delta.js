@@ -24,15 +24,14 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 		constructor(options = {}) {
 			super(options);
-			this._doArgs       = [];
-			this._original     = this;
-			this._children     = {}; // key -> [proxies]
-			this._childOptions = {}; // key -> options
+			this._doArgs   = [];
+			this._original = this;
+			this._children = new Map(); // key -> [proxies]
 		}
 
 
 		deactivate() {
-			for (let key of Object.keys(this._children)) {
+			for (let key of this._children.keys()) {
 				this.childProxy(key).deactivate();
 			}
 			super.deactivate();
@@ -55,18 +54,21 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 			if (current) { current.deactivate() }
 
 			/* create a new Proxy of the right class, remember it and return it */
-			this._children[key].push(proxy);
+			this._children.get(key).push(proxy);
 			return proxy;
 		}
 
 
-		childKeys() { return Object.keys(this._children) }
+		childKeys() { return [...this._children.keys()] } // TODO: Is an iterable a good return value?
 
 
 		childProxies(key) { return a(this._children, key) }
 
 
-		childProxy(key) { return a(this._children, key)[this._children[key].length-1] }
+		childProxy(key) {
+			if (!this._children.has(key)) { this._children.set(key, []) }
+			return this._children.get(key)[this._children.get(key).length-1];
+		}
 
 
 		childDelta(key) {

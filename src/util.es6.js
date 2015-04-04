@@ -16,10 +16,17 @@ function _default(object, ...rest) {
 	var def = rest[rest.length-1];
 	if (keys.length === 0) { return object }
 	var last = o(object, ...keys.slice(0, -1));
-	if (isUndefined(last[keys[keys.length-1]])) {
-		last[keys[keys.length-1]] = def;
+	if (last instanceof Map) {
+		if (isUndefined(last.get(keys[keys.length-1]))) {
+			last.set(keys[keys.length-1], def);
+		}
+		return last.get(keys[keys.length-1]);
+	} else {
+		if (isUndefined(last[keys[keys.length-1]])) {
+			last[keys[keys.length-1]] = def;
+		}
+		return last[keys[keys.length-1]];
 	}
-	return last[keys[keys.length-1]];
 }
 export function o(object, ...keys) { return _default(object, ...keys, {}) }
 export function a(object, ...keys) { return _default(object, ...keys, []) }
@@ -83,6 +90,18 @@ export var define_d = (deltaJs) => (type, fn) => {
 	if (typeof fn === 'string') { fn = ((v) => (o) => o[v])(fn) }
 	return (d1, d2) => new deltaJs.Delta[type](fn && fn({d1, d2, p1: d1.arg, p2: d2.arg}));
 };
+
+
+export function mapEqual(a, b, eq=(x,y)=>x===y) {
+	if (a.size !== b.size) { return false }
+	var aKeys = [...a.keys()].sort();
+	var bKeys = [...b.keys()].sort();
+	for (let i = 0; i < aKeys.length; ++i) {
+		if (aKeys[i] !== bKeys[i])                 { return false }
+		if (!eq(a.get(aKeys[i]), b.get(bKeys[i]))) { return false }
+	}
+	return true;
+}
 
 
 export function customIndexOf(a, value, eq=(x,y)=>x===y) {

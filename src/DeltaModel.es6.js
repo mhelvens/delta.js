@@ -185,8 +185,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		constructor(...args) {
 			super(...args);
-			this._childOptions = {};               // key -> options
-			this._childApplicationConditions = {}; // key -> application-condition
+			this._childOptions               = new Map(); // key -> options
+			this._childApplicationConditions = new Map(); // key -> application-condition
 		}
 
 		/** {@public}{@method}
@@ -217,7 +217,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			var {path, name, feature} = options;
 
 			/* create application condition and optional eponymous linked feature */
-			if (!this._childApplicationConditions[name]) {
+			if (!this._childApplicationConditions.has(name)) {
 				let appCond;
 				if (feature) { appCond = deltaJs.newFeature(  name,            options                           ) }
 				else         { appCond = deltaJs.newFeature( `delta__${name}`, extend({ hidden: true }, options) ) }
@@ -231,7 +231,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				if (feature || appCond.conditional) {
 					delta.applicationCondition = appCond;
 				}
-				this._childApplicationConditions[name] = appCond;
+				this._childApplicationConditions.set(name, appCond);
 			}
 
 			/* create proxies */
@@ -245,8 +245,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			}
 
 			/* store options */
-			if (!this._childOptions[name]) {
-				this._childOptions[name] = options;
+			if (!this._childOptions.has(name)) {
+				this._childOptions.set(name, options);
 			}
 
 			/* return the deepest created proxy */
@@ -262,7 +262,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			var result = super.delta();
 			result.graph.clear();
 			for (let name of this.childKeys()) {
-				let options = this._childOptions[name];
+				let options = this._childOptions.get(name);
 
 				/* delta in the graph */
 				var delta = this.childDelta(name);
@@ -280,8 +280,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				}
 
 				/* application condition */
-				if (options.feature || this._childApplicationConditions[name].conditional) {
-					delta.applicationCondition = this._childApplicationConditions[name];
+				if (options.feature || this._childApplicationConditions.get(name).conditional) {
+					delta.applicationCondition = this._childApplicationConditions.get(name);
 				}
 			}
 			return result;

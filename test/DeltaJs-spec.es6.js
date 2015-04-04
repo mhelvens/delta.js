@@ -108,7 +108,7 @@ describe("DeltaJs instance -", () => {
 			});
 
 			it("can be manually performed on values", () => {
-				delta.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
+				delta.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
 				var obj = { existingKey: "existing value" };
 				delta.applyTo(obj);
 				expect(obj).toEqual({ existingKey: "existing value", foo: "bar" });
@@ -119,134 +119,134 @@ describe("DeltaJs instance -", () => {
 
 			itCan("add a new field to an object", [[
 				{},
-				() => { delta.subDeltas['foo'] = new deltaJs.Delta.Add("bar") },
+				() => { delta.subDeltas.set('foo', new deltaJs.Delta.Add("bar")) },
 				{ foo: "bar" }
 			], [
 				{ key: "val" },
-				() => { delta.subDeltas['foo'] = new deltaJs.Delta.Add("bar") },
+				() => { delta.subDeltas.set('foo', new deltaJs.Delta.Add("bar")) },
 				{ key: "val", foo: "bar" }
 			], [
 				{ obj: {} },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						foo: new deltaJs.Delta.Add("bar")
-					});
+					}));
 				},
 				{ obj: { foo: "bar" } }
 			], [
 				{ obj: { key: "val" } },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						foo: new deltaJs.Delta.Add("bar")
-					});
+					}));
 				},
 				{ obj: { key: "val", foo: "bar" } }
 			], [
 				{ key: "val" },
-				() => { delta.subDeltas['key'] = new deltaJs.Delta.Add("bar") },
+				() => { delta.subDeltas.set('key', new deltaJs.Delta.Add("bar")) },
 				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("remove an existing field from an object", [[
 				{ foo: "bar" },
-				() => { delta.subDeltas['foo'] = new deltaJs.Delta.Remove() },
+				() => { delta.subDeltas.set('foo', new deltaJs.Delta.Remove()) },
 				{}
 			], [
 				{ key: "val", foo: "bar" },
-				() => { delta.subDeltas['foo'] = new deltaJs.Delta.Remove() },
+				() => { delta.subDeltas.set('foo', new deltaJs.Delta.Remove()) },
 				{ key: "val" }
 			], [
 				{ obj: { foo: "bar" } },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						foo: new deltaJs.Delta.Remove()
-					});
+					}));
 				},
 				{ obj: {} }
 			], [
 				{ obj: { key: "val", foo: "bar" } },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						foo: new deltaJs.Delta.Remove()
-					});
+					}));
 				},
 				{ obj: { key: "val" } }
 			], [
 				{ foo: "bar" },
-				() => { delta.subDeltas['absentKey'] = new deltaJs.Delta.Remove() },
+				() => { delta.subDeltas.set('absentKey', new deltaJs.Delta.Remove()) },
 				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("forbid a field from being in an object", [[
 				{ foo: "bar" },
-				() => { delta.subDeltas['absentKey'] = new deltaJs.Delta.Forbid() },
+				() => { delta.subDeltas.set('absentKey', new deltaJs.Delta.Forbid()) },
 				{ foo: "bar" }
 			], [
 				{ obj: { foo: "bar" } },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						absentKey: new deltaJs.Delta.Forbid()
-					});
+					}));
 				},
 				{ obj: { foo: "bar" } }
 			], [
 				{ key: "val", foo: "bar" },
-				() => { delta.subDeltas['key'] = new deltaJs.Delta.Forbid() },
+				() => { delta.subDeltas.set('key', new deltaJs.Delta.Forbid()) },
 				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("replace an existing field in an object", [[
 				{ foo: "bar" },
-				() => { delta.subDeltas['foo'] = new deltaJs.Delta.Replace("BAS") },
+				() => { delta.subDeltas.set('foo', new deltaJs.Delta.Replace("BAS")) },
 				{ foo: "BAS" }
 			], [
 				{ key: "val", foo: "bar" },
-				() => { delta.subDeltas['foo'] = new deltaJs.Delta.Replace("BAS") },
+				() => { delta.subDeltas.set('foo', new deltaJs.Delta.Replace("BAS")) },
 				{ key: "val", foo: "BAS" }
 			], [
 				{ obj: { foo: "bar" } },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						foo: new deltaJs.Delta.Replace("BAS")
-					});
+					}));
 				},
 				{ obj: { foo: "BAS" } }
 			], [
 				{ obj: { key: "val", foo: "bar" } },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						foo: new deltaJs.Delta.Replace("BAS")
-					});
+					}));
 				},
 				{ obj: { key: "val", foo: "BAS" } }
 			], [
 				{ foo: "bar" },
-				() => { delta.subDeltas['absentKey'] = new deltaJs.Delta.Replace("BAS") },
+				() => { delta.subDeltas.set('absentKey', new deltaJs.Delta.Replace("BAS")) },
 				expectError(DeltaJs.PreconditionFailure)
 			]]);
 
 			itCan("update an existing field in an object using the old value", [[
 				{ foo: "bar" },
-				() => { delta.subDeltas['foo'] = new deltaJs.Delta.Update(old => `${old}-BAS`) },
+				() => { delta.subDeltas.set('foo', new deltaJs.Delta.Update(old => `${old}-BAS`)) },
 				{ foo: "bar-BAS" }
 			], [
 				{ key: "val", foo: "bar" },
-				() => { delta.subDeltas['foo'] = new deltaJs.Delta.Update(old => `${old}-BAS`) },
+				() => { delta.subDeltas.set('foo', new deltaJs.Delta.Update(old => `${old}-BAS`)) },
 				{ key: "val", foo: "bar-BAS" }
 			], [
 				{ obj: { foo: "bar" } },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						foo: new deltaJs.Delta.Update(old => `${old}-BAS`)
-					});
+					}));
 				},
 				{ obj: { foo: "bar-BAS" } }
 			], [
 				{ obj: { key: "val", foo: "bar" } },
 				() => {
-					delta.subDeltas['obj'] = new deltaJs.Delta.Modify({
+					delta.subDeltas.set('obj', new deltaJs.Delta.Modify({
 						foo: new deltaJs.Delta.Update(old => `${old}-BAS`)
-					});
+					}));
 				},
 				{ obj: { key: "val", foo: "bar-BAS" } }
 			]]);
@@ -269,52 +269,52 @@ describe("DeltaJs instance -", () => {
 			itCan("correctly modify objects when the composition is valid", [[
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo1'] = new deltaJs.Delta.Add("bar1");
-					d2.subDeltas['foo2'] = new deltaJs.Delta.Add("bar2");
+					d1.subDeltas.set('foo1', new deltaJs.Delta.Add("bar1"));
+					d2.subDeltas.set('foo2', new deltaJs.Delta.Add("bar2"));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo1: "bar1", foo2: "bar2" }
 			], [
 				{ key: "val", key1: "val1", key2: "val2" },
 				() => {
-					d1.subDeltas['key1'] = new deltaJs.Delta.Remove();
-					d2.subDeltas['key2'] = new deltaJs.Delta.Remove();
+					d1.subDeltas.set('key1', new deltaJs.Delta.Remove());
+					d2.subDeltas.set('key2', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo1'] = new deltaJs.Delta.Forbid();
-					d2.subDeltas['foo2'] = new deltaJs.Delta.Forbid();
+					d1.subDeltas.set('foo1', new deltaJs.Delta.Forbid());
+					d2.subDeltas.set('foo2', new deltaJs.Delta.Forbid());
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val" }
 			], [
 				{ key1: "val1", key2: "val2" },
 				() => {
-					d1.subDeltas['key1'] = new deltaJs.Delta.Replace("VAL1");
-					d2.subDeltas['key2'] = new deltaJs.Delta.Replace("VAL2");
+					d1.subDeltas.set('key1', new deltaJs.Delta.Replace("VAL1"));
+					d2.subDeltas.set('key2', new deltaJs.Delta.Replace("VAL2"));
 					delta = d1.composedWith(d2);
 				},
 				{ key1: "VAL1", key2: "VAL2" }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add({});
-					d2.subDeltas['foo'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add({}));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Modify({
 						bar: new deltaJs.Delta.Add("bas")
-					});
+					}));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: { bar: "bas" } }
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add({});
-					d2.subDeltas['foo'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add({}));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Modify({
 						bar: new deltaJs.Delta.Add("bas")
-					});
+					}));
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
@@ -324,166 +324,166 @@ describe("DeltaJs instance -", () => {
 					// a more complex / deep version of 'add' composed with 'modify' (so, just for this one, two extra deltas)
 					var delta3 = new deltaJs.Delta.Modify();
 					var delta4 = new deltaJs.Delta.Modify();
-					d1.subDeltas['level1'] = new deltaJs.Delta.Add({ level2: {} });
-					d2.subDeltas['level1'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('level1', new deltaJs.Delta.Add({ level2: {} }));
+					d2.subDeltas.set('level1', new deltaJs.Delta.Modify({
 						level2: new deltaJs.Delta.Modify({
 							sideLevel: new deltaJs.Delta.Add("final")
 						})
-					});
-					delta3.subDeltas['level1'] = new deltaJs.Delta.Modify({
+					}));
+					delta3.subDeltas.set('level1', new deltaJs.Delta.Modify({
 						level2: new deltaJs.Delta.Modify({
 							level3: new deltaJs.Delta.Add({})
 						})
-					});
-					delta4.subDeltas['level1'] = new deltaJs.Delta.Modify({
+					}));
+					delta4.subDeltas.set('level1', new deltaJs.Delta.Modify({
 						level2: new deltaJs.Delta.Modify({
 							level3: new deltaJs.Delta.Modify({
 								level4: new deltaJs.Delta.Add("final")
 							})
 						})
-					});
+					}));
 					delta = d1.composedWith(d2).composedWith(delta3).composedWith(delta4);
 				},
 				{ key: "val", level1: { level2: { sideLevel: "final", level3: { level4: "final" } } } }
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('foo', new deltaJs.Delta.Modify({
 						newKey: new deltaJs.Delta.Add("newVal")
-					});
-					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					}));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val" }
 			], [
 				{ key: "val", foo: "whatever" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val", foo: "whatever" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Remove();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Remove());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: "bar" }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Remove();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Remove());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val", foo: "whatever" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Remove();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Remove());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Forbid());
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Remove();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Remove());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Forbid());
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Forbid();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Forbid());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: "bar" }
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Forbid();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Forbid());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Forbid();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Forbid());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Forbid());
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val" }
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Forbid();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Forbid());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Forbid());
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden (twice), but was present
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Modify();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Modify());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Replace("newValue"));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: "newValue" }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Modify();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Modify());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Replace("newValue"));
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add("oldValue");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add("oldValue"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Replace("newValue"));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: "newValue" }
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add("oldValue");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add("oldValue"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Replace("newValue"));
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is forbidden, but was present
 			], [
 				{ key: "val", foo: "bar" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Replace({});
-					d2.subDeltas['foo'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('foo', new deltaJs.Delta.Replace({}));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Modify({
 						bar: new deltaJs.Delta.Add("bas")
-					});
+					}));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: { bar: "bas" } }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Replace({});
-					d2.subDeltas['foo'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('foo', new deltaJs.Delta.Replace({}));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Modify({
 						bar: new deltaJs.Delta.Add("bas")
-					});
+					}));
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
@@ -493,100 +493,100 @@ describe("DeltaJs instance -", () => {
 					// a more complex / deep version of 'replace' composed with 'modify' (so, just for this one, two extra deltas)
 					var delta3 = new deltaJs.Delta.Modify();
 					var delta4 = new deltaJs.Delta.Modify();
-					d1.subDeltas['level1'] = new deltaJs.Delta.Replace({ level2: {} });
-					d2.subDeltas['level1'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('level1', new deltaJs.Delta.Replace({ level2: {} }));
+					d2.subDeltas.set('level1', new deltaJs.Delta.Modify({
 						level2: new deltaJs.Delta.Modify({
 							sideLevel: new deltaJs.Delta.Add("final")
 						})
-					});
-					delta3.subDeltas['level1'] = new deltaJs.Delta.Modify({
+					}));
+					delta3.subDeltas.set('level1', new deltaJs.Delta.Modify({
 						level2: new deltaJs.Delta.Modify({
 							level3: new deltaJs.Delta.Add({})
 						})
-					});
-					delta4.subDeltas['level1'] = new deltaJs.Delta.Modify({
+					}));
+					delta4.subDeltas.set('level1', new deltaJs.Delta.Modify({
 						level2: new deltaJs.Delta.Modify({
 							level3: new deltaJs.Delta.Modify({
 								level4: new deltaJs.Delta.Add("final")
 							})
 						})
-					});
+					}));
 					delta = d1.composedWith(d2).composedWith(delta3).composedWith(delta4);
 				},
 				{ key: "val", level1: { level2: { sideLevel: "final", level3: { level4: "final" } } } }
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Replace("newValue"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val" }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Replace("newValue"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Replace("oldValue");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Replace("oldValue"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Replace("newValue"));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: "newValue" }
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Replace("oldValue");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("newValue");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Replace("oldValue"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Replace("newValue"));
 					delta = d1.composedWith(d2);
 				},
 				expectError(DeltaJs.PreconditionFailure) // 'foo' is mandatory, but was absent
 			], [
 				{ key: "val" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add("oldValue");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Update(v => `${v}-newValue`);
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add("oldValue"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Update(v => `${v}-newValue`));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: "oldValue-newValue" }
 			], [
 				{ key: "val", foo: { bar: "bas" } },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Update(v => `${v}-newValue`);
-					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Update(v => `${v}-newValue`));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val" }
 			], [
 				{ key: "val", foo: "initialValue" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Update(v => `${v}-oldValue`);
-					d2.subDeltas['foo'] = new deltaJs.Delta.Update(v => `${v}-newValue`);
+					d1.subDeltas.set('foo', new deltaJs.Delta.Update(v => `${v}-oldValue`));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Update(v => `${v}-newValue`));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: "initialValue-oldValue-newValue" }
 			], [
 				{ key: "val", foo: { bar1: "bas1" } },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('foo', new deltaJs.Delta.Modify({
 						bar2: new deltaJs.Delta.Add("bas2")
-					});
-					d2.subDeltas['foo'] = new deltaJs.Delta.Update(v => ({ BAR: `${v.bar1}-${v.bar2}` }));
+					}));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Update(v => ({ BAR: `${v.bar1}-${v.bar2}` })));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: { BAR: "bas1-bas2" } }
 			], [
 				{ key: "val", foo: "bas1" },
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Update(v => ({ bar1: v }));
-					d2.subDeltas['foo'] = new deltaJs.Delta.Modify({
+					d1.subDeltas.set('foo', new deltaJs.Delta.Update(v => ({ bar1: v })));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Modify({
 						bar2: new deltaJs.Delta.Add("bas2")
-					});
+					}));
 					delta = d1.composedWith(d2);
 				},
 				{ key: "val", foo: { bar1: "bas1", bar2: "bas2" } }
@@ -598,52 +598,52 @@ describe("DeltaJs instance -", () => {
 
 			itCan("throw an error when the composition is detectably invalid", [
 				() => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Modify();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Modify());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add("bar1");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar2");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add("bar1"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Add("bar2"));
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Remove();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Modify();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Remove());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Modify());
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Remove();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Remove());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Modify();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Modify());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Forbid());
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Add("bar");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Add("bar"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Forbid());
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Forbid();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Modify();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Forbid());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Modify());
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Forbid();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Remove();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Forbid());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Remove());
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Remove();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("bar");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Remove());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Replace("bar"));
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Forbid();
-					d2.subDeltas['foo'] = new deltaJs.Delta.Replace("bar");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Forbid());
+					d2.subDeltas.set('foo', new deltaJs.Delta.Replace("bar"));
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Replace("bar1");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Add("bar2");
+					d1.subDeltas.set('foo', new deltaJs.Delta.Replace("bar1"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Add("bar2"));
 					delta = d1.composedWith(d2);
 				}, () => {
-					d1.subDeltas['foo'] = new deltaJs.Delta.Replace("bar");
-					d2.subDeltas['foo'] = new deltaJs.Delta.Forbid();
+					d1.subDeltas.set('foo', new deltaJs.Delta.Replace("bar"));
+					d2.subDeltas.set('foo', new deltaJs.Delta.Forbid());
 					delta = d1.composedWith(d2);
 				}
 			].map((action) => [null, action, expectError(DeltaJs.CompositionError)]));
@@ -657,122 +657,122 @@ describe("DeltaJs instance -", () => {
 			});
 
 			it("tests two Modify->Add deltas as equal if they add the same value to the same key", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Add('value');
-				d2.subDeltas['key'] = new deltaJs.Delta.Add('value');
+				d1.subDeltas.set('key', new deltaJs.Delta.Add('value'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Add('value'));
 				expect(d1.equals(d2)).toBeTruthy();
 			});
 
 			it("tests two Modify->Add deltas as unequal if they add different values to the same key", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Add('foo');
-				d2.subDeltas['key'] = new deltaJs.Delta.Add('bar');
+				d1.subDeltas.set('key', new deltaJs.Delta.Add('foo'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Add('bar'));
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests two Modify->Add deltas as unequal if they add the same value to different keys", () => {
-				d1.subDeltas['key1'] = new deltaJs.Delta.Add('value');
-				d2.subDeltas['key2'] = new deltaJs.Delta.Add('value');
+				d1.subDeltas.set('key1', new deltaJs.Delta.Add('value'));
+				d2.subDeltas.set('key2', new deltaJs.Delta.Add('value'));
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests two Modify->Replace deltas as equal if they add the same value to the same key", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Replace('value');
-				d2.subDeltas['key'] = new deltaJs.Delta.Replace('value');
+				d1.subDeltas.set('key', new deltaJs.Delta.Replace('value'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Replace('value'));
 				expect(d1.equals(d2)).toBeTruthy();
 			});
 
 			it("tests two Modify->Replace deltas as unequal if they add different values to the same key", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Replace('foo');
-				d2.subDeltas['key'] = new deltaJs.Delta.Replace('bar');
+				d1.subDeltas.set('key', new deltaJs.Delta.Replace('foo'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Replace('bar'));
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests two Modify->Replace deltas as unequal if they add the same value to different keys", () => {
-				d1.subDeltas['key1'] = new deltaJs.Delta.Replace('value');
-				d2.subDeltas['key2'] = new deltaJs.Delta.Replace('value');
+				d1.subDeltas.set('key1', new deltaJs.Delta.Replace('value'));
+				d2.subDeltas.set('key2', new deltaJs.Delta.Replace('value'));
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests two Modify->Remove deltas as equal if they act on the same key", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Remove();
-				d2.subDeltas['key'] = new deltaJs.Delta.Remove();
+				d1.subDeltas.set('key', new deltaJs.Delta.Remove());
+				d2.subDeltas.set('key', new deltaJs.Delta.Remove());
 				expect(d1.equals(d2)).toBeTruthy();
 			});
 
 			it("tests two Modify->Remove deltas as unequal if they act on different keys", () => {
-				d1.subDeltas['key1'] = new deltaJs.Delta.Remove();
-				d2.subDeltas['key2'] = new deltaJs.Delta.Remove();
+				d1.subDeltas.set('key1', new deltaJs.Delta.Remove());
+				d2.subDeltas.set('key2', new deltaJs.Delta.Remove());
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests two Modify->Forbid deltas as equal if they act on the same key", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Forbid();
-				d2.subDeltas['key'] = new deltaJs.Delta.Forbid();
+				d1.subDeltas.set('key', new deltaJs.Delta.Forbid());
+				d2.subDeltas.set('key', new deltaJs.Delta.Forbid());
 				expect(d1.equals(d2)).toBeTruthy();
 			});
 
 			it("tests two Modify->Forbid deltas as unequal if they act on different keys", () => {
-				d1.subDeltas['key1'] = new deltaJs.Delta.Forbid();
-				d2.subDeltas['key2'] = new deltaJs.Delta.Forbid();
+				d1.subDeltas.set('key1', new deltaJs.Delta.Forbid());
+				d2.subDeltas.set('key2', new deltaJs.Delta.Forbid());
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Add delta as unequal to a Modify->Remove delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Add   ('value');
-				d2.subDeltas['key'] = new deltaJs.Delta.Remove();
+				d1.subDeltas.set('key', new deltaJs.Delta.Add   ('value'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Remove()       );
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Add delta as unequal to a Modify->Replace delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Add    ('value');
-				d2.subDeltas['key'] = new deltaJs.Delta.Replace('value');
+				d1.subDeltas.set('key', new deltaJs.Delta.Add    ('value'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Replace('value'));
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Add delta as unequal to a Modify->Forbid delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Add   ('value');
-				d2.subDeltas['key'] = new deltaJs.Delta.Forbid();
+				d1.subDeltas.set('key', new deltaJs.Delta.Add   ('value'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Forbid()       );
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Add delta as unequal to a Modify->Modify delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Add   ('value');
-				d2.subDeltas['key'] = new deltaJs.Delta.Modify();
+				d1.subDeltas.set('key', new deltaJs.Delta.Add   ('value'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Modify()       );
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Remove delta as unequal to a Modify->Replace delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Remove ();
-				d2.subDeltas['key'] = new deltaJs.Delta.Replace('value');
+				d1.subDeltas.set('key', new deltaJs.Delta.Remove ()       );
+				d2.subDeltas.set('key', new deltaJs.Delta.Replace('value'));
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Remove delta as unequal to a Modify->Forbid delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Remove();
-				d2.subDeltas['key'] = new deltaJs.Delta.Forbid();
+				d1.subDeltas.set('key', new deltaJs.Delta.Remove());
+				d2.subDeltas.set('key', new deltaJs.Delta.Forbid());
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Remove delta as unequal to a Modify->Modify delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Remove();
-				d2.subDeltas['key'] = new deltaJs.Delta.Modify();
+				d1.subDeltas.set('key', new deltaJs.Delta.Remove());
+				d2.subDeltas.set('key', new deltaJs.Delta.Modify());
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Replace delta as unequal to a Modify->Forbid delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Replace('value');
-				d2.subDeltas['key'] = new deltaJs.Delta.Forbid ();
+				d1.subDeltas.set('key', new deltaJs.Delta.Replace('value'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Forbid ()       );
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Replace delta as unequal to a Modify->Modify delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Replace('value');
-				d2.subDeltas['key'] = new deltaJs.Delta.Modify ();
+				d1.subDeltas.set('key', new deltaJs.Delta.Replace('value'));
+				d2.subDeltas.set('key', new deltaJs.Delta.Modify ()       );
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
 			it("tests a Modify->Forbid delta as unequal to a Modify->Modify delta", () => {
-				d1.subDeltas['key'] = new deltaJs.Delta.Forbid();
-				d2.subDeltas['key'] = new deltaJs.Delta.Modify();
+				d1.subDeltas.set('key', new deltaJs.Delta.Forbid());
+				d2.subDeltas.set('key', new deltaJs.Delta.Modify());
 				expect(d1.equals(d2)).toBeFalsy();
 			});
 
