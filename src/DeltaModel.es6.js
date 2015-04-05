@@ -26,37 +26,14 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		clone() {
 			var result = super.clone();
-			result.graph = this.graph.clone();
-			for (let [id, delta] of result.graph.vertices()) {
-				result.graph.setVertex(id, delta.clone());
-			}
+			result.graph = this.graph.clone(d => d.clone());
 			return result;
 		}
 
 		equals(other) {
 			var g1 = this .graph.transitiveReduction();
 			var g2 = other.graph.transitiveReduction();
-			for (let [n1, d1] of g1.vertices()) {
-				if (!g2.vertexValue(n1).equals(d1)) {
-					return false;
-				}
-			}
-			for (let [n2, d2] of g2.vertices()) {
-				if (!g1.vertexValue(n2).equals(d2)) {
-					return false;
-				}
-			}
-			for (let [n1From, n1To] of g1.edges()) {
-				if (!g2.hasEdge(n1From, n1To)) {
-					return false;
-				}
-			}
-			for (let [n2From, n2To] of g2.edges()) {
-				if (!g1.hasEdge(n2From, n2To)) {
-					return false;
-				}
-			}
-			return true;
+			return g1.equals(g2, (x, y) => x.equals(y));
 		}
 
 		_assertNoUnresolvedConflicts() {

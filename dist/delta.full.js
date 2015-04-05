@@ -131,9 +131,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	global._babelPolyfill = true;
 	
-	__webpack_require__(21);
-	
 	__webpack_require__(20);
+	
+	__webpack_require__(21);
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
@@ -172,6 +172,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	/* run a function only once per obj+string combo */
 	exports.oncePer = oncePer;
+	exports.mapEqual = mapEqual;
 	exports.customIndexOf = customIndexOf;
 	exports.arraysEqual = arraysEqual;
 	exports.arraysHaveSameElements = arraysHaveSameElements;
@@ -186,17 +187,57 @@ return /******/ (function(modules) { // webpackBootstrap
 			rest[_key - 1] = arguments[_key];
 		}
 	
-		rest.forEach(function (obj) {
-			for (var key in obj) {
-				if (obj.hasOwnProperty(key)) {
-					Object.defineProperty(obj1, key, Object.getOwnPropertyDescriptor(obj, key));
+		var _iteratorNormalCompletion = true;
+		var _didIteratorError = false;
+		var _iteratorError = undefined;
+	
+		try {
+			for (var _iterator = rest[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+				var obj = _step.value;
+				var _iteratorNormalCompletion2 = true;
+				var _didIteratorError2 = false;
+				var _iteratorError2 = undefined;
+	
+				try {
+					for (var _iterator2 = Object.keys(obj)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+						var key = _step2.value;
+	
+						Object.defineProperty(obj1, key, Object.getOwnPropertyDescriptor(obj, key));
+					}
+				} catch (err) {
+					_didIteratorError2 = true;
+					_iteratorError2 = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+							_iterator2["return"]();
+						}
+					} finally {
+						if (_didIteratorError2) {
+							throw _iteratorError2;
+						}
+					}
 				}
 			}
-		});
+		} catch (err) {
+			_didIteratorError = true;
+			_iteratorError = err;
+		} finally {
+			try {
+				if (!_iteratorNormalCompletion && _iterator["return"]) {
+					_iterator["return"]();
+				}
+			} finally {
+				if (_didIteratorError) {
+					throw _iteratorError;
+				}
+			}
+		}
+	
 		return obj1;
 	}
 	
-	function dfault(object) {
+	function _default(object) {
 		for (var _len = arguments.length, rest = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
 			rest[_key - 1] = arguments[_key];
 		}
@@ -207,10 +248,17 @@ return /******/ (function(modules) { // webpackBootstrap
 			return object;
 		}
 		var last = o.apply(undefined, [object].concat(_toConsumableArray(keys.slice(0, -1))));
-		if (isUndefined(last[keys[keys.length - 1]])) {
-			last[keys[keys.length - 1]] = def;
+		if (last instanceof Map) {
+			if (isUndefined(last.get(keys[keys.length - 1]))) {
+				last.set(keys[keys.length - 1], def);
+			}
+			return last.get(keys[keys.length - 1]);
+		} else {
+			if (isUndefined(last[keys[keys.length - 1]])) {
+				last[keys[keys.length - 1]] = def;
+			}
+			return last[keys[keys.length - 1]];
 		}
-		return last[keys[keys.length - 1]];
 	}
 	
 	function o(object) {
@@ -218,7 +266,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			keys[_key - 1] = arguments[_key];
 		}
 	
-		return dfault.apply(undefined, [object].concat(keys, [{}]));
+		return _default.apply(undefined, [object].concat(keys, [{}]));
 	}
 	
 	function a(object) {
@@ -226,7 +274,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			keys[_key - 1] = arguments[_key];
 		}
 	
-		return dfault.apply(undefined, [object].concat(keys, [[]]));
+		return _default.apply(undefined, [object].concat(keys, [[]]));
 	}
 	
 	function assert(condition, message) {
@@ -301,6 +349,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 	
 	exports.define_d = define_d;
+	
+	function mapEqual(a, b) {
+		var eq = arguments[2] === undefined ? function (x, y) {
+			return x === y;
+		} : arguments[2];
+	
+		if (a.size !== b.size) {
+			return false;
+		}
+		var aKeys = [].concat(_toConsumableArray(a.keys())).sort();
+		var bKeys = [].concat(_toConsumableArray(b.keys())).sort();
+		for (var i = 0; i < aKeys.length; ++i) {
+			if (aKeys[i] !== bKeys[i]) {
+				return false;
+			}
+			if (!eq(a.get(aKeys[i]), b.get(bKeys[i]))) {
+				return false;
+			}
+		}
+		return true;
+	}
 	
 	function customIndexOf(a, value) {
 		var eq = arguments[2] === undefined ? function (x, y) {
@@ -381,7 +450,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function graphDescendants(graph, key) {
 		return Object.keys((function succDescendants(key) {
-			return extend.apply(undefined, [_defineProperty({}, key, true)].concat(_toConsumableArray(graph.successors(key).map(function (succ) {
+			return extend.apply(undefined, [_defineProperty({}, key, true)].concat(_toConsumableArray([].concat(_toConsumableArray(graph.verticesFrom(key))).map(function (_ref) {
+				var _ref2 = _slicedToArray(_ref, 1);
+	
+				var succ = _ref2[0];
 				return succDescendants(succ);
 			}))));
 		})(key));
@@ -482,8 +554,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    */
 	
 				value: function newOperationType(name, DeltaClass, ProxyClass) {
-					var _this = this;
-	
 					/* sanity checks */
 					assert(name[0] === name[0].toUpperCase(), "Delta operation classes must have a name starting with a capital letter - '" + name + "' does not.");
 					assert(isUndefined(this.Delta[name]), "The '" + name + "' operation type already exists.");
@@ -566,15 +636,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 					/* create any given methods with default handler */
 					var lowercaseName = name[0].toLowerCase() + name.slice(1);
-					(DeltaClass.prototype.methods || [lowercaseName]).forEach(function (method) {
-						_this.ContainerProxy.newProxyMethod(method, function () {
-							for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-								args[_key] = arguments[_key];
-							}
+					var _iteratorNormalCompletion = true;
+					var _didIteratorError = false;
+					var _iteratorError = undefined;
 	
-							return _applyConstructor(DeltaClass, args);
-						});
-					});
+					try {
+						for (var _iterator = (DeltaClass.prototype.methods || [lowercaseName])[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+							var method = _step.value;
+	
+							this.ContainerProxy.newProxyMethod(method, function () {
+								for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+									args[_key] = arguments[_key];
+								}
+	
+								return _applyConstructor(DeltaClass, args);
+							});
+						}
+					} catch (err) {
+						_didIteratorError = true;
+						_iteratorError = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion && _iterator["return"]) {
+								_iterator["return"]();
+							}
+						} finally {
+							if (_didIteratorError) {
+								throw _iteratorError;
+							}
+						}
+					}
 	
 					/* return the new class */
 					return DeltaClass;
@@ -1126,38 +1217,94 @@ return /******/ (function(modules) { // webpackBootstrap
 						}
 	
 						var result = new deltaJs.Delta.NoOp();
-						deltas.forEach(function (delta) {
-							var d1 = result,
-							    d2 = delta || new deltaJs.Delta.NoOp();
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
 	
-							/* use the first composition function for which these deltas satisfy the precondition */
-							var composeFn = function () {};
-							var success = Delta._compositions.some(function (_ref) {
-								var precondition = _ref.precondition;
-								var fn = _ref.compose;
+						try {
+							for (var _iterator = deltas[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _iteratorNormalCompletion2;
 	
-								if (precondition(d1, d2)) {
-									composeFn = fn;
-									return true; // success; break the loop
+								var _didIteratorError2;
+	
+								var _iteratorError2;
+	
+								var _iterator2, _step2;
+	
+								var _step2$value;
+	
+								(function () {
+									var delta = _step.value;
+	
+									var d1 = result,
+									    d2 = delta || new deltaJs.Delta.NoOp();
+	
+									/* use the first composition function for which these deltas satisfy the precondition */
+									var composeFn = function () {};
+									var success = false;
+									_iteratorNormalCompletion2 = true;
+									_didIteratorError2 = false;
+									_iteratorError2 = undefined;
+	
+									try {
+										for (_iterator2 = deltaJs.Delta._compositions[Symbol.iterator](); !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+											_step2$value = _step2.value;
+											var precondition = _step2$value.precondition;
+											var compose = _step2$value.compose;
+	
+											if (precondition(d1, d2)) {
+												composeFn = compose;
+												success = true;
+												break;
+											}
+										}
+									} catch (err) {
+										_didIteratorError2 = true;
+										_iteratorError2 = err;
+									} finally {
+										try {
+											if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+												_iterator2["return"]();
+											}
+										} finally {
+											if (_didIteratorError2) {
+												throw _iteratorError2;
+											}
+										}
+									}
+	
+									/* throw an error if 'false' was found rather than a function*/
+									if (composeFn === false || !success) {
+										throw new CompositionError(d1, d2);
+									}
+	
+									/*  if no composition function is found, use a linear delta model  */
+									/*  to 'naively' have one delta apply after another                */
+									if (composeFn === true) {
+										composeFn = function (d1, d2) {
+											return new deltaJs.Delta.Composed([d1, d2]);
+										};
+									}
+	
+									/* return the result on success */
+									result = composeFn(d1, d2);
+								})();
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
 								}
-							});
-	
-							/* throw an error if 'false' was found rather than a function*/
-							if (composeFn === false || !success) {
-								throw new CompositionError(d1, d2);
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
 							}
+						}
 	
-							/*  if no composition function is found, use a linear delta model  */
-							/*  to 'naively' have one delta apply after another                */
-							if (composeFn === true) {
-								composeFn = function (d1, d2) {
-									return new deltaJs.Delta.Composed([d1, d2]);
-								};
-							}
-	
-							/* return the result on success */
-							result = composeFn(d1, d2);
-						});
 						return result;
 					}
 				}
@@ -1307,15 +1454,57 @@ return /******/ (function(modules) { // webpackBootstrap
 			var D2 = d2 instanceof deltaJs.Delta.Overloaded ? d2.overloads : [d2];
 			var result = new deltaJs.Delta.Overloaded();
 			var errors = [];
-			D1.forEach(function (delta1) {
-				D2.forEach(function (delta2) {
+			var _iteratorNormalCompletion = true;
+			var _didIteratorError = false;
+			var _iteratorError = undefined;
+	
+			try {
+				for (var _iterator = D1[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+					var delta1 = _step.value;
+					var _iteratorNormalCompletion2 = true;
+					var _didIteratorError2 = false;
+					var _iteratorError2 = undefined;
+	
 					try {
-						result.overloads.push(delta1.composedWith(delta2));
-					} catch (error) {
-						errors.push(error);
+						for (var _iterator2 = D2[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+							var delta2 = _step2.value;
+	
+							try {
+								result.overloads.push(delta1.composedWith(delta2));
+							} catch (error) {
+								errors.push(error);
+							}
+						}
+					} catch (err) {
+						_didIteratorError2 = true;
+						_iteratorError2 = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+								_iterator2["return"]();
+							}
+						} finally {
+							if (_didIteratorError2) {
+								throw _iteratorError2;
+							}
+						}
 					}
-				});
-			});
+				}
+			} catch (err) {
+				_didIteratorError = true;
+				_iteratorError = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion && _iterator["return"]) {
+						_iterator["return"]();
+					}
+				} finally {
+					if (_didIteratorError) {
+						throw _iteratorError;
+					}
+				}
+			}
+	
 			if (result.overloads.length === 0) {
 				throw new MultipleOverloadsCompositionError(d1, d2, errors);
 			}
@@ -1330,6 +1519,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	"use strict";
 	
 	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+	
+	var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
 	
 	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 	
@@ -1347,7 +1538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var indent = _utilEs6Js.indent;
 	var t = _utilEs6Js.t;
 	var oncePer = _utilEs6Js.oncePer;
-	var objectsEqual = _utilEs6Js.objectsEqual;
+	var mapEqual = _utilEs6Js.mapEqual;
 	
 	var Path = _interopRequire(__webpack_require__(7));
 	
@@ -1362,6 +1553,8 @@ return /******/ (function(modules) { // webpackBootstrap
 		//noinspection JSUnusedLocalSymbols
 		deltaJs.newOperationType("Modify", (function (_deltaJs$Delta) {
 			function Modify() {
+				var _this = this;
+	
 				for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 					args[_key] = arguments[_key];
 				}
@@ -1369,8 +1562,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				_classCallCheck(this, Modify);
 	
 				_get(Object.getPrototypeOf(Modify.prototype), "constructor", this).apply(this, args);
-				this.subDeltas = {};
-				extend(this.subDeltas, this.arg || {});
+				this.subDeltas = new Map(this.arg && Object.keys(this.arg).map(function (key) {
+					return [key, _this.arg[key]];
+				}));
 			}
 	
 			_inherits(Modify, _deltaJs$Delta);
@@ -1383,18 +1577,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	
 					value: function clone() {
-						var _this = this;
-	
 						var result = _get(Object.getPrototypeOf(Modify.prototype), "clone", this).call(this);
-						Object.keys(this.subDeltas).forEach(function (prop) {
-							result.subDeltas[prop] = _this.subDeltas[prop].clone();
-						});
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
+	
+						try {
+							for (var _iterator = this.subDeltas[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _step$value = _slicedToArray(_step.value, 2);
+	
+								var key = _step$value[0];
+								var delta = _step$value[1];
+	
+								result.subDeltas.set(key, delta.clone());
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
+	
 						return result;
 					}
 				},
 				equals: {
 					value: function equals(other) {
-						return objectsEqual(this.subDeltas, other.subDeltas, function (d1, d2) {
+						return mapEqual(this.subDeltas, other.subDeltas, function (d1, d2) {
 							return d1.equals(d2);
 						});
 					}
@@ -1417,15 +1634,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	
 					value: function applyTo(target) {
-						var _this = this;
-	
 						var options = arguments[1] === undefined ? {} : arguments[1];
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
 	
-						Object.keys(this.subDeltas).forEach(function (prop) {
-							if (!options.restrictToProperty || options.restrictToProperty === prop) {
-								_this.subDeltas[prop].applyTo(wt(target.value, prop), extend({}, options, { restrictToProperty: null }));
+						try {
+							for (var _iterator = this.subDeltas[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _step$value = _slicedToArray(_step.value, 2);
+	
+								var prop = _step$value[0];
+								var delta = _step$value[1];
+	
+								if (!options.restrictToProperty || options.restrictToProperty === prop) {
+									delta.applyTo(wt(target.value, prop), extend({}, options, { restrictToProperty: null }));
+								}
 							}
-						});
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
 					}
 				},
 				toString: {
@@ -1436,14 +1674,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	
 					value: function toString() {
-						var _this = this;
-	
 						var options = arguments[0] === undefined ? {} : arguments[0];
 	
 						var str = _get(Object.getPrototypeOf(Modify.prototype), "toString", this).call(this, options);
-						if (Object.keys(this.subDeltas).length > 0) {
-							var deltas = Object.keys(this.subDeltas).map(function (p) {
-								return _this.subDeltas[p].toString(extend({}, options, { targetProp: p }));
+						if (this.subDeltas.size > 0) {
+							var deltas = this.subDeltas.entries().map(function (_ref) {
+								var _ref2 = _slicedToArray(_ref, 2);
+	
+								var prop = _ref2[0];
+								var delta = _ref2[1];
+								return delta.toString(extend({}, options, { targetProp: prop }));
 							}).join("\n");
 							str += "\n" + indent(deltas, 4);
 						}
@@ -1535,13 +1775,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	
 					value: function delta() {
-						var _this = this;
-	
 						var result = _get(Object.getPrototypeOf(ModifyProxy.prototype), "delta", this).call(this);
-						result.subDeltas = {};
-						this.childKeys().forEach(function (prop) {
-							result.subDeltas[prop] = _this.childDelta(prop);
-						});
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
+	
+						try {
+							for (var _iterator = this.childKeys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var prop = _step.value;
+	
+								result.subDeltas.set(prop, this.childDelta(prop));
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
+	
 						return result;
 					}
 				}
@@ -1553,9 +1812,31 @@ return /******/ (function(modules) { // webpackBootstrap
 		/* composition - introducing 'Modify' ***********************************************/
 		deltaJs.newComposition(t("Modify", "Modify"), function (d1, d2) {
 			var result = d1.clone();
-			Object.keys(d2.subDeltas).forEach(function (prop) {
-				result.subDeltas[prop] = deltaJs.Delta.composed(result.subDeltas[prop], d2.subDeltas[prop]);
-			});
+			var _iteratorNormalCompletion = true;
+			var _didIteratorError = false;
+			var _iteratorError = undefined;
+	
+			try {
+				for (var _iterator = d2.subDeltas.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+					var prop = _step.value;
+	
+					result.subDeltas.set(prop, deltaJs.Delta.composed(result.subDeltas.get(prop), d2.subDeltas.get(prop)));
+				}
+			} catch (err) {
+				_didIteratorError = true;
+				_iteratorError = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion && _iterator["return"]) {
+						_iterator["return"]();
+					}
+				} finally {
+					if (_didIteratorError) {
+						throw _iteratorError;
+					}
+				}
+			}
+	
 			return result;
 		});
 	});
@@ -1967,29 +2248,49 @@ return /******/ (function(modules) { // webpackBootstrap
 				applyTo: {
 					value: function applyTo(target) {
 						var arr = target.value;
-						this.values.forEach(function (_ref) {
-							var method = _ref.method;
-							var value = _ref.value;
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
 	
-							switch (method) {
-								case "prepend":
-									{
-										arr.unshift(value);
-									}break;
-								case "insert":
-									{
-										// 'insert' doesn't *have* to use a random position. Any position will do.
-										//  E.g., its implementation could just be the same as for 'append'.
-										//  Nonetheless, we use a random position to force the tests to be permissive.
-										var position = Math.floor(Math.random() * (arr.length + 1));
-										arr.splice(position, 0, value);
-									}break;
-								case "append":
-									{
-										arr.push(value);
-									}break;
+						try {
+							for (var _iterator = this.values[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _step$value = _step.value;
+								var method = _step$value.method;
+								var value = _step$value.value;
+	
+								switch (method) {
+									case "prepend":
+										{
+											arr.unshift(value);
+										}break;
+									case "insert":
+										{
+											// 'insert' doesn't *have* to use a random position. Any position will do.
+											//  E.g., its implementation could just be the same as for 'append'.
+											//  Nonetheless, we use a random position to force the tests to be permissive.
+											var position = Math.floor(Math.random() * (arr.length + 1));
+											arr.splice(position, 0, value);
+										}break;
+									case "append":
+										{
+											arr.push(value);
+										}break;
+								}
 							}
-						});
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
 					}
 				},
 				methods: {
@@ -2112,6 +2413,9 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 				},
 				equals: {
+	
+					// TODO: refines method instead of equals method (look at PutIntoArray.es6.js)
+	
 					value: function equals(other) {
 						return arraysEqual(this.values, other.values, function (a, b) {
 							return a.method === b.method && a.value && b.value;
@@ -2138,17 +2442,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 								return _newFnWrapper;
 							})(function () {
-								var _this = this;
-	
 								for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 									args[_key] = arguments[_key];
 								}
 	
-								var result;
-								newFn._DeltaJs_functions.forEach(function (fn) {
-									result = fn.apply(_this, args);
-								});
-								//noinspection JSUnusedAssignment
+								var result = undefined;
+								var _iteratorNormalCompletion = true;
+								var _didIteratorError = false;
+								var _iteratorError = undefined;
+	
+								try {
+									for (var _iterator = newFn._DeltaJs_functions[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+										var fn = _step.value;
+	
+										result = fn.apply(this, args);
+									}
+								} catch (err) {
+									_didIteratorError = true;
+									_iteratorError = err;
+								} finally {
+									try {
+										if (!_iteratorNormalCompletion && _iterator["return"]) {
+											_iterator["return"]();
+										}
+									} finally {
+										if (_didIteratorError) {
+											throw _iteratorError;
+										}
+									}
+								}
+	
 								return result;
 							});
 							newFn._DeltaJs_functions = [function () {
@@ -2161,29 +2484,49 @@ return /******/ (function(modules) { // webpackBootstrap
 							target.value = newFn;
 						}
 						var arr = target.value._DeltaJs_functions;
-						this.values.forEach(function (_ref) {
-							var method = _ref.method;
-							var value = _ref.value;
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
 	
-							switch (method) {
-								case "prepend":
-									{
-										arr.unshift(value);
-									}break;
-								case "insert":
-									{
-										// 'insert' doesn't *have* to use a random position. Any position will do.
-										//  E.g., its implementation could just be the same as for 'append'.
-										//  Nonetheless, we use a random position to force the tests to be permissive.
-										var position = Math.floor(Math.random() * (arr.length + 1));
-										arr.splice(position, 0, value);
-									}break;
-								case "append":
-									{
-										arr.push(value);
-									}break;
+						try {
+							for (var _iterator = this.values[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _step$value = _step.value;
+								var method = _step$value.method;
+								var value = _step$value.value;
+	
+								switch (method) {
+									case "prepend":
+										{
+											arr.unshift(value);
+										}break;
+									case "insert":
+										{
+											// 'insert' doesn't *have* to use a random position. Any position will do.
+											//  E.g., its implementation could just be the same as for 'append'.
+											//  Nonetheless, we use a random position to force the tests to be permissive.
+											var position = Math.floor(Math.random() * (arr.length + 1));
+											arr.splice(position, 0, value);
+										}break;
+									case "append":
+										{
+											arr.push(value);
+										}break;
+								}
 							}
-						});
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
 					}
 				},
 				methods: {
@@ -2247,6 +2590,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 	
+	var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
+	
 	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 	
 	var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
@@ -2307,9 +2652,8 @@ return /******/ (function(modules) { // webpackBootstrap
 				clone: {
 					value: function clone() {
 						var result = _get(Object.getPrototypeOf(DeltaModel.prototype), "clone", this).call(this);
-						result.graph = this.graph.clone();
-						result.graph.eachVertex(function (id, delta) {
-							result.graph.setVertex(id, delta.clone());
+						result.graph = this.graph.clone(function (d) {
+							return d.clone();
 						});
 						return result;
 					}
@@ -2318,51 +2662,39 @@ return /******/ (function(modules) { // webpackBootstrap
 					value: function equals(other) {
 						var g1 = this.graph.transitiveReduction();
 						var g2 = other.graph.transitiveReduction();
-						var result = true;
-						g1.eachVertex(function (n1, d1) {
-							if (g2.vertexValue(n1).equals(d1)) {
-								result = false;
-								return false;
-							}
+						return g1.equals(g2, function (x, y) {
+							return x.equals(y);
 						});
-						if (!result) {
-							return false;
-						}
-						g2.eachVertex(function (n2, d2) {
-							if (g1.vertexValue(n2).equals(d2)) {
-								result = false;
-								return false;
-							}
-						});
-						if (!result) {
-							return false;
-						}
-						g1.eachEdge(function (n1From, n1To) {
-							if (g2.hasEdge(n1From, n1To)) {
-								result = false;
-								return false;
-							}
-						});
-						if (!result) {
-							return false;
-						}
-						g1.eachEdge(function (n2From, n2To) {
-							if (g1.hasEdge(n2From, n2To)) {
-								result = false;
-								return false;
-							}
-						});
-						return result; // TODO: move 'equals' method to the js-graph library (and make more efficient)
 					}
 				},
 				_assertNoUnresolvedConflicts: {
 					value: function _assertNoUnresolvedConflicts() {
-						var conflicts = this.conflicts();
-						conflicts.forEach(function (conflictInfo) {
-							if (conflictInfo.conflictResolvingDeltas.length === 0) {
-								throw new UnresolvedDeltaConflict(conflictInfo.conflictingDeltas);
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
+	
+						try {
+							for (var _iterator = this.conflicts()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var conflictInfo = _step.value;
+	
+								if (conflictInfo.conflictResolvingDeltas.length === 0) {
+									throw new UnresolvedDeltaConflict(conflictInfo.conflictingDeltas);
+								}
 							}
-						});
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
 					}
 				},
 				applyTo: {
@@ -2373,9 +2705,32 @@ return /******/ (function(modules) { // webpackBootstrap
 						this._assertNoUnresolvedConflicts();
 	
 						/* no unresolved conflicts: apply the delta model */
-						this.graph.topologically(function (name, subDelta) {
-							subDelta.applyTo(target, options);
-						});
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
+	
+						try {
+							for (var _iterator = this.graph.vertices_topologically()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _step$value = _slicedToArray(_step.value, 2);
+	
+								var subDelta = _step$value[1];
+	
+								subDelta.applyTo(target, options);
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
 					}
 				},
 				toString: {
@@ -2391,9 +2746,34 @@ return /******/ (function(modules) { // webpackBootstrap
 						var str = _get(Object.getPrototypeOf(DeltaModel.prototype), "toString", this).call(this, options);
 						if (this.graph.vertexCount() > 0) {
 							var deltas = "";
-							this.graph.topologically(function (name, delta) {
-								deltas += "[" + name + "] " + delta.toString(options) + "\n";
-							});
+							var _iteratorNormalCompletion = true;
+							var _didIteratorError = false;
+							var _iteratorError = undefined;
+	
+							try {
+								for (var _iterator = this.graph.vertices_topologically()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+									var _step$value = _slicedToArray(_step.value, 2);
+	
+									var _name = _step$value[0];
+									var delta = _step$value[1];
+	
+									deltas += "[" + _name + "] " + delta.toString(options) + "\n";
+								}
+							} catch (err) {
+								_didIteratorError = true;
+								_iteratorError = err;
+							} finally {
+								try {
+									if (!_iteratorNormalCompletion && _iterator["return"]) {
+										_iterator["return"]();
+									}
+								} finally {
+									if (_didIteratorError) {
+										throw _iteratorError;
+									}
+								}
+							}
+	
 							str += "\n" + indent(deltas, 4);
 						}
 						return str;
@@ -2406,8 +2786,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	
 					value: function conflicts() {
-						var _this = this;
-	
 						/* clone the graph */
 						var g = this.graph.clone();
 	
@@ -2419,12 +2797,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 						/* create sink vertex, connect it to all other vertices */
 						g.addNewVertex(sink, null);
-						g.eachVertex(function (name) {
-							g.setVertex(name, null);
-							if (name !== sink) {
-								g.ensureEdge(name, sink);
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
+	
+						try {
+							for (var _iterator = g.vertices()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _step$value = _slicedToArray(_step.value, 1);
+	
+								var _name = _step$value[0];
+	
+								g.setVertex(_name, null);
+								if (_name !== sink) {
+									g.ensureEdge(_name, sink);
+								}
 							}
-						});
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
 	
 						/* transitive reduction */
 						g = g.transitiveReduction();
@@ -2436,65 +2837,299 @@ return /******/ (function(modules) { // webpackBootstrap
 								return;
 							}
 							var ancestors = {};
-							g.predecessors(name).forEach(function (pred) {
-								getResolutionsIn(pred);
-								ancestors[pred] = _defineProperty({}, pred, true);
-								var predAncestors = g.vertexValue(pred);
-								extend.apply(undefined, [ancestors[pred]].concat(_toConsumableArray(Object.keys(predAncestors).map(function (ppred) {
-									return predAncestors[ppred];
-								}))));
-							});
+							var _iteratorNormalCompletion2 = true;
+							var _didIteratorError2 = false;
+							var _iteratorError2 = undefined;
+	
+							try {
+								for (var _iterator2 = g.verticesTo(name)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+									var _step2$value;
+	
+									(function () {
+										_step2$value = _slicedToArray(_step2.value, 1);
+										var pred = _step2$value[0];
+	
+										getResolutionsIn(pred);
+										ancestors[pred] = _defineProperty({}, pred, true);
+										var predAncestors = g.vertexValue(pred);
+										extend.apply(undefined, [ancestors[pred]].concat(_toConsumableArray(Object.keys(predAncestors).map(function (ppred) {
+											return predAncestors[ppred];
+										}))));
+									})();
+								}
+							} catch (err) {
+								_didIteratorError2 = true;
+								_iteratorError2 = err;
+							} finally {
+								try {
+									if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+										_iterator2["return"]();
+									}
+								} finally {
+									if (_didIteratorError2) {
+										throw _iteratorError2;
+									}
+								}
+							}
+	
 							g.setVertex(name, ancestors);
-							Object.keys(ancestors).forEach(function (pred1) {
-								Object.keys(ancestors).forEach(function (pred2) {
-									if (pred1 >= pred2) {
-										return;
-									} // make sure pred1 < pred2
-									var ancs1 = extend({}, ancestors[pred1]);
-									var ancs2 = extend({}, ancestors[pred2]);
-									Object.keys(ancs1).forEach(function (anc1) {
-										Object.keys(ancs2).forEach(function (anc2) {
-											if (anc1 === anc2) {
-												delete ancs1[anc1];
-												delete ancs2[anc2];
+							var _iteratorNormalCompletion3 = true;
+							var _didIteratorError3 = false;
+							var _iteratorError3 = undefined;
+	
+							try {
+								for (var _iterator3 = Object.keys(ancestors)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+									var pred1 = _step3.value;
+									var _iteratorNormalCompletion4 = true;
+									var _didIteratorError4 = false;
+									var _iteratorError4 = undefined;
+	
+									try {
+										for (var _iterator4 = Object.keys(ancestors)[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+											var pred2 = _step4.value;
+	
+											if (pred1 >= pred2) {
+												continue;
+											} // make sure pred1 < pred2
+											var ancs1 = extend({}, ancestors[pred1]);
+											var ancs2 = extend({}, ancestors[pred2]);
+											var _iteratorNormalCompletion5 = true;
+											var _didIteratorError5 = false;
+											var _iteratorError5 = undefined;
+	
+											try {
+												for (var _iterator5 = Object.keys(ancs1)[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+													var anc1 = _step5.value;
+													var _iteratorNormalCompletion6 = true;
+													var _didIteratorError6 = false;
+													var _iteratorError6 = undefined;
+	
+													try {
+														for (var _iterator6 = Object.keys(ancs2)[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+															var anc2 = _step6.value;
+	
+															if (anc1 === anc2) {
+																delete ancs1[anc1];
+																delete ancs2[anc2];
+															}
+														}
+													} catch (err) {
+														_didIteratorError6 = true;
+														_iteratorError6 = err;
+													} finally {
+														try {
+															if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
+																_iterator6["return"]();
+															}
+														} finally {
+															if (_didIteratorError6) {
+																throw _iteratorError6;
+															}
+														}
+													}
+												}
+											} catch (err) {
+												_didIteratorError5 = true;
+												_iteratorError5 = err;
+											} finally {
+												try {
+													if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+														_iterator5["return"]();
+													}
+												} finally {
+													if (_didIteratorError5) {
+														throw _iteratorError5;
+													}
+												}
 											}
-										});
-									});
-									Object.keys(ancs1).forEach(function (anc1) {
-										Object.keys(ancs2).forEach(function (anc2) {
-											o.apply(undefined, [resolutions].concat(_toConsumableArray([anc1, anc2].sort())))[name] = true;
-										});
-									});
-								});
-							});
+	
+											var _iteratorNormalCompletion7 = true;
+											var _didIteratorError7 = false;
+											var _iteratorError7 = undefined;
+	
+											try {
+												for (var _iterator7 = Object.keys(ancs1)[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+													var anc1 = _step7.value;
+													var _iteratorNormalCompletion8 = true;
+													var _didIteratorError8 = false;
+													var _iteratorError8 = undefined;
+	
+													try {
+														for (var _iterator8 = Object.keys(ancs2)[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+															var anc2 = _step8.value;
+	
+															o.apply(undefined, [resolutions].concat(_toConsumableArray([anc1, anc2].sort())))[name] = true;
+														}
+													} catch (err) {
+														_didIteratorError8 = true;
+														_iteratorError8 = err;
+													} finally {
+														try {
+															if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
+																_iterator8["return"]();
+															}
+														} finally {
+															if (_didIteratorError8) {
+																throw _iteratorError8;
+															}
+														}
+													}
+												}
+											} catch (err) {
+												_didIteratorError7 = true;
+												_iteratorError7 = err;
+											} finally {
+												try {
+													if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
+														_iterator7["return"]();
+													}
+												} finally {
+													if (_didIteratorError7) {
+														throw _iteratorError7;
+													}
+												}
+											}
+										}
+									} catch (err) {
+										_didIteratorError4 = true;
+										_iteratorError4 = err;
+									} finally {
+										try {
+											if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+												_iterator4["return"]();
+											}
+										} finally {
+											if (_didIteratorError4) {
+												throw _iteratorError4;
+											}
+										}
+									}
+								}
+							} catch (err) {
+								_didIteratorError3 = true;
+								_iteratorError3 = err;
+							} finally {
+								try {
+									if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+										_iterator3["return"]();
+									}
+								} finally {
+									if (_didIteratorError3) {
+										throw _iteratorError3;
+									}
+								}
+							}
 						};
 						getResolutionsIn(sink);
 	
 						/* out of the incomparable deltas, find those that are actually in conflict, and find any */
 						var result = [];
-						Object.keys(resolutions).forEach(function (first) {
-							Object.keys(resolutions[first]).forEach(function (second) {
-								var x = _this.graph.vertexValue(first);
-								var y = _this.graph.vertexValue(second);
-								if (!x.commutesWith(y)) {
-									var conflictInfo = {
-										conflictingDeltas: [first, second],
-										conflictResolvingDeltas: []
-									};
-									Object.keys(resolutions[first][second]).forEach(function (resolver) {
-										graphDescendants(g, resolver).forEach(function (resolver) {
-											var z = _this.graph.vertexValue(resolver);
-											if (resolver !== sink) {
-												if (z.resolves(x, y)) {
-													conflictInfo.conflictResolvingDeltas.push(resolver);
+						var _iteratorNormalCompletion2 = true;
+						var _didIteratorError2 = false;
+						var _iteratorError2 = undefined;
+	
+						try {
+							for (var _iterator2 = Object.keys(resolutions)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+								var first = _step2.value;
+								var _iteratorNormalCompletion3 = true;
+								var _didIteratorError3 = false;
+								var _iteratorError3 = undefined;
+	
+								try {
+									for (var _iterator3 = Object.keys(resolutions[first])[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+										var second = _step3.value;
+	
+										var x = this.graph.vertexValue(first);
+										var y = this.graph.vertexValue(second);
+										if (!x.commutesWith(y)) {
+											var conflictInfo = {
+												conflictingDeltas: [first, second],
+												conflictResolvingDeltas: []
+											};
+											var _iteratorNormalCompletion4 = true;
+											var _didIteratorError4 = false;
+											var _iteratorError4 = undefined;
+	
+											try {
+												for (var _iterator4 = Object.keys(resolutions[first][second])[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+													var nearestResolver = _step4.value;
+													var _iteratorNormalCompletion5 = true;
+													var _didIteratorError5 = false;
+													var _iteratorError5 = undefined;
+	
+													try {
+														for (var _iterator5 = graphDescendants(g, nearestResolver)[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+															var resolver = _step5.value;
+	
+															var z = this.graph.vertexValue(resolver);
+															if (resolver !== sink) {
+																if (z.resolves(x, y)) {
+																	conflictInfo.conflictResolvingDeltas.push(resolver);
+																}
+															}
+														}
+													} catch (err) {
+														_didIteratorError5 = true;
+														_iteratorError5 = err;
+													} finally {
+														try {
+															if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+																_iterator5["return"]();
+															}
+														} finally {
+															if (_didIteratorError5) {
+																throw _iteratorError5;
+															}
+														}
+													}
+												}
+											} catch (err) {
+												_didIteratorError4 = true;
+												_iteratorError4 = err;
+											} finally {
+												try {
+													if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+														_iterator4["return"]();
+													}
+												} finally {
+													if (_didIteratorError4) {
+														throw _iteratorError4;
+													}
 												}
 											}
-										});
-									});
-									result.push(conflictInfo);
+	
+											result.push(conflictInfo);
+										}
+									}
+								} catch (err) {
+									_didIteratorError3 = true;
+									_iteratorError3 = err;
+								} finally {
+									try {
+										if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+											_iterator3["return"]();
+										}
+									} finally {
+										if (_didIteratorError3) {
+											throw _iteratorError3;
+										}
+									}
 								}
-							});
-						});
+							}
+						} catch (err) {
+							_didIteratorError2 = true;
+							_iteratorError2 = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+									_iterator2["return"]();
+								}
+							} finally {
+								if (_didIteratorError2) {
+									throw _iteratorError2;
+								}
+							}
+						}
 	
 						/* return the conflict results */
 						return result;
@@ -2515,8 +3150,8 @@ return /******/ (function(modules) { // webpackBootstrap
 				_classCallCheck(this, DeltaModelProxy);
 	
 				_get(Object.getPrototypeOf(DeltaModelProxy.prototype), "constructor", this).apply(this, args);
-				this._childOptions = {}; // key -> options
-				this._childApplicationConditions = {}; // key -> application-condition
+				this._childOptions = new Map(); // key -> options
+				this._childApplicationConditions = new Map(); // key -> application-condition
 			}
 	
 			_inherits(DeltaModelProxy, _deltaJs$ContainerProxy);
@@ -2569,7 +3204,7 @@ return /******/ (function(modules) { // webpackBootstrap
 						var feature = options.feature;
 	
 						/* create application condition and optional eponymous linked feature */
-						if (!this._childApplicationConditions[name]) {
+						if (!this._childApplicationConditions.has(name)) {
 							var appCond = undefined;
 							if (feature) {
 								appCond = deltaJs.newFeature(name, options);
@@ -2586,7 +3221,7 @@ return /******/ (function(modules) { // webpackBootstrap
 							if (feature || appCond.conditional) {
 								delta.applicationCondition = appCond;
 							}
-							this._childApplicationConditions[name] = appCond;
+							this._childApplicationConditions.set(name, appCond);
 						}
 	
 						/* create proxies */
@@ -2600,8 +3235,8 @@ return /******/ (function(modules) { // webpackBootstrap
 						}
 	
 						/* store options */
-						if (!this._childOptions[name]) {
-							this._childOptions[name] = options;
+						if (!this._childOptions.has(name)) {
+							this._childOptions.set(name, options);
 						}
 	
 						/* return the deepest created proxy */
@@ -2616,34 +3251,85 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @return the delta belonging to this proxy
 	     */
 	
-					value: function delta() {
-						var _this = this;
+					value: (function (_delta) {
+						var _deltaWrapper = function delta() {
+							return _delta.apply(this, arguments);
+						};
 	
+						_deltaWrapper.toString = function () {
+							return _delta.toString();
+						};
+	
+						return _deltaWrapper;
+					})(function () {
 						var result = _get(Object.getPrototypeOf(DeltaModelProxy.prototype), "delta", this).call(this);
 						result.graph.clear();
-						this.childKeys().forEach(function (name) {
-							var options = _this._childOptions[name];
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
 	
-							/* delta in the graph */
-							var delta = _this.childDelta(name);
-							result.graph.addVertex(name, delta);
+						try {
+							for (var _iterator = this.childKeys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _name = _step.value;
 	
-							/* application order */
-							[].concat(_toConsumableArray(options.resolves || []), _toConsumableArray(options.after || []), _toConsumableArray(options.requires || [])).forEach(function (subName) {
-								result.graph.createEdge(subName, name);
-								if (result.graph.hasCycle()) {
-									result.graph.removeExistingEdge(subName, name);
-									throw new ApplicationOrderCycle(subName, name);
+								var options = this._childOptions.get(_name);
+	
+								/* delta in the graph */
+								var delta = this.childDelta(_name);
+								result.graph.addVertex(_name, delta);
+	
+								/* application order */
+								var _iteratorNormalCompletion2 = true;
+								var _didIteratorError2 = false;
+								var _iteratorError2 = undefined;
+	
+								try {
+									for (var _iterator2 = [].concat(_toConsumableArray(options.resolves || []), _toConsumableArray(options.after || []), _toConsumableArray(options.requires || []))[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+										var subName = _step2.value;
+	
+										result.graph.createEdge(subName, _name);
+										if (result.graph.hasCycle()) {
+											result.graph.removeExistingEdge(subName, _name);
+											throw new ApplicationOrderCycle(subName, _name);
+										}
+									}
+								} catch (err) {
+									_didIteratorError2 = true;
+									_iteratorError2 = err;
+								} finally {
+									try {
+										if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+											_iterator2["return"]();
+										}
+									} finally {
+										if (_didIteratorError2) {
+											throw _iteratorError2;
+										}
+									}
 								}
-							});
 	
-							/* application condition */
-							if (options.feature || _this._childApplicationConditions[name].conditional) {
-								delta.applicationCondition = _this._childApplicationConditions[name];
+								/* application condition */
+								if (options.feature || this._childApplicationConditions.get(_name).conditional) {
+									delta.applicationCondition = this._childApplicationConditions.get(_name);
+								}
 							}
-						});
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
+	
 						return result;
-					}
+					})
 				}
 			});
 	
@@ -2714,41 +3400,83 @@ return /******/ (function(modules) { // webpackBootstrap
 		}
 	
 		/* code for the mutual selection of features */
-		var _if = {}; // feature -> (arrays of arrays; disjunctive normal form)
-		var _selected = {}; // feature -> Boolean
+		var _if = new Map(); // feature -> (arrays of arrays; disjunctive normal form)
+		var _selected = new Map(); // feature -> Boolean
 		function _addIf(feature) {
 			var disjunct = arguments[1] === undefined ? [] : arguments[1];
 	
 			_conditionsUnsettled = true;
 			if (disjunct === true) {
-				_selected[feature] = true;
-			} else if (disjunct === false) {} else if (_if[feature] !== true) {
+				_selected.set(feature, true);
+			} else if (disjunct === false) {} else if (_if.get(feature) !== true) {
 				a(_if, feature).push(_normalizeClause(disjunct));
 			}
 		}
 		function _addSelects(feature, otherFeatures) {
-			_normalizeClause(otherFeatures).forEach(function (other) {
-				_addIf(other, feature);
-			});
+			var _iteratorNormalCompletion = true;
+			var _didIteratorError = false;
+			var _iteratorError = undefined;
+	
+			try {
+				for (var _iterator = _normalizeClause(otherFeatures)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+					var other = _step.value;
+	
+					_addIf(other, feature);
+				}
+			} catch (err) {
+				_didIteratorError = true;
+				_iteratorError = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion && _iterator["return"]) {
+						_iterator["return"]();
+					}
+				} finally {
+					if (_didIteratorError) {
+						throw _iteratorError;
+					}
+				}
+			}
 		}
 	
 		/* code for constraints between features (enforced by errors) */
-		var _onlyIf = {}; // feature -> (arrays of arrays; conjunctive normal form)
-		var _allowed = {}; // feature -> Boolean
+		var _onlyIf = new Map(); // feature -> (arrays of arrays; conjunctive normal form)
+		var _allowed = new Map(); // feature -> Boolean
 		function _addOnlyIf(feature) {
 			var conjunct = arguments[1] === undefined ? [] : arguments[1];
 	
 			_conditionsUnsettled = true;
 			if (conjunct === false) {
-				_allowed[feature] = false;
-			} else if (conjunct === true) {} else if (_onlyIf[feature] !== false) {
+				_allowed.set(feature, false);
+			} else if (conjunct === true) {} else if (_onlyIf.get(feature) !== false) {
 				a(_onlyIf, feature).push(_normalizeClause(conjunct));
 			}
 		}
 		function _addRequiredBy(feature, otherFeatures) {
-			_normalizeClause(otherFeatures).forEach(function (other) {
-				_addOnlyIf(other, feature);
-			});
+			var _iteratorNormalCompletion = true;
+			var _didIteratorError = false;
+			var _iteratorError = undefined;
+	
+			try {
+				for (var _iterator = _normalizeClause(otherFeatures)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+					var other = _step.value;
+	
+					_addOnlyIf(other, feature);
+				}
+			} catch (err) {
+				_didIteratorError = true;
+				_iteratorError = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion && _iterator["return"]) {
+						_iterator["return"]();
+					}
+				} finally {
+					if (_didIteratorError) {
+						throw _iteratorError;
+					}
+				}
+			}
 		}
 	
 		/* code for settling relations between features */
@@ -2763,33 +3491,75 @@ return /******/ (function(modules) { // webpackBootstrap
 			var somethingChanged;
 			do {
 				somethingChanged = false;
-				Object.keys(deltaJs.features).forEach(function (featureName) {
-					if (!_selected[featureName]) {
-						/* if there are 'if' disjuncts that are selected, this feature is selected */
-						if (isUndefined(_selected[featureName])) {
-							_selected[featureName] = false;
-						}
-						if ((_if[featureName] || []).some(function (disj) {
-							return disj.every(function (conj) {
-								return _selected[conj];
-							});
-						})) {
-							_selected[featureName] = true;
-							somethingChanged = true;
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = Object.keys(deltaJs.features)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var featureName = _step.value;
+	
+						if (!_selected.get(featureName)) {
+							/* if there are 'if' disjuncts that are selected, this feature is selected */
+							if (_selected.has(featureName)) {
+								_selected.set(featureName, false);
+							}
+							if ((_if.get(featureName) || []).some(function (disj) {
+								return disj.every(function (conj) {
+									return _selected.get(conj);
+								});
+							})) {
+								_selected.set(featureName, true);
+								somethingChanged = true;
+							}
 						}
 					}
-				});
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
 			} while (somethingChanged);
 	
 			/* computation of allowed features */
-			Object.keys(deltaJs.features).forEach(function (featureName) {
-				/* if there are 'onlyIf' conjuncts that are excluded, this feature is excluded */
-				_allowed[featureName] = (_onlyIf[featureName] || []).every(function (conj) {
-					return conj.some(function (disj) {
-						return _selected[disj];
-					});
-				});
-			});
+			var _iteratorNormalCompletion2 = true;
+			var _didIteratorError2 = false;
+			var _iteratorError2 = undefined;
+	
+			try {
+				for (var _iterator2 = Object.keys(deltaJs.features)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+					var featureName = _step2.value;
+	
+					/* if there are 'onlyIf' conjuncts that are excluded, this feature is excluded */
+					_allowed.set(featureName, (_onlyIf.get(featureName) || []).every(function (conj) {
+						return conj.some(function (disj) {
+							return _selected.get(disj);
+						});
+					}));
+				}
+			} catch (err) {
+				_didIteratorError2 = true;
+				_iteratorError2 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+						_iterator2["return"]();
+					}
+				} finally {
+					if (_didIteratorError2) {
+						throw _iteratorError2;
+					}
+				}
+			}
 		}
 	
 		/** {@public}{@class DeltaJs#Feature}
@@ -2797,8 +3567,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  */
 		deltaJs.Feature = (function () {
 			function Feature(name) {
-				var _this = this;
-	
 				var options = arguments[1] === undefined ? {} : arguments[1];
 	
 				_classCallCheck(this, Feature);
@@ -2808,24 +3576,45 @@ return /******/ (function(modules) { // webpackBootstrap
 				this.options = options;
 	
 				/* update conditions */
-				Object.keys(options).forEach(function (option) {
-					_this.addOption(option, options[option]);
-				});
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = Object.keys(options)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var option = _step.value;
+	
+						this.addOption(option, options[option]);
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
 			}
 	
 			_createClass(Feature, {
 				selected: {
 					get: function () {
 						_settleConditions();
-						if (_selected[this.name] && !_allowed[this.name]) {
+						if (_selected.get(this.name) && !_allowed.get(this.name)) {
 							throw new ConstraintFailure(this);
 						}
-						return _selected[this.name];
+						return _selected.get(this.name);
 					}
 				},
 				condition: {
 					get: function () {
-						return _if[this.name];
+						return _if.get(this.name);
 					}
 				},
 				conditional: {
@@ -2856,30 +3645,89 @@ return /******/ (function(modules) { // webpackBootstrap
 		["iff", [_addIf, _addOnlyIf]] // if and onlyIf
 		];
 		deltaJs.Feature.prototype.addOption = function (optionName, value) {
-			var _this = this;
+			var _iteratorNormalCompletion = true;
+			var _didIteratorError = false;
+			var _iteratorError = undefined;
 	
-			FEATURE_CONNECTIONS.forEach(function (_ref) {
-				var _ref2 = _slicedToArray(_ref, 2);
+			try {
+				for (var _iterator = FEATURE_CONNECTIONS[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+					var _step$value = _slicedToArray(_step.value, 2);
 	
-				var connectionName = _ref2[0];
-				var methods = _ref2[1];
+					var connectionName = _step$value[0];
+					var methods = _step$value[1];
 	
-				if (optionName === connectionName) {
-					methods.forEach(function (method) {
-						method(_this.name, value);
-					});
+					if (optionName === connectionName) {
+						var _iteratorNormalCompletion2 = true;
+						var _didIteratorError2 = false;
+						var _iteratorError2 = undefined;
+	
+						try {
+							for (var _iterator2 = methods[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+								var method = _step2.value;
+								method(this.name, value);
+							}
+						} catch (err) {
+							_didIteratorError2 = true;
+							_iteratorError2 = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+									_iterator2["return"]();
+								}
+							} finally {
+								if (_didIteratorError2) {
+									throw _iteratorError2;
+								}
+							}
+						}
+					}
 				}
-			});
+			} catch (err) {
+				_didIteratorError = true;
+				_iteratorError = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion && _iterator["return"]) {
+						_iterator["return"]();
+					}
+				} finally {
+					if (_didIteratorError) {
+						throw _iteratorError;
+					}
+				}
+			}
 		};
-		FEATURE_CONNECTIONS.forEach(function (_ref) {
-			var _ref2 = _slicedToArray(_ref, 1);
+		var _iteratorNormalCompletion = true;
+		var _didIteratorError = false;
+		var _iteratorError = undefined;
 	
-			var name = _ref2[0];
+		try {
+			for (var _iterator = FEATURE_CONNECTIONS[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+				var _step$value;
 	
-			deltaJs.Feature.prototype[name] = function (value) {
-				this.addOption(name, value);
-			};
-		});
+				(function () {
+					_step$value = _slicedToArray(_step.value, 1);
+					var name = _step$value[0];
+	
+					deltaJs.Feature.prototype[name] = function (value) {
+						this.addOption(name, value);
+					};
+				})();
+			}
+		} catch (err) {
+			_didIteratorError = true;
+			_iteratorError = err;
+		} finally {
+			try {
+				if (!_iteratorNormalCompletion && _iterator["return"]) {
+					_iterator["return"]();
+				}
+			} finally {
+				if (_didIteratorError) {
+					throw _iteratorError;
+				}
+			}
+		}
 	
 		/* the features belonging to this DeltaJs instance */
 		deltaJs.features = {}; // name -> Feature
@@ -2975,19 +3823,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 			extend(deltaJs.constructor.prototype, {
 				select: function select() {
-					var _this = this;
-	
 					for (var _len = arguments.length, features = Array(_len), _key = 0; _key < _len; _key++) {
 						features[_key] = arguments[_key];
 					}
 	
-					features.forEach(function (feature) {
-						if (Array.isArray(feature)) {
-							_this.select.apply(_this, _toConsumableArray(feature));
-						} else {
-							_this.features[feature].select();
+					var _iteratorNormalCompletion = true;
+					var _didIteratorError = false;
+					var _iteratorError = undefined;
+	
+					try {
+						for (var _iterator = features[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+							var feature = _step.value;
+	
+							if (Array.isArray(feature)) {
+								this.select.apply(this, _toConsumableArray(feature));
+							} else {
+								this.features[feature].select();
+							}
 						}
-					});
+					} catch (err) {
+						_didIteratorError = true;
+						_iteratorError = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion && _iterator["return"]) {
+								_iterator["return"]();
+							}
+						} finally {
+							if (_didIteratorError) {
+								throw _iteratorError;
+							}
+						}
+					}
 				}
 			});
 		});
@@ -3070,8 +3937,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				_get(Object.getPrototypeOf(ContainerProxy.prototype), "constructor", this).call(this, options);
 				this._doArgs = [];
 				this._original = this;
-				this._children = {}; // key -> [proxies]
-				this._childOptions = {}; // key -> options
+				this._children = new Map(); // key -> [proxies]
 			}
 	
 			_inherits(ContainerProxy, _deltaJs$Proxy);
@@ -3079,11 +3945,31 @@ return /******/ (function(modules) { // webpackBootstrap
 			_createClass(ContainerProxy, {
 				deactivate: {
 					value: function deactivate() {
-						var _this = this;
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
 	
-						Object.keys(this._children).forEach(function (key) {
-							_this.childProxy(key).deactivate();
-						});
+						try {
+							for (var _iterator = this._children.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var key = _step.value;
+	
+								this.childProxy(key).deactivate();
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
+	
 						_get(Object.getPrototypeOf(ContainerProxy.prototype), "deactivate", this).call(this);
 					}
 				},
@@ -3107,23 +3993,27 @@ return /******/ (function(modules) { // webpackBootstrap
 						}
 	
 						/* create a new Proxy of the right class, remember it and return it */
-						this._children[key].push(proxy);
+						this._children.get(key).push(proxy);
 						return proxy;
 					}
 				},
 				childKeys: {
 					value: function childKeys() {
-						return Object.keys(this._children);
+						return [].concat(_toConsumableArray(this._children.keys()));
 					}
 				},
-				childProxies: {
+				childProxies: { // TODO: Is an iterable a good return value?
+	
 					value: function childProxies(key) {
 						return a(this._children, key);
 					}
 				},
 				childProxy: {
 					value: function childProxy(key) {
-						return a(this._children, key)[this._children[key].length - 1];
+						if (!this._children.has(key)) {
+							this._children.set(key, []);
+						}
+						return this._children.get(key)[this._children.get(key).length - 1];
 					}
 				},
 				childDelta: {
@@ -3278,550 +4168,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(global) {/**
-	 * Copyright (c) 2014, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * https://raw.github.com/facebook/regenerator/master/LICENSE file. An
-	 * additional grant of patent rights can be found in the PATENTS file in
-	 * the same directory.
-	 */
-	
-	!(function(global) {
-	  "use strict";
-	
-	  var hasOwn = Object.prototype.hasOwnProperty;
-	  var undefined; // More compressible than void 0.
-	  var iteratorSymbol =
-	    typeof Symbol === "function" && Symbol.iterator || "@@iterator";
-	
-	  var inModule = typeof module === "object";
-	  var runtime = global.regeneratorRuntime;
-	  if (runtime) {
-	    if (inModule) {
-	      // If regeneratorRuntime is defined globally and we're in a module,
-	      // make the exports object identical to regeneratorRuntime.
-	      module.exports = runtime;
-	    }
-	    // Don't bother evaluating the rest of this file if the runtime was
-	    // already defined globally.
-	    return;
-	  }
-	
-	  // Define the runtime globally (as expected by generated code) as either
-	  // module.exports (if we're in a module) or a new, empty object.
-	  runtime = global.regeneratorRuntime = inModule ? module.exports : {};
-	
-	  function wrap(innerFn, outerFn, self, tryLocsList) {
-	    return new Generator(innerFn, outerFn, self || null, tryLocsList || []);
-	  }
-	  runtime.wrap = wrap;
-	
-	  // Try/catch helper to minimize deoptimizations. Returns a completion
-	  // record like context.tryEntries[i].completion. This interface could
-	  // have been (and was previously) designed to take a closure to be
-	  // invoked without arguments, but in all the cases we care about we
-	  // already have an existing method we want to call, so there's no need
-	  // to create a new function object. We can even get away with assuming
-	  // the method takes exactly one argument, since that happens to be true
-	  // in every case, so we don't have to touch the arguments object. The
-	  // only additional allocation required is the completion record, which
-	  // has a stable shape and so hopefully should be cheap to allocate.
-	  function tryCatch(fn, obj, arg) {
-	    try {
-	      return { type: "normal", arg: fn.call(obj, arg) };
-	    } catch (err) {
-	      return { type: "throw", arg: err };
-	    }
-	  }
-	
-	  var GenStateSuspendedStart = "suspendedStart";
-	  var GenStateSuspendedYield = "suspendedYield";
-	  var GenStateExecuting = "executing";
-	  var GenStateCompleted = "completed";
-	
-	  // Returning this object from the innerFn has the same effect as
-	  // breaking out of the dispatch switch statement.
-	  var ContinueSentinel = {};
-	
-	  // Dummy constructor functions that we use as the .constructor and
-	  // .constructor.prototype properties for functions that return Generator
-	  // objects. For full spec compliance, you may wish to configure your
-	  // minifier not to mangle the names of these two functions.
-	  function GeneratorFunction() {}
-	  function GeneratorFunctionPrototype() {}
-	
-	  var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype;
-	  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
-	  GeneratorFunctionPrototype.constructor = GeneratorFunction;
-	  GeneratorFunction.displayName = "GeneratorFunction";
-	
-	  runtime.isGeneratorFunction = function(genFun) {
-	    var ctor = typeof genFun === "function" && genFun.constructor;
-	    return ctor
-	      ? ctor === GeneratorFunction ||
-	        // For the native GeneratorFunction constructor, the best we can
-	        // do is to check its .name property.
-	        (ctor.displayName || ctor.name) === "GeneratorFunction"
-	      : false;
-	  };
-	
-	  runtime.mark = function(genFun) {
-	    genFun.__proto__ = GeneratorFunctionPrototype;
-	    genFun.prototype = Object.create(Gp);
-	    return genFun;
-	  };
-	
-	  runtime.async = function(innerFn, outerFn, self, tryLocsList) {
-	    return new Promise(function(resolve, reject) {
-	      var generator = wrap(innerFn, outerFn, self, tryLocsList);
-	      var callNext = step.bind(generator.next);
-	      var callThrow = step.bind(generator["throw"]);
-	
-	      function step(arg) {
-	        var record = tryCatch(this, null, arg);
-	        if (record.type === "throw") {
-	          reject(record.arg);
-	          return;
-	        }
-	
-	        var info = record.arg;
-	        if (info.done) {
-	          resolve(info.value);
-	        } else {
-	          Promise.resolve(info.value).then(callNext, callThrow);
-	        }
-	      }
-	
-	      callNext();
-	    });
-	  };
-	
-	  function Generator(innerFn, outerFn, self, tryLocsList) {
-	    var generator = outerFn ? Object.create(outerFn.prototype) : this;
-	    var context = new Context(tryLocsList);
-	    var state = GenStateSuspendedStart;
-	
-	    function invoke(method, arg) {
-	      if (state === GenStateExecuting) {
-	        throw new Error("Generator is already running");
-	      }
-	
-	      if (state === GenStateCompleted) {
-	        // Be forgiving, per 25.3.3.3.3 of the spec:
-	        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
-	        return doneResult();
-	      }
-	
-	      while (true) {
-	        var delegate = context.delegate;
-	        if (delegate) {
-	          var record = tryCatch(
-	            delegate.iterator[method],
-	            delegate.iterator,
-	            arg
-	          );
-	
-	          if (record.type === "throw") {
-	            context.delegate = null;
-	
-	            // Like returning generator.throw(uncaught), but without the
-	            // overhead of an extra function call.
-	            method = "throw";
-	            arg = record.arg;
-	
-	            continue;
-	          }
-	
-	          // Delegate generator ran and handled its own exceptions so
-	          // regardless of what the method was, we continue as if it is
-	          // "next" with an undefined arg.
-	          method = "next";
-	          arg = undefined;
-	
-	          var info = record.arg;
-	          if (info.done) {
-	            context[delegate.resultName] = info.value;
-	            context.next = delegate.nextLoc;
-	          } else {
-	            state = GenStateSuspendedYield;
-	            return info;
-	          }
-	
-	          context.delegate = null;
-	        }
-	
-	        if (method === "next") {
-	          if (state === GenStateSuspendedStart &&
-	              typeof arg !== "undefined") {
-	            // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
-	            throw new TypeError(
-	              "attempt to send " + JSON.stringify(arg) + " to newborn generator"
-	            );
-	          }
-	
-	          if (state === GenStateSuspendedYield) {
-	            context.sent = arg;
-	          } else {
-	            delete context.sent;
-	          }
-	
-	        } else if (method === "throw") {
-	          if (state === GenStateSuspendedStart) {
-	            state = GenStateCompleted;
-	            throw arg;
-	          }
-	
-	          if (context.dispatchException(arg)) {
-	            // If the dispatched exception was caught by a catch block,
-	            // then let that catch block handle the exception normally.
-	            method = "next";
-	            arg = undefined;
-	          }
-	
-	        } else if (method === "return") {
-	          context.abrupt("return", arg);
-	        }
-	
-	        state = GenStateExecuting;
-	
-	        var record = tryCatch(innerFn, self, context);
-	        if (record.type === "normal") {
-	          // If an exception is thrown from innerFn, we leave state ===
-	          // GenStateExecuting and loop back for another invocation.
-	          state = context.done
-	            ? GenStateCompleted
-	            : GenStateSuspendedYield;
-	
-	          var info = {
-	            value: record.arg,
-	            done: context.done
-	          };
-	
-	          if (record.arg === ContinueSentinel) {
-	            if (context.delegate && method === "next") {
-	              // Deliberately forget the last sent value so that we don't
-	              // accidentally pass it on to the delegate.
-	              arg = undefined;
-	            }
-	          } else {
-	            return info;
-	          }
-	
-	        } else if (record.type === "throw") {
-	          state = GenStateCompleted;
-	
-	          if (method === "next") {
-	            context.dispatchException(record.arg);
-	          } else {
-	            arg = record.arg;
-	          }
-	        }
-	      }
-	    }
-	
-	    generator.next = invoke.bind(generator, "next");
-	    generator["throw"] = invoke.bind(generator, "throw");
-	    generator["return"] = invoke.bind(generator, "return");
-	
-	    return generator;
-	  }
-	
-	  Gp[iteratorSymbol] = function() {
-	    return this;
-	  };
-	
-	  Gp.toString = function() {
-	    return "[object Generator]";
-	  };
-	
-	  function pushTryEntry(locs) {
-	    var entry = { tryLoc: locs[0] };
-	
-	    if (1 in locs) {
-	      entry.catchLoc = locs[1];
-	    }
-	
-	    if (2 in locs) {
-	      entry.finallyLoc = locs[2];
-	      entry.afterLoc = locs[3];
-	    }
-	
-	    this.tryEntries.push(entry);
-	  }
-	
-	  function resetTryEntry(entry) {
-	    var record = entry.completion || {};
-	    record.type = "normal";
-	    delete record.arg;
-	    entry.completion = record;
-	  }
-	
-	  function Context(tryLocsList) {
-	    // The root entry object (effectively a try statement without a catch
-	    // or a finally block) gives us a place to store values thrown from
-	    // locations where there is no enclosing try statement.
-	    this.tryEntries = [{ tryLoc: "root" }];
-	    tryLocsList.forEach(pushTryEntry, this);
-	    this.reset();
-	  }
-	
-	  runtime.keys = function(object) {
-	    var keys = [];
-	    for (var key in object) {
-	      keys.push(key);
-	    }
-	    keys.reverse();
-	
-	    // Rather than returning an object with a next method, we keep
-	    // things simple and return the next function itself.
-	    return function next() {
-	      while (keys.length) {
-	        var key = keys.pop();
-	        if (key in object) {
-	          next.value = key;
-	          next.done = false;
-	          return next;
-	        }
-	      }
-	
-	      // To avoid creating an additional object, we just hang the .value
-	      // and .done properties off the next function object itself. This
-	      // also ensures that the minifier will not anonymize the function.
-	      next.done = true;
-	      return next;
-	    };
-	  };
-	
-	  function values(iterable) {
-	    if (iterable) {
-	      var iteratorMethod = iterable[iteratorSymbol];
-	      if (iteratorMethod) {
-	        return iteratorMethod.call(iterable);
-	      }
-	
-	      if (typeof iterable.next === "function") {
-	        return iterable;
-	      }
-	
-	      if (!isNaN(iterable.length)) {
-	        var i = -1, next = function next() {
-	          while (++i < iterable.length) {
-	            if (hasOwn.call(iterable, i)) {
-	              next.value = iterable[i];
-	              next.done = false;
-	              return next;
-	            }
-	          }
-	
-	          next.value = undefined;
-	          next.done = true;
-	
-	          return next;
-	        };
-	
-	        return next.next = next;
-	      }
-	    }
-	
-	    // Return an iterator with no values.
-	    return { next: doneResult };
-	  }
-	  runtime.values = values;
-	
-	  function doneResult() {
-	    return { value: undefined, done: true };
-	  }
-	
-	  Context.prototype = {
-	    constructor: Context,
-	
-	    reset: function() {
-	      this.prev = 0;
-	      this.next = 0;
-	      this.sent = undefined;
-	      this.done = false;
-	      this.delegate = null;
-	
-	      this.tryEntries.forEach(resetTryEntry);
-	
-	      // Pre-initialize at least 20 temporary variables to enable hidden
-	      // class optimizations for simple generators.
-	      for (var tempIndex = 0, tempName;
-	           hasOwn.call(this, tempName = "t" + tempIndex) || tempIndex < 20;
-	           ++tempIndex) {
-	        this[tempName] = null;
-	      }
-	    },
-	
-	    stop: function() {
-	      this.done = true;
-	
-	      var rootEntry = this.tryEntries[0];
-	      var rootRecord = rootEntry.completion;
-	      if (rootRecord.type === "throw") {
-	        throw rootRecord.arg;
-	      }
-	
-	      return this.rval;
-	    },
-	
-	    dispatchException: function(exception) {
-	      if (this.done) {
-	        throw exception;
-	      }
-	
-	      var context = this;
-	      function handle(loc, caught) {
-	        record.type = "throw";
-	        record.arg = exception;
-	        context.next = loc;
-	        return !!caught;
-	      }
-	
-	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-	        var entry = this.tryEntries[i];
-	        var record = entry.completion;
-	
-	        if (entry.tryLoc === "root") {
-	          // Exception thrown outside of any try block that could handle
-	          // it, so set the completion value of the entire function to
-	          // throw the exception.
-	          return handle("end");
-	        }
-	
-	        if (entry.tryLoc <= this.prev) {
-	          var hasCatch = hasOwn.call(entry, "catchLoc");
-	          var hasFinally = hasOwn.call(entry, "finallyLoc");
-	
-	          if (hasCatch && hasFinally) {
-	            if (this.prev < entry.catchLoc) {
-	              return handle(entry.catchLoc, true);
-	            } else if (this.prev < entry.finallyLoc) {
-	              return handle(entry.finallyLoc);
-	            }
-	
-	          } else if (hasCatch) {
-	            if (this.prev < entry.catchLoc) {
-	              return handle(entry.catchLoc, true);
-	            }
-	
-	          } else if (hasFinally) {
-	            if (this.prev < entry.finallyLoc) {
-	              return handle(entry.finallyLoc);
-	            }
-	
-	          } else {
-	            throw new Error("try statement without catch or finally");
-	          }
-	        }
-	      }
-	    },
-	
-	    abrupt: function(type, arg) {
-	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-	        var entry = this.tryEntries[i];
-	        if (entry.tryLoc <= this.prev &&
-	            hasOwn.call(entry, "finallyLoc") &&
-	            this.prev < entry.finallyLoc) {
-	          var finallyEntry = entry;
-	          break;
-	        }
-	      }
-	
-	      if (finallyEntry &&
-	          (type === "break" ||
-	           type === "continue") &&
-	          finallyEntry.tryLoc <= arg &&
-	          arg < finallyEntry.finallyLoc) {
-	        // Ignore the finally entry if control is not jumping to a
-	        // location outside the try/catch block.
-	        finallyEntry = null;
-	      }
-	
-	      var record = finallyEntry ? finallyEntry.completion : {};
-	      record.type = type;
-	      record.arg = arg;
-	
-	      if (finallyEntry) {
-	        this.next = finallyEntry.finallyLoc;
-	      } else {
-	        this.complete(record);
-	      }
-	
-	      return ContinueSentinel;
-	    },
-	
-	    complete: function(record, afterLoc) {
-	      if (record.type === "throw") {
-	        throw record.arg;
-	      }
-	
-	      if (record.type === "break" ||
-	          record.type === "continue") {
-	        this.next = record.arg;
-	      } else if (record.type === "return") {
-	        this.rval = record.arg;
-	        this.next = "end";
-	      } else if (record.type === "normal" && afterLoc) {
-	        this.next = afterLoc;
-	      }
-	
-	      return ContinueSentinel;
-	    },
-	
-	    finish: function(finallyLoc) {
-	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-	        var entry = this.tryEntries[i];
-	        if (entry.finallyLoc === finallyLoc) {
-	          return this.complete(entry.completion, entry.afterLoc);
-	        }
-	      }
-	    },
-	
-	    "catch": function(tryLoc) {
-	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-	        var entry = this.tryEntries[i];
-	        if (entry.tryLoc === tryLoc) {
-	          var record = entry.completion;
-	          if (record.type === "throw") {
-	            var thrown = record.arg;
-	            resetTryEntry(entry);
-	          }
-	          return thrown;
-	        }
-	      }
-	
-	      // The context.catch method must only be called with a location
-	      // argument that corresponds to a known catch block.
-	      throw new Error("illegal catch attempt");
-	    },
-	
-	    delegateYield: function(iterable, resultName, nextLoc) {
-	      this.delegate = {
-	        iterator: values(iterable),
-	        resultName: resultName,
-	        nextLoc: nextLoc
-	      };
-	
-	      return ContinueSentinel;
-	    }
-	  };
-	})(
-	  // Among the various tricks for obtaining a reference to the global
-	  // object, this seems to be the most reliable technique that does not
-	  // use indirect eval (which violates Content Security Policy).
-	  typeof global === "object" ? global :
-	  typeof window === "object" ? window : this
-	);
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ },
-/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -5804,12 +6150,558 @@ return /******/ (function(modules) { // webpackBootstrap
 	}(typeof self != 'undefined' && self.Math === Math ? self : Function('return this')(), true);
 
 /***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {/**
+	 * Copyright (c) 2014, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * https://raw.github.com/facebook/regenerator/master/LICENSE file. An
+	 * additional grant of patent rights can be found in the PATENTS file in
+	 * the same directory.
+	 */
+	
+	!(function(global) {
+	  "use strict";
+	
+	  var hasOwn = Object.prototype.hasOwnProperty;
+	  var undefined; // More compressible than void 0.
+	  var iteratorSymbol =
+	    typeof Symbol === "function" && Symbol.iterator || "@@iterator";
+	
+	  var inModule = typeof module === "object";
+	  var runtime = global.regeneratorRuntime;
+	  if (runtime) {
+	    if (inModule) {
+	      // If regeneratorRuntime is defined globally and we're in a module,
+	      // make the exports object identical to regeneratorRuntime.
+	      module.exports = runtime;
+	    }
+	    // Don't bother evaluating the rest of this file if the runtime was
+	    // already defined globally.
+	    return;
+	  }
+	
+	  // Define the runtime globally (as expected by generated code) as either
+	  // module.exports (if we're in a module) or a new, empty object.
+	  runtime = global.regeneratorRuntime = inModule ? module.exports : {};
+	
+	  function wrap(innerFn, outerFn, self, tryLocsList) {
+	    return new Generator(innerFn, outerFn, self || null, tryLocsList || []);
+	  }
+	  runtime.wrap = wrap;
+	
+	  // Try/catch helper to minimize deoptimizations. Returns a completion
+	  // record like context.tryEntries[i].completion. This interface could
+	  // have been (and was previously) designed to take a closure to be
+	  // invoked without arguments, but in all the cases we care about we
+	  // already have an existing method we want to call, so there's no need
+	  // to create a new function object. We can even get away with assuming
+	  // the method takes exactly one argument, since that happens to be true
+	  // in every case, so we don't have to touch the arguments object. The
+	  // only additional allocation required is the completion record, which
+	  // has a stable shape and so hopefully should be cheap to allocate.
+	  function tryCatch(fn, obj, arg) {
+	    try {
+	      return { type: "normal", arg: fn.call(obj, arg) };
+	    } catch (err) {
+	      return { type: "throw", arg: err };
+	    }
+	  }
+	
+	  var GenStateSuspendedStart = "suspendedStart";
+	  var GenStateSuspendedYield = "suspendedYield";
+	  var GenStateExecuting = "executing";
+	  var GenStateCompleted = "completed";
+	
+	  // Returning this object from the innerFn has the same effect as
+	  // breaking out of the dispatch switch statement.
+	  var ContinueSentinel = {};
+	
+	  // Dummy constructor functions that we use as the .constructor and
+	  // .constructor.prototype properties for functions that return Generator
+	  // objects. For full spec compliance, you may wish to configure your
+	  // minifier not to mangle the names of these two functions.
+	  function GeneratorFunction() {}
+	  function GeneratorFunctionPrototype() {}
+	
+	  var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype;
+	  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
+	  GeneratorFunctionPrototype.constructor = GeneratorFunction;
+	  GeneratorFunction.displayName = "GeneratorFunction";
+	
+	  runtime.isGeneratorFunction = function(genFun) {
+	    var ctor = typeof genFun === "function" && genFun.constructor;
+	    return ctor
+	      ? ctor === GeneratorFunction ||
+	        // For the native GeneratorFunction constructor, the best we can
+	        // do is to check its .name property.
+	        (ctor.displayName || ctor.name) === "GeneratorFunction"
+	      : false;
+	  };
+	
+	  runtime.mark = function(genFun) {
+	    genFun.__proto__ = GeneratorFunctionPrototype;
+	    genFun.prototype = Object.create(Gp);
+	    return genFun;
+	  };
+	
+	  runtime.async = function(innerFn, outerFn, self, tryLocsList) {
+	    return new Promise(function(resolve, reject) {
+	      var generator = wrap(innerFn, outerFn, self, tryLocsList);
+	      var callNext = step.bind(generator.next);
+	      var callThrow = step.bind(generator["throw"]);
+	
+	      function step(arg) {
+	        var record = tryCatch(this, null, arg);
+	        if (record.type === "throw") {
+	          reject(record.arg);
+	          return;
+	        }
+	
+	        var info = record.arg;
+	        if (info.done) {
+	          resolve(info.value);
+	        } else {
+	          Promise.resolve(info.value).then(callNext, callThrow);
+	        }
+	      }
+	
+	      callNext();
+	    });
+	  };
+	
+	  function Generator(innerFn, outerFn, self, tryLocsList) {
+	    var generator = outerFn ? Object.create(outerFn.prototype) : this;
+	    var context = new Context(tryLocsList);
+	    var state = GenStateSuspendedStart;
+	
+	    function invoke(method, arg) {
+	      if (state === GenStateExecuting) {
+	        throw new Error("Generator is already running");
+	      }
+	
+	      if (state === GenStateCompleted) {
+	        // Be forgiving, per 25.3.3.3.3 of the spec:
+	        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+	        return doneResult();
+	      }
+	
+	      while (true) {
+	        var delegate = context.delegate;
+	        if (delegate) {
+	          var record = tryCatch(
+	            delegate.iterator[method],
+	            delegate.iterator,
+	            arg
+	          );
+	
+	          if (record.type === "throw") {
+	            context.delegate = null;
+	
+	            // Like returning generator.throw(uncaught), but without the
+	            // overhead of an extra function call.
+	            method = "throw";
+	            arg = record.arg;
+	
+	            continue;
+	          }
+	
+	          // Delegate generator ran and handled its own exceptions so
+	          // regardless of what the method was, we continue as if it is
+	          // "next" with an undefined arg.
+	          method = "next";
+	          arg = undefined;
+	
+	          var info = record.arg;
+	          if (info.done) {
+	            context[delegate.resultName] = info.value;
+	            context.next = delegate.nextLoc;
+	          } else {
+	            state = GenStateSuspendedYield;
+	            return info;
+	          }
+	
+	          context.delegate = null;
+	        }
+	
+	        if (method === "next") {
+	          if (state === GenStateSuspendedStart &&
+	              typeof arg !== "undefined") {
+	            // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+	            throw new TypeError(
+	              "attempt to send " + JSON.stringify(arg) + " to newborn generator"
+	            );
+	          }
+	
+	          if (state === GenStateSuspendedYield) {
+	            context.sent = arg;
+	          } else {
+	            delete context.sent;
+	          }
+	
+	        } else if (method === "throw") {
+	          if (state === GenStateSuspendedStart) {
+	            state = GenStateCompleted;
+	            throw arg;
+	          }
+	
+	          if (context.dispatchException(arg)) {
+	            // If the dispatched exception was caught by a catch block,
+	            // then let that catch block handle the exception normally.
+	            method = "next";
+	            arg = undefined;
+	          }
+	
+	        } else if (method === "return") {
+	          context.abrupt("return", arg);
+	        }
+	
+	        state = GenStateExecuting;
+	
+	        var record = tryCatch(innerFn, self, context);
+	        if (record.type === "normal") {
+	          // If an exception is thrown from innerFn, we leave state ===
+	          // GenStateExecuting and loop back for another invocation.
+	          state = context.done
+	            ? GenStateCompleted
+	            : GenStateSuspendedYield;
+	
+	          var info = {
+	            value: record.arg,
+	            done: context.done
+	          };
+	
+	          if (record.arg === ContinueSentinel) {
+	            if (context.delegate && method === "next") {
+	              // Deliberately forget the last sent value so that we don't
+	              // accidentally pass it on to the delegate.
+	              arg = undefined;
+	            }
+	          } else {
+	            return info;
+	          }
+	
+	        } else if (record.type === "throw") {
+	          state = GenStateCompleted;
+	
+	          if (method === "next") {
+	            context.dispatchException(record.arg);
+	          } else {
+	            arg = record.arg;
+	          }
+	        }
+	      }
+	    }
+	
+	    generator.next = invoke.bind(generator, "next");
+	    generator["throw"] = invoke.bind(generator, "throw");
+	    generator["return"] = invoke.bind(generator, "return");
+	
+	    return generator;
+	  }
+	
+	  Gp[iteratorSymbol] = function() {
+	    return this;
+	  };
+	
+	  Gp.toString = function() {
+	    return "[object Generator]";
+	  };
+	
+	  function pushTryEntry(locs) {
+	    var entry = { tryLoc: locs[0] };
+	
+	    if (1 in locs) {
+	      entry.catchLoc = locs[1];
+	    }
+	
+	    if (2 in locs) {
+	      entry.finallyLoc = locs[2];
+	      entry.afterLoc = locs[3];
+	    }
+	
+	    this.tryEntries.push(entry);
+	  }
+	
+	  function resetTryEntry(entry) {
+	    var record = entry.completion || {};
+	    record.type = "normal";
+	    delete record.arg;
+	    entry.completion = record;
+	  }
+	
+	  function Context(tryLocsList) {
+	    // The root entry object (effectively a try statement without a catch
+	    // or a finally block) gives us a place to store values thrown from
+	    // locations where there is no enclosing try statement.
+	    this.tryEntries = [{ tryLoc: "root" }];
+	    tryLocsList.forEach(pushTryEntry, this);
+	    this.reset();
+	  }
+	
+	  runtime.keys = function(object) {
+	    var keys = [];
+	    for (var key in object) {
+	      keys.push(key);
+	    }
+	    keys.reverse();
+	
+	    // Rather than returning an object with a next method, we keep
+	    // things simple and return the next function itself.
+	    return function next() {
+	      while (keys.length) {
+	        var key = keys.pop();
+	        if (key in object) {
+	          next.value = key;
+	          next.done = false;
+	          return next;
+	        }
+	      }
+	
+	      // To avoid creating an additional object, we just hang the .value
+	      // and .done properties off the next function object itself. This
+	      // also ensures that the minifier will not anonymize the function.
+	      next.done = true;
+	      return next;
+	    };
+	  };
+	
+	  function values(iterable) {
+	    if (iterable) {
+	      var iteratorMethod = iterable[iteratorSymbol];
+	      if (iteratorMethod) {
+	        return iteratorMethod.call(iterable);
+	      }
+	
+	      if (typeof iterable.next === "function") {
+	        return iterable;
+	      }
+	
+	      if (!isNaN(iterable.length)) {
+	        var i = -1, next = function next() {
+	          while (++i < iterable.length) {
+	            if (hasOwn.call(iterable, i)) {
+	              next.value = iterable[i];
+	              next.done = false;
+	              return next;
+	            }
+	          }
+	
+	          next.value = undefined;
+	          next.done = true;
+	
+	          return next;
+	        };
+	
+	        return next.next = next;
+	      }
+	    }
+	
+	    // Return an iterator with no values.
+	    return { next: doneResult };
+	  }
+	  runtime.values = values;
+	
+	  function doneResult() {
+	    return { value: undefined, done: true };
+	  }
+	
+	  Context.prototype = {
+	    constructor: Context,
+	
+	    reset: function() {
+	      this.prev = 0;
+	      this.next = 0;
+	      this.sent = undefined;
+	      this.done = false;
+	      this.delegate = null;
+	
+	      this.tryEntries.forEach(resetTryEntry);
+	
+	      // Pre-initialize at least 20 temporary variables to enable hidden
+	      // class optimizations for simple generators.
+	      for (var tempIndex = 0, tempName;
+	           hasOwn.call(this, tempName = "t" + tempIndex) || tempIndex < 20;
+	           ++tempIndex) {
+	        this[tempName] = null;
+	      }
+	    },
+	
+	    stop: function() {
+	      this.done = true;
+	
+	      var rootEntry = this.tryEntries[0];
+	      var rootRecord = rootEntry.completion;
+	      if (rootRecord.type === "throw") {
+	        throw rootRecord.arg;
+	      }
+	
+	      return this.rval;
+	    },
+	
+	    dispatchException: function(exception) {
+	      if (this.done) {
+	        throw exception;
+	      }
+	
+	      var context = this;
+	      function handle(loc, caught) {
+	        record.type = "throw";
+	        record.arg = exception;
+	        context.next = loc;
+	        return !!caught;
+	      }
+	
+	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+	        var entry = this.tryEntries[i];
+	        var record = entry.completion;
+	
+	        if (entry.tryLoc === "root") {
+	          // Exception thrown outside of any try block that could handle
+	          // it, so set the completion value of the entire function to
+	          // throw the exception.
+	          return handle("end");
+	        }
+	
+	        if (entry.tryLoc <= this.prev) {
+	          var hasCatch = hasOwn.call(entry, "catchLoc");
+	          var hasFinally = hasOwn.call(entry, "finallyLoc");
+	
+	          if (hasCatch && hasFinally) {
+	            if (this.prev < entry.catchLoc) {
+	              return handle(entry.catchLoc, true);
+	            } else if (this.prev < entry.finallyLoc) {
+	              return handle(entry.finallyLoc);
+	            }
+	
+	          } else if (hasCatch) {
+	            if (this.prev < entry.catchLoc) {
+	              return handle(entry.catchLoc, true);
+	            }
+	
+	          } else if (hasFinally) {
+	            if (this.prev < entry.finallyLoc) {
+	              return handle(entry.finallyLoc);
+	            }
+	
+	          } else {
+	            throw new Error("try statement without catch or finally");
+	          }
+	        }
+	      }
+	    },
+	
+	    abrupt: function(type, arg) {
+	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+	        var entry = this.tryEntries[i];
+	        if (entry.tryLoc <= this.prev &&
+	            hasOwn.call(entry, "finallyLoc") &&
+	            this.prev < entry.finallyLoc) {
+	          var finallyEntry = entry;
+	          break;
+	        }
+	      }
+	
+	      if (finallyEntry &&
+	          (type === "break" ||
+	           type === "continue") &&
+	          finallyEntry.tryLoc <= arg &&
+	          arg < finallyEntry.finallyLoc) {
+	        // Ignore the finally entry if control is not jumping to a
+	        // location outside the try/catch block.
+	        finallyEntry = null;
+	      }
+	
+	      var record = finallyEntry ? finallyEntry.completion : {};
+	      record.type = type;
+	      record.arg = arg;
+	
+	      if (finallyEntry) {
+	        this.next = finallyEntry.finallyLoc;
+	      } else {
+	        this.complete(record);
+	      }
+	
+	      return ContinueSentinel;
+	    },
+	
+	    complete: function(record, afterLoc) {
+	      if (record.type === "throw") {
+	        throw record.arg;
+	      }
+	
+	      if (record.type === "break" ||
+	          record.type === "continue") {
+	        this.next = record.arg;
+	      } else if (record.type === "return") {
+	        this.rval = record.arg;
+	        this.next = "end";
+	      } else if (record.type === "normal" && afterLoc) {
+	        this.next = afterLoc;
+	      }
+	
+	      return ContinueSentinel;
+	    },
+	
+	    finish: function(finallyLoc) {
+	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+	        var entry = this.tryEntries[i];
+	        if (entry.finallyLoc === finallyLoc) {
+	          return this.complete(entry.completion, entry.afterLoc);
+	        }
+	      }
+	    },
+	
+	    "catch": function(tryLoc) {
+	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+	        var entry = this.tryEntries[i];
+	        if (entry.tryLoc === tryLoc) {
+	          var record = entry.completion;
+	          if (record.type === "throw") {
+	            var thrown = record.arg;
+	            resetTryEntry(entry);
+	          }
+	          return thrown;
+	        }
+	      }
+	
+	      // The context.catch method must only be called with a location
+	      // argument that corresponds to a known catch block.
+	      throw new Error("illegal catch attempt");
+	    },
+	
+	    delegateYield: function(iterable, resultName, nextLoc) {
+	      this.delegate = {
+	        iterator: values(iterable),
+	        resultName: resultName,
+	        nextLoc: nextLoc
+	      };
+	
+	      return ContinueSentinel;
+	    }
+	  };
+	})(
+	  // Among the various tricks for obtaining a reference to the global
+	  // object, this seems to be the most reliable technique that does not
+	  // use indirect eval (which violates Content Security Policy).
+	  typeof global === "object" ? global :
+	  typeof window === "object" ? window : this
+	);
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	
 	var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
+	
+	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 	
 	var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
 	
@@ -5829,7 +6721,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		function Callbacks() {
 			_classCallCheck(this, Callbacks);
 	
-			this._callbacks = [];
+			this._callbacks = new Set();
 		}
 	
 		_createClass(Callbacks, {
@@ -5837,14 +6729,11 @@ return /******/ (function(modules) { // webpackBootstrap
 				value: function add(fn) {
 					var _this = this;
 	
-					if (this._callbacks.indexOf(fn) === -1) {
-						this._callbacks.push(fn);
+					if (!this._callbacks.has(fn)) {
+						this._callbacks.add(fn);
 					}
 					return function () {
-						var index = _this._callbacks.indexOf(fn);
-						if (index !== -1) {
-							_this._callbacks.splice(index, 1);
-						}
+						_this._callbacks["delete"](fn);
 					};
 				}
 			},
@@ -5854,9 +6743,30 @@ return /******/ (function(modules) { // webpackBootstrap
 						args[_key] = arguments[_key];
 					}
 	
-					this._callbacks.forEach(function (fn) {
-						fn.apply(undefined, args);
-					});
+					var _iteratorNormalCompletion = true;
+					var _didIteratorError = false;
+					var _iteratorError = undefined;
+	
+					try {
+						for (var _iterator = this._callbacks[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+							var fn = _step.value;
+	
+							fn.apply(undefined, args);
+						}
+					} catch (err) {
+						_didIteratorError = true;
+						_iteratorError = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion && _iterator["return"]) {
+								_iterator["return"]();
+							}
+						} finally {
+							if (_didIteratorError) {
+								throw _iteratorError;
+							}
+						}
+					}
 				}
 			}
 		});
@@ -5872,9 +6782,9 @@ return /******/ (function(modules) { // webpackBootstrap
 		function JsGraph() {
 			_classCallCheck(this, JsGraph);
 	
-			this._vertices = {}; // key -> value
-			this._edges = {}; // from -> to -> value
-			this._reverseEdges = {}; // to -> from -> null (_edges contains the values)
+			this._vertices = new Map(); // key -> value
+			this._edges = new Map(); // from -> to -> value
+			this._reverseEdges = new Map(); // to -> Set<from> (_edges contains the values)
 			this._vertexCount = 0;
 			this._edgeCount = 0;
 			this._addVertexCallbacks = new Callbacks();
@@ -5905,11 +6815,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 			value: function addNewVertex(key, value) {
 				if (this.hasVertex(key)) {
-					throw new JsGraph.VertexExistsError(key, this._vertices[key]);
+					throw new JsGraph.VertexExistsError(key, this._vertices.get(key));
 				}
-				this._vertices[key] = value;
-				this._edges[key] = {};
-				this._reverseEdges[key] = {};
+				this._vertices.set(key, value);
+				this._edges.set(key, new Map());
+				this._reverseEdges.set(key, new Set());
 				this._vertexCount += 1;
 				this._addVertexCallbacks.fire(key, value);
 			}
@@ -5919,7 +6829,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				if (!this.hasVertex(key)) {
 					throw new JsGraph.VertexNotExistsError(key);
 				}
-				this._vertices[key] = value;
+				this._vertices.set(key, value);
 			}
 		}, {
 			key: "ensureVertex",
@@ -5946,14 +6856,14 @@ return /******/ (function(modules) { // webpackBootstrap
 				if (!this.hasVertex(key)) {
 					throw new JsGraph.VertexNotExistsError(key);
 				}
-				if (Object.keys(this._edges[key]).length) {
+				if (this._edges.get(key).size > 0) {
 					throw new JsGraph.HasConnectedEdgesError(key);
 				}
-				if (Object.keys(this._reverseEdges[key]).length) {
+				if (this._reverseEdges.get(key).size > 0) {
 					throw new JsGraph.HasConnectedEdgesError(key);
 				}
-				var valueOfRemovedVertex = this._vertices[key];
-				delete this._vertices[key];
+				var valueOfRemovedVertex = this._vertices.get(key);
+				this._vertices["delete"](key);
 				this._vertexCount -= 1;
 				this._removeVertexCallbacks.fire(key, valueOfRemovedVertex);
 			}
@@ -5998,12 +6908,12 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: "hasVertex",
 			value: function hasVertex(key) {
-				return key in this._vertices;
+				return this._vertices.has(key);
 			}
 		}, {
 			key: "vertexValue",
 			value: function vertexValue(key) {
-				return this._vertices[key];
+				return this._vertices.get(key);
 			}
 		}, {
 			key: "onAddEdge",
@@ -6035,8 +6945,8 @@ return /******/ (function(modules) { // webpackBootstrap
 				} else if (!this.hasVertex(to)) {
 					throw new JsGraph.VertexNotExistsError(to);
 				}
-				this._edges[from][to] = value;
-				this._reverseEdges[to][from] = null;
+				this._edges.get(from).set(to, value);
+				this._reverseEdges.get(to).add(from);
 				this._edgeCount += 1;
 				this._addEdgeCallbacks.fire(from, to, value);
 			}
@@ -6056,7 +6966,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				if (!this.hasEdge(from, to)) {
 					throw new JsGraph.EdgeNotExistsError(from, to);
 				}
-				this._edges[from][to] = value;
+				this._edges.get(from).set(to, value);
 			}
 		}, {
 			key: "spanEdge",
@@ -6108,9 +7018,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				if (!this.hasEdge(from, to)) {
 					throw new JsGraph.EdgeNotExistsError(from, to);
 				}
-				var valueOfRemovedEdge = this._edges[from][to];
-				delete this._edges[from][to];
-				delete this._reverseEdges[to][from];
+				var valueOfRemovedEdge = this._edges.get(from).get(to);
+				this._edges.get(from)["delete"](to);
+				this._reverseEdges.get(to)["delete"](from);
 				this._edgeCount -= 1;
 				this._removeEdgeCallbacks.fire(from, to, valueOfRemovedEdge);
 			}
@@ -6132,114 +7042,12 @@ return /******/ (function(modules) { // webpackBootstrap
 		}, {
 			key: "hasEdge",
 			value: function hasEdge(from, to) {
-				return this.hasVertex(from) && this.hasVertex(to) && from in this._edges && to in this._edges[from];
+				return this.hasVertex(from) && this.hasVertex(to) && this._edges.has(from) && this._edges.get(from).has(to);
 			}
 		}, {
 			key: "edgeValue",
 			value: function edgeValue(from, to) {
-				return this.hasEdge(from, to) ? this._edges[from][to] : undefined;
-			}
-		}, {
-			key: "successors",
-	
-			//////////////////////////
-			////////// More //////////
-			//////////////////////////
-	
-			value: function successors(from) {
-				if (!this.hasVertex(from)) {
-					throw new JsGraph.VertexNotExistsError(from);
-				}
-				return Object.keys(this._edges[from]);
-			}
-		}, {
-			key: "predecessors",
-			value: function predecessors(to) {
-				if (!this.hasVertex(to)) {
-					throw new JsGraph.VertexNotExistsError(to);
-				}
-				return Object.keys(this._reverseEdges[to]);
-			}
-		}, {
-			key: "eachVertex",
-	
-			///////////////////////////////
-			////////// Iteration //////////
-			///////////////////////////////
-	
-			value: function eachVertex(handler) {
-				var _this = this;
-	
-				Object.keys(this._vertices).every(function (key) {
-					var r = handler(key, _this._vertices[key]);
-					return r !== false;
-				});
-			}
-		}, {
-			key: "eachVertexFrom",
-			value: function eachVertexFrom(from, handler) {
-				var _this = this;
-	
-				if (!this.hasVertex(from)) {
-					throw new JsGraph.VertexNotExistsError(from);
-				}
-				Object.keys(this._edges[from]).every(function (to) {
-					var r = handler(to, _this.vertexValue(to), _this.edgeValue(from, to));
-					return r !== false;
-				});
-			}
-		}, {
-			key: "eachVertexTo",
-			value: function eachVertexTo(to, handler) {
-				var _this = this;
-	
-				if (!this.hasVertex(to)) {
-					throw new JsGraph.VertexNotExistsError(to);
-				}
-				Object.keys(this._reverseEdges[to]).every(function (from) {
-					var r = handler(from, _this.vertexValue(from), _this.edgeValue(from, to));
-					return r !== false;
-				});
-			}
-		}, {
-			key: "eachEdge",
-			value: function eachEdge(handler) {
-				var _this = this;
-	
-				Object.keys(this._edges).every(function (from) {
-					return Object.keys(_this._edges[from]).every(function (to) {
-						var r = handler(from, to, _this._edges[from][to]);
-						return r !== false;
-					});
-				});
-			}
-		}, {
-			key: "topologically",
-			value: function topologically(handler) {
-				var _this = this;
-	
-				var visited = [];
-				var handled = {};
-	
-				var visit = function (a) {
-					visited.push(a);
-					var i = visited.indexOf(a);
-					if (i !== visited.length - 1) {
-						var cycle = visited.slice(i + 1).reverse();
-						throw new JsGraph.CycleError(cycle);
-					}
-					if (!handled[a]) {
-						_this.eachVertexTo(a, visit);
-						handled[a] = { returned: handler(a, _this.vertexValue(a)) };
-					}
-					visited.pop();
-				};
-	
-				this.eachVertex(function (a) {
-					if (!handled[a]) {
-						visit(a);
-					}
-				});
+				return this.hasEdge(from, to) ? this._edges.get(from).get(to) : undefined;
 			}
 		}, {
 			key: Symbol.iterator,
@@ -6256,206 +7064,216 @@ return /******/ (function(modules) { // webpackBootstrap
 			value: regeneratorRuntime.mark(function vertices() {
 				var _this = this;
 	
-				var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, key;
+				var done, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _step$value, key, value;
 	
 				return regeneratorRuntime.wrap(function vertices$(context$2$0) {
 					while (1) switch (context$2$0.prev = context$2$0.next) {
 						case 0:
+							done = new Set();
 							_iteratorNormalCompletion = true;
 							_didIteratorError = false;
 							_iteratorError = undefined;
-							context$2$0.prev = 3;
-							_iterator = Object.keys(_this._vertices)[Symbol.iterator]();
+							context$2$0.prev = 4;
+							_iterator = _this._vertices[Symbol.iterator]();
 	
-						case 5:
+						case 6:
 							if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-								context$2$0.next = 13;
+								context$2$0.next = 17;
 								break;
 							}
 	
-							key = _step.value;
+							_step$value = _slicedToArray(_step.value, 2);
+							key = _step$value[0];
+							value = _step$value[1];
 	
-							if (!_this.hasVertex(key)) {
-								context$2$0.next = 10;
+							if (!(_this.hasVertex(key) && !done.has(key))) {
+								context$2$0.next = 14;
 								break;
 							}
 	
-							context$2$0.next = 10;
-							return [key, _this._vertices[key]];
+							done.add(key);
+							context$2$0.next = 14;
+							return [key, value];
 	
-						case 10:
+						case 14:
 							_iteratorNormalCompletion = true;
-							context$2$0.next = 5;
+							context$2$0.next = 6;
 							break;
 	
-						case 13:
-							context$2$0.next = 19;
+						case 17:
+							context$2$0.next = 23;
 							break;
-	
-						case 15:
-							context$2$0.prev = 15;
-							context$2$0.t0 = context$2$0["catch"](3);
-							_didIteratorError = true;
-							_iteratorError = context$2$0.t0;
 	
 						case 19:
 							context$2$0.prev = 19;
-							context$2$0.prev = 20;
+							context$2$0.t0 = context$2$0["catch"](4);
+							_didIteratorError = true;
+							_iteratorError = context$2$0.t0;
+	
+						case 23:
+							context$2$0.prev = 23;
+							context$2$0.prev = 24;
 	
 							if (!_iteratorNormalCompletion && _iterator["return"]) {
 								_iterator["return"]();
 							}
 	
-						case 22:
-							context$2$0.prev = 22;
+						case 26:
+							context$2$0.prev = 26;
 	
 							if (!_didIteratorError) {
-								context$2$0.next = 25;
+								context$2$0.next = 29;
 								break;
 							}
 	
 							throw _iteratorError;
 	
-						case 25:
-							return context$2$0.finish(22);
+						case 29:
+							return context$2$0.finish(26);
 	
-						case 26:
-							return context$2$0.finish(19);
+						case 30:
+							return context$2$0.finish(23);
 	
-						case 27:
+						case 31:
 						case "end":
 							return context$2$0.stop();
 					}
-				}, vertices, this, [[3, 15, 19, 27], [20,, 22, 26]]);
+				}, vertices, this, [[4, 19, 23, 31], [24,, 26, 30]]);
 			})
 		}, {
 			key: "edges",
 			value: regeneratorRuntime.mark(function edges() {
 				var _this = this;
 	
-				var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, from, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, to;
+				var done, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, from, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, to;
 	
 				return regeneratorRuntime.wrap(function edges$(context$2$0) {
 					while (1) switch (context$2$0.prev = context$2$0.next) {
 						case 0:
+							done = new Map();
 							_iteratorNormalCompletion = true;
 							_didIteratorError = false;
 							_iteratorError = undefined;
-							context$2$0.prev = 3;
-							_iterator = Object.keys(_this._edges)[Symbol.iterator]();
+							context$2$0.prev = 4;
+							_iterator = _this._edges.keys()[Symbol.iterator]();
 	
-						case 5:
+						case 6:
 							if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-								context$2$0.next = 37;
+								context$2$0.next = 40;
 								break;
 							}
 	
 							from = _step.value;
+	
+							if (!done.has(from)) {
+								done.set(from, new Set());
+							}
 							_iteratorNormalCompletion2 = true;
 							_didIteratorError2 = false;
 							_iteratorError2 = undefined;
-							context$2$0.prev = 10;
-							_iterator2 = Object.keys(_this._edges[from])[Symbol.iterator]();
+							context$2$0.prev = 12;
+							_iterator2 = _this._edges.get(from).keys()[Symbol.iterator]();
 	
-						case 12:
+						case 14:
 							if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-								context$2$0.next = 20;
+								context$2$0.next = 23;
 								break;
 							}
 	
 							to = _step2.value;
 	
-							if (!_this.hasEdge(from, to)) {
-								context$2$0.next = 17;
+							if (!(_this.hasEdge(from, to) && !done.get(from).has(to))) {
+								context$2$0.next = 20;
 								break;
 							}
 	
-							context$2$0.next = 17;
-							return [from, to, _this._edges[from][to]];
-	
-						case 17:
-							_iteratorNormalCompletion2 = true;
-							context$2$0.next = 12;
-							break;
+							done.get(from).add(to);
+							context$2$0.next = 20;
+							return [from, to, _this._edges.get(from).get(to)];
 	
 						case 20:
-							context$2$0.next = 26;
+							_iteratorNormalCompletion2 = true;
+							context$2$0.next = 14;
 							break;
 	
-						case 22:
-							context$2$0.prev = 22;
-							context$2$0.t1 = context$2$0["catch"](10);
+						case 23:
+							context$2$0.next = 29;
+							break;
+	
+						case 25:
+							context$2$0.prev = 25;
+							context$2$0.t1 = context$2$0["catch"](12);
 							_didIteratorError2 = true;
 							_iteratorError2 = context$2$0.t1;
 	
-						case 26:
-							context$2$0.prev = 26;
-							context$2$0.prev = 27;
+						case 29:
+							context$2$0.prev = 29;
+							context$2$0.prev = 30;
 	
 							if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
 								_iterator2["return"]();
 							}
 	
-						case 29:
-							context$2$0.prev = 29;
+						case 32:
+							context$2$0.prev = 32;
 	
 							if (!_didIteratorError2) {
-								context$2$0.next = 32;
+								context$2$0.next = 35;
 								break;
 							}
 	
 							throw _iteratorError2;
 	
-						case 32:
+						case 35:
+							return context$2$0.finish(32);
+	
+						case 36:
 							return context$2$0.finish(29);
 	
-						case 33:
-							return context$2$0.finish(26);
-	
-						case 34:
-							_iteratorNormalCompletion = true;
-							context$2$0.next = 5;
-							break;
-	
 						case 37:
-							context$2$0.next = 43;
+							_iteratorNormalCompletion = true;
+							context$2$0.next = 6;
 							break;
 	
-						case 39:
-							context$2$0.prev = 39;
-							context$2$0.t2 = context$2$0["catch"](3);
+						case 40:
+							context$2$0.next = 46;
+							break;
+	
+						case 42:
+							context$2$0.prev = 42;
+							context$2$0.t2 = context$2$0["catch"](4);
 							_didIteratorError = true;
 							_iteratorError = context$2$0.t2;
 	
-						case 43:
-							context$2$0.prev = 43;
-							context$2$0.prev = 44;
+						case 46:
+							context$2$0.prev = 46;
+							context$2$0.prev = 47;
 	
 							if (!_iteratorNormalCompletion && _iterator["return"]) {
 								_iterator["return"]();
 							}
 	
-						case 46:
-							context$2$0.prev = 46;
+						case 49:
+							context$2$0.prev = 49;
 	
 							if (!_didIteratorError) {
-								context$2$0.next = 49;
+								context$2$0.next = 52;
 								break;
 							}
 	
 							throw _iteratorError;
 	
-						case 49:
+						case 52:
+							return context$2$0.finish(49);
+	
+						case 53:
 							return context$2$0.finish(46);
 	
-						case 50:
-							return context$2$0.finish(43);
-	
-						case 51:
+						case 54:
 						case "end":
 							return context$2$0.stop();
 					}
-				}, edges, this, [[3, 39, 43, 51], [10, 22, 26, 34], [27,, 29, 33], [44,, 46, 50]]);
+				}, edges, this, [[4, 42, 46, 54], [12, 25, 29, 37], [30,, 32, 36], [47,, 49, 53]]);
 			})
 		}, {
 			key: "verticesFrom",
@@ -6470,77 +7288,79 @@ return /******/ (function(modules) { // webpackBootstrap
 			value: regeneratorRuntime.mark(function _verticesFrom(from) {
 				var _this = this;
 	
-				var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, to;
+				var done, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, to;
 	
 				return regeneratorRuntime.wrap(function _verticesFrom$(context$2$0) {
 					while (1) switch (context$2$0.prev = context$2$0.next) {
 						case 0:
+							done = new Set();
 							_iteratorNormalCompletion = true;
 							_didIteratorError = false;
 							_iteratorError = undefined;
-							context$2$0.prev = 3;
-							_iterator = Object.keys(_this._edges[from])[Symbol.iterator]();
+							context$2$0.prev = 4;
+							_iterator = _this._edges.get(from).keys()[Symbol.iterator]();
 	
-						case 5:
+						case 6:
 							if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-								context$2$0.next = 13;
+								context$2$0.next = 15;
 								break;
 							}
 	
 							to = _step.value;
 	
-							if (!_this.hasEdge(from, to)) {
-								context$2$0.next = 10;
+							if (!(_this.hasEdge(from, to) && !done.has(to))) {
+								context$2$0.next = 12;
 								break;
 							}
 	
-							context$2$0.next = 10;
-							return [to, _this._vertices[to], _this._edges[from][to]];
+							done.add(to);
+							context$2$0.next = 12;
+							return [to, _this._vertices.get(to), _this._edges.get(from).get(to)];
 	
-						case 10:
+						case 12:
 							_iteratorNormalCompletion = true;
-							context$2$0.next = 5;
-							break;
-	
-						case 13:
-							context$2$0.next = 19;
+							context$2$0.next = 6;
 							break;
 	
 						case 15:
-							context$2$0.prev = 15;
-							context$2$0.t3 = context$2$0["catch"](3);
+							context$2$0.next = 21;
+							break;
+	
+						case 17:
+							context$2$0.prev = 17;
+							context$2$0.t3 = context$2$0["catch"](4);
 							_didIteratorError = true;
 							_iteratorError = context$2$0.t3;
 	
-						case 19:
-							context$2$0.prev = 19;
-							context$2$0.prev = 20;
+						case 21:
+							context$2$0.prev = 21;
+							context$2$0.prev = 22;
 	
 							if (!_iteratorNormalCompletion && _iterator["return"]) {
 								_iterator["return"]();
 							}
 	
-						case 22:
-							context$2$0.prev = 22;
+						case 24:
+							context$2$0.prev = 24;
 	
 							if (!_didIteratorError) {
-								context$2$0.next = 25;
+								context$2$0.next = 27;
 								break;
 							}
 	
 							throw _iteratorError;
 	
-						case 25:
-							return context$2$0.finish(22);
-	
-						case 26:
-							return context$2$0.finish(19);
-	
 						case 27:
+							return context$2$0.finish(24);
+	
+						case 28:
+							return context$2$0.finish(21);
+	
+						case 29:
 						case "end":
 							return context$2$0.stop();
 					}
-				}, _verticesFrom, this, [[3, 15, 19, 27], [20,, 22, 26]]);
+				}, _verticesFrom, this, [[4, 17, 21, 29], [22,, 24, 28]]);
 			})
 		}, {
 			key: "verticesTo",
@@ -6555,77 +7375,79 @@ return /******/ (function(modules) { // webpackBootstrap
 			value: regeneratorRuntime.mark(function _verticesTo(to) {
 				var _this = this;
 	
-				var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, from;
+				var done, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, from;
 	
 				return regeneratorRuntime.wrap(function _verticesTo$(context$2$0) {
 					while (1) switch (context$2$0.prev = context$2$0.next) {
 						case 0:
+							done = new Set();
 							_iteratorNormalCompletion = true;
 							_didIteratorError = false;
 							_iteratorError = undefined;
-							context$2$0.prev = 3;
-							_iterator = Object.keys(_this._reverseEdges[to])[Symbol.iterator]();
+							context$2$0.prev = 4;
+							_iterator = _this._reverseEdges.get(to)[Symbol.iterator]();
 	
-						case 5:
+						case 6:
 							if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-								context$2$0.next = 13;
+								context$2$0.next = 15;
 								break;
 							}
 	
 							from = _step.value;
 	
-							if (!_this.hasEdge(from, to)) {
-								context$2$0.next = 10;
+							if (!(_this.hasEdge(from, to) && !done.has(from))) {
+								context$2$0.next = 12;
 								break;
 							}
 	
-							context$2$0.next = 10;
-							return [from, _this._vertices[from], _this._edges[from][to]];
+							done.add(from);
+							context$2$0.next = 12;
+							return [from, _this._vertices.get(from), _this._edges.get(from).get(to)];
 	
-						case 10:
+						case 12:
 							_iteratorNormalCompletion = true;
-							context$2$0.next = 5;
-							break;
-	
-						case 13:
-							context$2$0.next = 19;
+							context$2$0.next = 6;
 							break;
 	
 						case 15:
-							context$2$0.prev = 15;
-							context$2$0.t4 = context$2$0["catch"](3);
+							context$2$0.next = 21;
+							break;
+	
+						case 17:
+							context$2$0.prev = 17;
+							context$2$0.t4 = context$2$0["catch"](4);
 							_didIteratorError = true;
 							_iteratorError = context$2$0.t4;
 	
-						case 19:
-							context$2$0.prev = 19;
-							context$2$0.prev = 20;
+						case 21:
+							context$2$0.prev = 21;
+							context$2$0.prev = 22;
 	
 							if (!_iteratorNormalCompletion && _iterator["return"]) {
 								_iterator["return"]();
 							}
 	
-						case 22:
-							context$2$0.prev = 22;
+						case 24:
+							context$2$0.prev = 24;
 	
 							if (!_didIteratorError) {
-								context$2$0.next = 25;
+								context$2$0.next = 27;
 								break;
 							}
 	
 							throw _iteratorError;
 	
-						case 25:
-							return context$2$0.finish(22);
-	
-						case 26:
-							return context$2$0.finish(19);
-	
 						case 27:
+							return context$2$0.finish(24);
+	
+						case 28:
+							return context$2$0.finish(21);
+	
+						case 29:
 						case "end":
 							return context$2$0.stop();
 					}
-				}, _verticesTo, this, [[3, 15, 19, 27], [20,, 22, 26]]);
+				}, _verticesTo, this, [[4, 17, 21, 29], [22,, 24, 28]]);
 			})
 		}, {
 			key: "vertices_topologically",
@@ -6650,7 +7472,7 @@ return /******/ (function(modules) { // webpackBootstrap
 								throw new JsGraph.CycleError(cycle);
 	
 							case 5:
-								if (handled[a]) {
+								if (handled.has(a)) {
 									context$3$0.next = 36;
 									break;
 								}
@@ -6717,10 +7539,10 @@ return /******/ (function(modules) { // webpackBootstrap
 								}
 	
 								context$3$0.next = 35;
-								return [a, _this._vertices[a]];
+								return [a, _this._vertices.get(a)];
 	
 							case 35:
-								handled[a] = true;
+								handled.add(a);
 	
 							case 36:
 								visited.pop();
@@ -6738,7 +7560,7 @@ return /******/ (function(modules) { // webpackBootstrap
 					while (1) switch (context$2$0.prev = context$2$0.next) {
 						case 0:
 							visited = [];
-							handled = {};
+							handled = new Set();
 							_this = _this2;
 							_iteratorNormalCompletion = true;
 							_didIteratorError = false;
@@ -6755,7 +7577,7 @@ return /******/ (function(modules) { // webpackBootstrap
 							_step$value = _slicedToArray(_step.value, 1);
 							a = _step$value[0];
 	
-							if (handled[a]) {
+							if (handled.has(a)) {
 								context$2$0.next = 13;
 								break;
 							}
@@ -6807,6 +7629,161 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 				}, vertices_topologically, this, [[6, 18, 22, 30], [23,, 25, 29]]);
 			})
+		}, {
+			key: "eachVertex",
+	
+			/////////////////////////////////////////
+			////////// Old Style Iteration //////////
+			/////////////////////////////////////////
+	
+			value: function eachVertex(handler) {
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = this.vertices()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var args = _step.value;
+	
+						if (handler.apply(undefined, _toConsumableArray(args)) === false) {
+							break;
+						}
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+			}
+		}, {
+			key: "eachVertexFrom",
+			value: function eachVertexFrom(from, handler) {
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = this.verticesFrom(from)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var args = _step.value;
+	
+						if (handler.apply(undefined, _toConsumableArray(args)) === false) {
+							break;
+						}
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+			}
+		}, {
+			key: "eachVertexTo",
+			value: function eachVertexTo(to, handler) {
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = this.verticesTo(to)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var args = _step.value;
+	
+						if (handler.apply(undefined, _toConsumableArray(args)) === false) {
+							break;
+						}
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+			}
+		}, {
+			key: "eachEdge",
+			value: function eachEdge(handler) {
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = this.edges()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var args = _step.value;
+	
+						if (handler.apply(undefined, _toConsumableArray(args)) === false) {
+							break;
+						}
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+			}
+		}, {
+			key: "eachVertexTopologically",
+			value: function eachVertexTopologically(handler) {
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = this.vertices_topologically()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var args = _step.value;
+	
+						if (handler.apply(undefined, _toConsumableArray(args)) === false) {
+							break;
+						}
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+			}
 		}, {
 			key: "clearEdges",
 	
@@ -6916,29 +7893,149 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 			value: function clone() {
 				var result = new JsGraph();
-				this.eachVertex(function (key, val) {
-					result.addVertex(key, val);
-				});
-				this.eachEdge(function (from, to, val) {
-					result.addEdge(from, to, val);
-				});
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = this.vertices()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var _step$value = _slicedToArray(_step.value, 2);
+	
+						var key = _step$value[0];
+						var val = _step$value[1];
+	
+						result.addVertex(key, val);
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+	
+				var _iteratorNormalCompletion2 = true;
+				var _didIteratorError2 = false;
+				var _iteratorError2 = undefined;
+	
+				try {
+					for (var _iterator2 = this.edges()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+						var _step2$value = _slicedToArray(_step2.value, 3);
+	
+						var from = _step2$value[0];
+						var to = _step2$value[1];
+						var val = _step2$value[2];
+	
+						result.addEdge(from, to, val);
+					}
+				} catch (err) {
+					_didIteratorError2 = true;
+					_iteratorError2 = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+							_iterator2["return"]();
+						}
+					} finally {
+						if (_didIteratorError2) {
+							throw _iteratorError2;
+						}
+					}
+				}
+	
 				return result;
 			}
 		}, {
 			key: "transitiveReduction",
 			value: function transitiveReduction() {
 				var result = this.clone();
-				result.eachVertex(function (x) {
-					result.eachVertex(function (y) {
-						if (result.hasEdge(x, y)) {
-							result.eachVertex(function (z) {
-								if (result.hasPath(y, z)) {
-									result.removeEdge(x, z);
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
+	
+				try {
+					for (var _iterator = this.vertices()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						var _step$value = _slicedToArray(_step.value, 1);
+	
+						var x = _step$value[0];
+						var _iteratorNormalCompletion2 = true;
+						var _didIteratorError2 = false;
+						var _iteratorError2 = undefined;
+	
+						try {
+							for (var _iterator2 = this.vertices()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+								var _step2$value = _slicedToArray(_step2.value, 1);
+	
+								var y = _step2$value[0];
+	
+								if (result.hasEdge(x, y)) {
+									var _iteratorNormalCompletion3 = true;
+									var _didIteratorError3 = false;
+									var _iteratorError3 = undefined;
+	
+									try {
+										for (var _iterator3 = this.vertices()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+											var _step3$value = _slicedToArray(_step3.value, 1);
+	
+											var z = _step3$value[0];
+	
+											if (result.hasPath(y, z)) {
+												result.removeEdge(x, z);
+											}
+										}
+									} catch (err) {
+										_didIteratorError3 = true;
+										_iteratorError3 = err;
+									} finally {
+										try {
+											if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+												_iterator3["return"]();
+											}
+										} finally {
+											if (_didIteratorError3) {
+												throw _iteratorError3;
+											}
+										}
+									}
 								}
-							});
+							}
+						} catch (err) {
+							_didIteratorError2 = true;
+							_iteratorError2 = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+									_iterator2["return"]();
+								}
+							} finally {
+								if (_didIteratorError2) {
+									throw _iteratorError2;
+								}
+							}
 						}
-					});
-				});
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator["return"]) {
+							_iterator["return"]();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
+	
 				return result;
 			}
 		}]);
@@ -7109,6 +8206,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 		return CycleError;
 	})(Error);
+	// stack
 
 /***/ },
 /* 23 */
@@ -7172,10 +8270,30 @@ return /******/ (function(modules) { // webpackBootstrap
 				applyTo: {
 					value: function applyTo(target) {
 						var options = arguments[1] === undefined ? {} : arguments[1];
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
 	
-						this._components.forEach(function (components) {
-							components.applyTo(target, options);
-						});
+						try {
+							for (var _iterator = this._components[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var delta = _step.value;
+	
+								delta.applyTo(target, options);
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
 					}
 				},
 				toString: {
@@ -7191,9 +8309,31 @@ return /******/ (function(modules) { // webpackBootstrap
 						var str = _get(Object.getPrototypeOf(Composed.prototype), "toString", this).call(this, options);
 						if (this._components.length > 0) {
 							var deltas = "";
-							this._components.forEach(function (delta) {
-								deltas += "• " + delta.toString(options) + "\n";
-							});
+							var _iteratorNormalCompletion = true;
+							var _didIteratorError = false;
+							var _iteratorError = undefined;
+	
+							try {
+								for (var _iterator = this._components[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+									var delta = _step.value;
+	
+									deltas += "• " + delta.toString(options) + "\n";
+								}
+							} catch (err) {
+								_didIteratorError = true;
+								_iteratorError = err;
+							} finally {
+								try {
+									if (!_iteratorNormalCompletion && _iterator["return"]) {
+										_iterator["return"]();
+									}
+								} finally {
+									if (_didIteratorError) {
+										throw _iteratorError;
+									}
+								}
+							}
+	
 							str += "\n" + indent(deltas, 4);
 						}
 						return str;
@@ -7214,14 +8354,36 @@ return /******/ (function(modules) { // webpackBootstrap
 						/* flatten Composed that are inside Composed */
 						this._components = (function () {
 							var newComponents = [];
-							_this._components.forEach(function (delta) {
-								if (delta instanceof deltaJs.Delta.Composed) {
-									delta._collapse();
-									newComponents.push.apply(newComponents, _toConsumableArray(delta._components));
-								} else {
-									newComponents.push(delta);
+							var _iteratorNormalCompletion = true;
+							var _didIteratorError = false;
+							var _iteratorError = undefined;
+	
+							try {
+								for (var _iterator = _this._components[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+									var delta = _step.value;
+	
+									if (delta instanceof deltaJs.Delta.Composed) {
+										delta._collapse();
+										newComponents.push.apply(newComponents, _toConsumableArray(delta._components));
+									} else {
+										newComponents.push(delta);
+									}
 								}
-							});
+							} catch (err) {
+								_didIteratorError = true;
+								_iteratorError = err;
+							} finally {
+								try {
+									if (!_iteratorNormalCompletion && _iterator["return"]) {
+										_iterator["return"]();
+									}
+								} finally {
+									if (_didIteratorError) {
+										throw _iteratorError;
+									}
+								}
+							}
+	
 							return newComponents;
 						})();
 	
