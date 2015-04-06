@@ -3,7 +3,7 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import {extend, isDefined, indent, oncePer, o, graphDescendants} from './util.es6.js';
+import {extend, isDefined, indent, oncePer, s}          from './util.es6.js';
 import Path                                             from './Path.es6.js';
 import define_Modify                                    from './Modify.es6.js';
 import define_ContainerProxy                            from './ContainerProxy.es6.js';
@@ -38,7 +38,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		_assertNoUnresolvedConflicts() {
 			for (let conflictInfo of this.conflicts()) {
-				if (conflictInfo.conflictResolvingDeltas.length === 0) {
+				if (conflictInfo.conflictResolvingDeltas.size === 0) {
 					throw new UnresolvedDeltaConflict(conflictInfo.conflictingDeltas);
 				}
 			}
@@ -92,33 +92,32 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			g = g.transitiveReduction();
 
 			/* find all pairs of 'incomparable' deltas, plus the closest deltas that are 'greater' than both */
-			var resolutions = {}; // first -> second -> possible-resolving-delta -> true
+			var resolutions = new Map(); // first -> second -> Set<possible-resolving-delta>
 			var getResolutionsIn = (name) => {
 				if (g.vertexValue(name)) { return }
-				var ancestors = {};
+				let ancestors = new Map();
 				for (let [pred] of g.verticesTo(name)) {
 					getResolutionsIn(pred);
-					ancestors[pred] = { [pred]: true };
-					let predAncestors = g.vertexValue(pred);
-					extend(ancestors[pred], ...Object.keys(predAncestors).map(ppred => predAncestors[ppred]));
+					ancestors.set(pred, new Set([pred, ...g.vertexValue(pred).keys()]));
 				}
 				g.setVertex(name, ancestors);
-				for (let pred1 of Object.keys(ancestors)) {
-					for (let pred2 of Object.keys(ancestors)) {
-						if (pred1 >= pred2) { continue } // make sure pred1 < pred2
-						let ancs1 = extend({}, ancestors[pred1]);
-						let ancs2 = extend({}, ancestors[pred2]);
-						for (let anc1 of Object.keys(ancs1)) {
-							for (let anc2 of Object.keys(ancs2)) {
-								if (anc1 === anc2) {
-									delete ancs1[anc1];
-									delete ancs2[anc2];
+				for (let pred1 of ancestors.keys()) {
+					for (let pred2 of ancestors.keys()) {
+						if (pred1 < pred2) {
+							let ancs1 = new Set(ancestors.get(pred1));
+							let ancs2 = new Set(ancestors.get(pred2));
+							for (let anc1 of ancs1) {
+								for (let anc2 of ancs2) {
+									if (anc1 === anc2) {
+										ancs1.delete(anc1);
+										ancs2.delete(anc2);
+									}
 								}
 							}
-						}
-						for (let anc1 of Object.keys(ancs1)) {
-							for (let anc2 of Object.keys(ancs2)) {
-								o(resolutions, ...[anc1, anc2].sort())[name] = true;
+							for (let anc1 of ancs1) {
+								for (let anc2 of ancs2) {
+									s(resolutions, ...[anc1, anc2].sort()).add(name);
+								}
 							}
 						}
 					}
@@ -127,27 +126,27 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			getResolutionsIn(sink);
 
 			/* out of the incomparable deltas, find those that are actually in conflict, and find any */
-			var result = [];
-			for (let first of Object.keys(resolutions)) {
-				for (let second of Object.keys(resolutions[first])) {
+			var result = new Set();
+			for (let first of resolutions.keys()) {
+				for (let second of resolutions.get(first).keys()) {
 					let x = this.graph.vertexValue(first);
 					let y = this.graph.vertexValue(second);
 					if (!x.commutesWith(y)) {
 						var conflictInfo = {
-							conflictingDeltas:       [first, second],
-							conflictResolvingDeltas: []
+							conflictingDeltas:       new Set([first, second]),
+							conflictResolvingDeltas: new Set()
 						};
-						for (let nearestResolver of Object.keys(resolutions[first][second])) {
-							for (let resolver of graphDescendants(g, nearestResolver)) {
+						for (let nearestResolver of resolutions.get(first).get(second)) {
+							for (let [resolver] of [[nearestResolver], ...g.verticesWithPathFrom(nearestResolver)]) {
 								let z = this.graph.vertexValue(resolver);
 								if (resolver !== sink) {
 									if (z.resolves(x, y)) {
-										conflictInfo.conflictResolvingDeltas.push(resolver);
+										conflictInfo.conflictResolvingDeltas.add(resolver);
 									}
 								}
 							}
 						}
-						result.push(conflictInfo);
+						result.add(conflictInfo);
 					}
 				}
 			}
@@ -247,8 +246,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 				/* application order */
 				for (let subName of [ ...options['resolves'] || [],
-					...options['after']    || [],
-					...options['requires'] || [] ]) {
+				                      ...options['after']    || [],
+				                      ...options['requires'] || [] ]) {
 					result.graph.createEdge(subName, name);
 					if (result.graph.hasCycle()) {
 						result.graph.removeExistingEdge(subName, name);

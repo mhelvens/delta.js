@@ -11,11 +11,11 @@ export function extend(obj1, ...rest) {
 }
 
 
-function _default(object, ...rest) {
+var _default = (ds) => (object, ...rest) => {
 	var keys = rest.slice(0, -1);
 	var def = rest[rest.length-1];
 	if (keys.length === 0) { return object }
-	var last = o(object, ...keys.slice(0, -1));
+	var last = ds(object, ...keys.slice(0, -1));
 	if (last instanceof Map) {
 		if (isUndefined(last.get(keys[keys.length-1]))) {
 			last.set(keys[keys.length-1], def);
@@ -27,9 +27,11 @@ function _default(object, ...rest) {
 		}
 		return last[keys[keys.length-1]];
 	}
-}
-export function o(object, ...keys) { return _default(object, ...keys, {}) }
-export function a(object, ...keys) { return _default(object, ...keys, []) }
+};
+export function o(object, ...keys) { return _default(o)(object, ...keys, {}) }
+export function a(object, ...keys) { return _default(o)(object, ...keys, []) }
+export function m(object, ...keys) { return _default(m)(object, ...keys, new Map()) }
+export function s(object, ...keys) { return _default(m)(object, ...keys, new Set()) }
 
 
 /* a simple `assert` function, to express a condition that is expected to be true */
@@ -136,25 +138,4 @@ export function arraysHaveSameElements(a, b, eq=(x,y)=>x===y) {
 		if (!found) { return false }
 	}
 	return true;
-}
-
-
-export function objectsEqual(a, b, eq=(x,y)=>x===y) {
-	var aKeys = Object.keys(a);
-	var bKeys = Object.keys(b);
-	if (aKeys.length !== bKeys.length) { return false }
-	aKeys.sort();
-	bKeys.sort();
-	for (let i = 0; i < aKeys.length; ++i) {
-		if (aKeys[i] !== bKeys[i])         { return false }
-		if (!eq(a[aKeys[i]], b[bKeys[i]])) { return false }
-	}
-	return true;
-}
-
-
-export function graphDescendants(graph, key) {
-	return Object.keys((function succDescendants(key) {
-		return extend({ [key]: true }, ...[...graph.verticesFrom(key)].map(([succ]) => succDescendants(succ)));
-	})(key));
 }

@@ -71,6 +71,7 @@ export class UnresolvedDeltaConflict extends ApplicationError {
 	constructor(deltaNames) {
 		super();
 		this.name = 'UnresolvedDeltaConflict';
+		deltaNames = [...deltaNames];
 		var nameList = deltaNames.slice(0, -1).map(name => `'${name}'`).join(',');
 		this.message = `There is an unresolved conflict between deltas ${nameList} and '${deltaNames[deltaNames.length-1]}'.`;
 		this.deltaNames = deltaNames;
