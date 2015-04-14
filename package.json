@@ -36,7 +36,7 @@
 	"phantomjs-polyfill": "*",
 	"uglifyjs": "~2",
 	"webpack": "~1",
-	"js-graph": "~1.6.1-alpha"
+	"js-graph": "~1.7.1-alpha"
   },
   "scripts": {
 	"build": "mkdir -p dist && webpack && uglifyjs dist/delta.js -mo dist/delta.min.js --in-source-map dist/delta.js.map --source-map dist/delta.min.js.map && uglifyjs dist/delta.full.js -mo dist/delta.full.min.js --in-source-map dist/delta.full.js.map --source-map dist/delta.full.min.js.map",
