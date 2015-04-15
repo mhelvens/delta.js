@@ -1,26 +1,22 @@
 /* import internal stuff */
-import {extend, oncePer}                    from './util.es6.js';
-import {ReadableTarget, wt}                 from './Target.es6.js';
-import {PreconditionFailure, CompositionError} from './Error.es6.js';
-import define_Composed                      from './Composed.es6.js';
+import {extend, oncePer, isDefined, isUndefined, arraysEqual} from './util.es6.js';
+import {ReadableTarget, wt}                                   from './Target.es6.js';
+import {PreconditionFailure, CompositionError}                from './Error.es6.js';
+import define_Composed                                        from './Composed.es6.js';
 
 
 export default oncePer('Delta', (deltaJs) => {
 
-
-	oncePer(deltaJs.constructor, 'Delta', () => {
-
-		extend(deltaJs.constructor.prototype, {
-			/** {@public}{@method}
-			 * @param precondition {(DeltaJs#Delta, DeltaJs#Delta) => Boolean} - can these deltas be composed this way?
-			 * @param compose      {(DeltaJs#Delta, DeltaJs#Delta) => DeltaJs#Delta} - should be side-effect free
-			 */
-			newComposition(precondition, compose) {
-				this.Delta.newComposition(precondition, compose);
-			}
-		});
-
-	});
+	//
+	//oncePer(deltaJs.constructor, 'Delta', () => {
+	//
+	//	extend(deltaJs.constructor.prototype, {
+	//		newCommutation(precondition, predicate) {
+	//			this.Delta.newCommutation(precondition, predicate);
+	//		}
+	//	});
+	//
+	//});
 
 
 	deltaJs.Delta = class Delta {
@@ -69,11 +65,12 @@ export default oncePer('Delta', (deltaJs) => {
 			return obj.value;
 		}
 
-		/** {@public}{@method}{@nosideeffects}
-		 * @param other {DeltaJs#Delta} - the other delta to compose with
-		 * @return {DeltaJs#Delta} - the composed delta
-		 */
-		composedWith(other) { return deltaJs.Delta.composed(this, other) }
+		///**
+		// * @public
+		// * @method
+		// * @nosideeffects
+		// */
+		//commutesWith(other) { return deltaJs.Delta.commute(this, other) }
 
 		/** {@public}{@method}
 		 * @param options {object?}
@@ -87,53 +84,171 @@ export default oncePer('Delta', (deltaJs) => {
 			return str;
 		}
 
-		/** {@public}{@static}{@method}
-		 * @param precondition {(DeltaJs#Delta, DeltaJs#Delta) => Boolean} - can these deltas be composed this way?
-		 * @param compose {Boolean|((DeltaJs#Delta, DeltaJs#Delta) => DeltaJs#Delta)} - false, or a side-effect free function
-		 */
-		static newComposition(precondition, compose) {
-			deltaJs.Delta._compositions.push({precondition, compose});
-		}
+		///**
+		// * @public
+		// * @static
+		// * @method
+		// *
+		// */
+		//static newCommutation(precondition, predicate) {
+		//	deltaJs.Delta._commutations.push({precondition, predicate});
+		//}
 
-		/** {@public}{@static}{@method}
-		 * @param deltas {[DeltaJs#Delta]} - the deltas to compose
-		 * @return {DeltaJs#Delta} - the composed delta
-		 */
-		static composed(...deltas) {
-			let result = new deltaJs.Delta.NoOp();
-			for (let delta of deltas) {
-				let d1 = result,
-					d2 = delta || new deltaJs.Delta.NoOp();
-
-				/* use the first composition function for which these deltas satisfy the precondition */
-				let composeFn = ()=>{};
-				let success = false;
-				for (let {precondition, compose} of deltaJs.Delta._compositions) {
-					if (precondition(d1, d2)) {
-						composeFn = compose;
-						success = true;
-						break;
-					}
-				}
-
-				/* throw an error if 'false' was found rather than a function*/
-				if (composeFn === false || !success) { throw new CompositionError(d1, d2) }
-
-				/*  if no composition function is found, use a linear delta model  */
-				/*  to 'naively' have one delta apply after another                */
-				if (composeFn === true) {
-					composeFn = (d1, d2) => new deltaJs.Delta.Composed([d1, d2]);
-				}
-
-				/* return the result on success */
-				result = composeFn(d1, d2);
-			}
-			return result;
-		}
+		///**
+		// *
+		// */
+		//static commute(d1, d2, {weak} = {}) {
+		//	for (let {precondition, predicate} of deltaJs.Delta._commutations) {
+		//		if (precondition(d1, d2)) {
+		//			return predicate(d1, d2);
+		//		} else if (precondition(d2, d1)) {
+		//			return predicate(d2, d1);
+		//		}
+		//	}
+		//	return d1.composedWith(d2).equals(d2.composedWith(d1));
+		//}
 
 	};
 	deltaJs.Delta._nextID = 0;
-	deltaJs.Delta._compositions  = []; // [{precondition, composeFn}]
+	//deltaJs.Delta._commutations = []; // [{precondition, predicate}]
+
+
+	let _multiDispatchOptions = new Map();
+
+	/**
+	 * To create new 'multiple dispatch' functions for mixed types of deltas.
+	 * Any number of candidate functions can be created,
+	 * which are then selected based on their precondition predicates.
+	 * @private
+	 * @param name             {String}
+	 * @param staticMethodName {String}
+	 * @param methodName       {String}
+	 * @param onTrue           {Function=undefined}
+	 * @param onFalse          {Function=undefined}
+	 * @param onDefault        {Function|Boolean=false}
+	 * @param commutative      {Boolean}
+	 */
+	function newMultiDispatch(name, staticMethodName, methodName, {onTrue, onFalse, onDefault, commutative} = {}) {
+		/* store the options */
+		_multiDispatchOptions.set(name, { commutative });
+
+		/* convenience variables */
+		let creationMethodName = `new${name[0].toUpperCase()}${name.slice(1)}`;
+		let privateVarName = `_multiDispatch_${name}`;
+
+		/* set defaults */
+		if (!onTrue)  { onTrue = (...args) => args }
+		if (!onFalse) { onFalse = () => { throw new Error(`Failure in finding a ${name}!`) } }
+		if (onDefault === 'onTrue')                { onDefault = onTrue  }
+		if (onDefault === 'onFalse' || !onDefault) { onDefault = onFalse }
+
+		/* set static Delta members */
+		extend(deltaJs.Delta, {
+			[privateVarName]: [],
+			[creationMethodName](precondition, value) {
+				deltaJs.Delta[privateVarName].push({ precondition, value });
+			},
+			[staticMethodName](d1, d2, d3) {
+				/* use the first composition function for which these deltas satisfy the precondition */
+				let fn = ()=>{};
+				let found = false;
+				let commuting = false;
+				for (let {precondition, value} of deltaJs.Delta[privateVarName]) {
+					if (precondition(d1, d2, d3)) {
+						fn = value;
+						found = true;
+						break;
+					} else if (commutative && ( isDefined(d3)   && precondition(d1, d3, d2) ||
+						                        isUndefined(d3) && precondition(d2, d1)     )) {
+						fn = value;
+						found = true;
+						commuting = true;
+						break;
+					}
+				}
+				/* if no function was found, set the proper function */
+				if      (!found)       { fn = onDefault }
+				else if (fn === false) { fn = onFalse   }
+				else if (fn === true)  { fn = onTrue    }
+				/* return the result */
+				if (commuting) {
+					if (isDefined(d3)) { return fn(d1, d3, d2) }
+					else               { return fn(d2, d1)     }
+				} else                 { return fn(d1, d2, d3) }
+			}
+		});
+
+		extend(deltaJs.Delta.prototype, {
+			[methodName](...others) {
+				return deltaJs.Delta[staticMethodName](this, ...others);
+			}
+		});
+
+		oncePer(deltaJs.constructor, `multiDispatch:${name}`, () => {
+			extend(deltaJs.constructor.prototype, {
+				[creationMethodName](precondition, fn) {
+					return this.Delta[creationMethodName](precondition, fn);
+				}
+			});
+		});
+	}
+
+	function customMultiDispatchGiven(name, d1, d2, d3) {
+		let privateVarName = `_multiDispatch_${name}`;
+		for (let {precondition, value} of deltaJs.Delta[privateVarName]) {
+			if (precondition(d1, d2, d3)) {
+				return typeof value === 'function';
+			} else if (_multiDispatchOptions.get(name).commutative && ( isDefined(d3)   && precondition(d1, d3, d2) ||
+				                                                        isUndefined(d3) && precondition(d2, d1)     )) {
+				return typeof value === 'function';
+			}
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	newMultiDispatch('composition', '_binaryComposed', 'composedWith', {
+		onTrue:    (d1, d2) => new deltaJs.Delta.Composed([d1, d2]),
+		onFalse:   (d1, d2) => { throw new CompositionError(d1, d2) },
+		onDefault: 'onFalse'
+	});
+	deltaJs.Delta.composed = function composed(...deltas) {
+		return deltas.map((d) => d || new deltaJs.Delta.NoOp())
+			         .reduce(deltaJs.Delta._binaryComposed, new deltaJs.Delta.NoOp());
+	};
+	////////////////////////////////////////////////////////////////////////////////
+	newMultiDispatch('commutation', 'commute', 'commutesWith', {
+		onTrue:    (d1, d2) => true,
+		onFalse:   (d1, d2) => false,
+		onDefault: (d1, d2) => d1.composedWith(d2).equals(d2.composedWith(d1)),
+		commutative: true
+	});
+	////////////////////////////////////////////////////////////////////////////////
+	newMultiDispatch('refinement', 'refines', 'refines', {
+		onTrue:    (d1, d2) => true,
+		onFalse:   (d1, d2) => false,
+		onDefault: (d1, d2) => d1.equals(d2)
+	});
+	////////////////////////////////////////////////////////////////////////////////
+	newMultiDispatch('equality', 'equal', 'equals', {
+		onTrue:    (d1, d2) => true,
+		onFalse:   (d1, d2) => false,
+		onDefault: (d1, d2) => {
+			if (customMultiDispatchGiven('refinement', d1, d2)) {
+				return d1.refines(d2) && d2.refines(d1);
+			} else {
+				return d1.type === d2.type && arraysEqual(d1.args, d2.args);
+			}
+		},
+		commutative: true
+	});
+	////////////////////////////////////////////////////////////////////////////////
+	newMultiDispatch('resolution', 'resolves', 'resolves', {
+		onTrue:    (d1, d2, d3) => true,
+		onFalse:   (d1, d2, d3) => false,
+		onDefault: (d1, d2, d3) => deltaJs.Delta.composed(d2, d3, d1).equals(deltaJs.Delta.composed(d3, d2, d1)),
+		commutative: true
+	});
+	////////////////////////////////////////////////////////////////////////////////
 
 
 	/* define deltaJs.Delta.Composed for use in compositions */

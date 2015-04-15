@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {indent, oncePer, arraysEqual} from './util.es6.js';
+import {indent, oncePer, arraysEqual, t} from './util.es6.js';
 
 
 export default oncePer('Composed', (deltaJs) => {
@@ -20,10 +20,6 @@ export default oncePer('Composed', (deltaJs) => {
 			var result = super.clone();
 			result._components = this._components.map((delta) => delta.clone());
 			return result;
-		}
-
-		equals(other) {
-			return arraysEqual(this._components, other._components, (d1, d2) => d1.equals(d2));
 		}
 
 		applyTo(target, options = {}) {
@@ -108,6 +104,11 @@ export default oncePer('Composed', (deltaJs) => {
 		result._collapse();
 		return result;
 	});
+
+
+	/* equality */
+	deltaJs.newEquality( t('Composed', 'Composed'), (d1, d2) =>
+			arraysEqual(d1._components, d2._components, (x, y) => x.equals(y)) );
 
 
 });

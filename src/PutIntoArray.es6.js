@@ -27,48 +27,6 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 			return result;
 		}
 
-		refines(other) {
-			/* define operation equality */
-			var eq = (x, y) => x.method === y.method && x.value === y.value;
-
-			/* both need to at least have the same operations (not necessarily in the same order) */
-			if (!arraysHaveSameElements(this.values, other.values, eq)) { return false }
-
-			/* appensions and prepensions need to be in the same order */
-			if (!arraysEqual(
-				this .values.filter(v => v.method === 'append'),
-				other.values.filter(v => v.method === 'append'), eq
-			)) { return false }
-			if (!arraysEqual(
-				this .values.filter(v => v.method === 'prepend'),
-				other.values.filter(v => v.method === 'prepend'), eq
-			)) { return false }
-
-			/* insertions in 'this' cannot come later than their counterparts in 'other', */
-			/* in the sense of appensions and prepensions that have come before it        */
-			var appensionsAndPrepensionsSeen = [];
-			for (let i = 0; i < this.values.length; ++i) {
-				if (this.values[i].method === 'insert') {
-					var ind = customIndexOf(other.values, this.values[i], eq);
-					var appensionsAndPrepensionsToGo = [...appensionsAndPrepensionsSeen];
-					for (let j = 0; j <= ind; ++j) {
-						var indd = customIndexOf(appensionsAndPrepensionsToGo, other.values[j], eq);
-						if (indd > -1) {
-							appensionsAndPrepensionsToGo.splice(indd, 1);
-						}
-					}
-					if (appensionsAndPrepensionsToGo.length > 0) {
-						return false;
-					}
-				} else {
-					appensionsAndPrepensionsSeen.push(this.values[i]);
-				}
-			}
-
-			/* OK, it's a refinement */
-			return true;
-		}
-
 		precondition(target) { return isDefined(target.value) && Array.isArray(target.value) }
 
 		applyTo(target) {
@@ -121,6 +79,50 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 		new deltaJs.Delta.PutIntoArray([...d1.values, ...d2.values]));
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
+
+
+	/* refinement *******************************************************************************/
+	deltaJs.newRefinement( t('PutIntoArray', 'PutIntoArray'), (d1, d2) => {
+		/* define operation equality */
+		var eq = (x, y) => x.method === y.method && x.value === y.value;
+
+		/* both need to at least have the same operations (not necessarily in the same order) */
+		if (!arraysHaveSameElements(d1.values, d2.values, eq)) { return false }
+
+		/* appensions and prepensions need to be in the same order */
+		if (!arraysEqual(
+			d1.values.filter(v => v.method === 'append'),
+			d2.values.filter(v => v.method === 'append'), eq
+		)) { return false }
+		if (!arraysEqual(
+			d1.values.filter(v => v.method === 'prepend'),
+			d2.values.filter(v => v.method === 'prepend'), eq
+		)) { return false }
+
+		/* insertions in 'd1' cannot come later than their counterparts in 'd2', */
+		/* in the sense of appensions and prepensions that have come before it        */
+		var appensionsAndPrepensionsSeen = [];
+		for (let i = 0; i < d1.values.length; ++i) {
+			if (d1.values[i].method === 'insert') {
+				var ind = customIndexOf(d2.values, d1.values[i], eq);
+				var appensionsAndPrepensionsToGo = [...appensionsAndPrepensionsSeen];
+				for (let j = 0; j <= ind; ++j) {
+					var indd = customIndexOf(appensionsAndPrepensionsToGo, d2.values[j], eq);
+					if (indd > -1) {
+						appensionsAndPrepensionsToGo.splice(indd, 1);
+					}
+				}
+				if (appensionsAndPrepensionsToGo.length > 0) {
+					return false;
+				}
+			} else {
+				appensionsAndPrepensionsSeen.push(d1.values[i]);
+			}
+		}
+
+		/* OK, it's a refinement */
+		return true;
+	});
 
 
 });

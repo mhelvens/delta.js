@@ -2121,8 +2121,8 @@ describe("DeltaJs instance -", () => {
 			], [
 				{ key: [] },
 				() => {
-					dm.do('X')                       .append('key', "X value");
-					dm.do('Y')                       .append('key', "Y value");
+					dm.do('X')                       .append ('key', "X value");
+					dm.do('Y')                       .append ('key', "Y value");
 					dm.do('Z', { after: ['X', 'Y'] }).replace('key', "Z value");
 				},
 				{ key: "Z value" }
@@ -2137,8 +2137,8 @@ describe("DeltaJs instance -", () => {
 			], [
 				{ key() {} },
 				() => {
-					dm.do('X')                       .append('key', function () { console.log("something") });
-					dm.do('Y')                       .append('key', function () { console.log("something") });
+					dm.do('X')                       .append ('key', function () { console.log("something") });
+					dm.do('Y')                       .append ('key', function () { console.log("something") });
 					dm.do('Z', { after: ['X', 'Y'] }).replace('key', "Z value");
 				},
 				{ key: "Z value" }
@@ -2188,6 +2188,24 @@ describe("DeltaJs instance -", () => {
 				},
 				{ o: { x: 'value-x-6', y: 'value-y-8' } }
 			]]);
+
+
+
+
+
+			//itCan("TEST", [[
+			//	{ o: {} },
+			//	() => {
+			//		dm.do('x').add('o.foo', "bar");
+			//		dm.do('y').add('o.foo', "bar");
+			//	},
+			//	{ o: { foo: "bar" } }
+			//]]);
+
+
+
+
+
 
 		});
 

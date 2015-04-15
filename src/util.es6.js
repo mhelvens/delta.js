@@ -66,7 +66,7 @@ export function indent(str, amount, char = ' ') {
 
 /* run a function only once per obj+string combo */
 export function oncePer(obj, key, fn) {
-	var opfn = (obj) => {
+	var opFn = (obj) => {
 		var p = `_once per: ${key}`;
 		if (obj[p]) { return }
 		obj[p] = true; // TODO: make non-enumeratable, or use ES6 Symbol
@@ -74,9 +74,9 @@ export function oncePer(obj, key, fn) {
 	};
 	if (typeof obj === 'string') {
 		[key, fn] = [obj, key];
-		return opfn;
+		return opFn;
 	} else {
-		return opfn(obj);
+		return opFn(obj);
 	}
 }
 

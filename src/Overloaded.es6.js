@@ -1,6 +1,6 @@
 /* import internal stuff */
-import define_Delta                   from './Delta_class.es6.js';
-import {indent, oncePer, arraysEqual} from './util.es6.js';
+import {indent, oncePer, arraysEqual, t} from './util.es6.js';
+import define_Delta                      from './Delta_class.es6.js';
 import {MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError,
 		MultipleOverloadsCompositionError} from './Error.es6.js';
@@ -26,10 +26,6 @@ export default oncePer('Overloaded', (deltaJs) => {
 			var result = super.clone();
 			result.overloads = this.overloads.map(delta => delta.clone());
 			return result;
-		}
-
-		equals(other) {
-			return arraysEqual(this.overloads, other.overloads, (d1, d2) => d1.equals(d2));
 		}
 
 		/** {@public}{@method}
@@ -92,6 +88,11 @@ export default oncePer('Overloaded', (deltaJs) => {
 		if (result.overloads.length === 0) { throw new MultipleOverloadsCompositionError(d1, d2, errors) }
 		return result;
 	});
+
+
+	/* equality */
+	deltaJs.newEquality( t('Overloaded', 'Overloaded'), (d1, d2) =>
+		arraysEqual(d1.overloads, d2.overloads, (x, y) => x.equals(y)) );
 
 
 });

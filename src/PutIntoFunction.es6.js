@@ -28,13 +28,6 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 			return result;
 		}
 
-		// TODO: refines method instead of equals method (look at PutIntoArray.es6.js)
-
-		equals(other) {
-			return arraysEqual(this.values, other.values,
-				(a, b) => a.method === b.method && a.value && b.value);
-		}
-
 		precondition(target) {
 			return isDefined(target.value) && typeof target.value === 'function' &&
 				(isDefined(target.value._DeltaJs_functions) || target instanceof WritableTarget);
@@ -102,6 +95,12 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 		new deltaJs.Delta.PutIntoFunction([...d1.values, ...d2.values]));
 
 	// TODO: Change 'append' and 'prepend' to follow any underlying partial order (delta model)
+
+
+	/* equality */
+	// TODO: refinement function instead of equals function (look at PutIntoArray.es6.js)
+	deltaJs.newEquality( t('PutIntoFunction', 'PutIntoFunction'), (d1, d2) =>
+		arraysEqual(d1.values, d2.values, (a, b) => a.method === b.method && a.value && b.value) );
 
 
 });

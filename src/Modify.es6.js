@@ -1,8 +1,8 @@
 /* import internal stuff */
 import {extend, indent, t, oncePer, mapEqual} from './util.es6.js';
-import Path                         from './Path.es6.js';
-import {wt}                         from './Target.es6.js';
-import define_ContainerProxy        from './ContainerProxy.es6.js';
+import Path                                   from './Path.es6.js';
+import {wt}                                   from './Target.es6.js';
+import define_ContainerProxy                  from './ContainerProxy.es6.js';
 
 
 export default oncePer('Modify', (deltaJs) => {
@@ -28,10 +28,6 @@ export default oncePer('Modify', (deltaJs) => {
 				result.subDeltas.set(key, delta.clone());
 			}
 			return result;
-		}
-
-		equals(other) {
-			return mapEqual(this.subDeltas, other.subDeltas, (d1, d2) => d1.equals(d2));
 		}
 
 		/** {@public}{@method}
@@ -136,6 +132,11 @@ export default oncePer('Modify', (deltaJs) => {
 		}
 		return result;
 	});
+
+
+	/* equality ***********************************************/
+	deltaJs.newEquality( t('Modify', 'Modify'),
+		(d1, d2) => mapEqual(d1.subDeltas, d2.subDeltas, (x, y) => x.equals(y)));
 
 
 });

@@ -3,7 +3,7 @@ import JsGraph from 'js-graph';
 
 
 /* import internal stuff */
-import {extend, isDefined, indent, oncePer, s}          from './util.es6.js';
+import {extend, isDefined, indent, oncePer, s, t}       from './util.es6.js';
 import Path                                             from './Path.es6.js';
 import define_Modify                                    from './Modify.es6.js';
 import define_ContainerProxy                            from './ContainerProxy.es6.js';
@@ -28,12 +28,6 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			var result = super.clone();
 			result.graph = this.graph.clone(d => d.clone());
 			return result;
-		}
-
-		equals(other) {
-			var g1 = this .graph.transitiveReduction();
-			var g2 = other.graph.transitiveReduction();
-			return g1.equals(g2, (x, y) => x.equals(y));
 		}
 
 		_assertNoUnresolvedConflicts() {
@@ -139,10 +133,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 						for (let nearestResolver of resolutions.get(first).get(second)) {
 							for (let [resolver] of [[nearestResolver], ...g.verticesWithPathFrom(nearestResolver)]) {
 								let z = this.graph.vertexValue(resolver);
-								if (resolver !== sink) {
-									if (z.resolves(x, y)) {
-										conflictInfo.conflictResolvingDeltas.add(resolver);
-									}
+								if (resolver !== sink && z.resolves(x, y)) {
+									conflictInfo.conflictResolvingDeltas.add(resolver);
 								}
 							}
 						}
@@ -241,7 +233,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				let options = this._childOptions.get(name);
 
 				/* delta in the graph */
-				var delta = this.childDelta(name);
+				let delta = this.childDelta(name);
 				result.graph.addVertex(name, delta);
 
 				/* application order */
@@ -273,6 +265,14 @@ export default oncePer('DeltaModel', (deltaJs) => {
 		d1 instanceof deltaJs.Delta.DeltaModel ||
 		d2 instanceof deltaJs.Delta.DeltaModel
 	), true);
+
+
+	/* equality */
+	deltaJs.newEquality( t('DeltaModel', 'DeltaModel'), (d1, d2) => {
+		var g1 = d1.graph.transitiveReduction();
+		var g2 = d2.graph.transitiveReduction();
+		return g1.equals(g2, (x, y) => x.equals(y));
+	} );
 
 
 });
