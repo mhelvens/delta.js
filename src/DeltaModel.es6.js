@@ -54,10 +54,6 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			}
 		}
 
-		/** {@public}{@method}
-		 * @param options {object?}
-		 * @return {string}
-		 */
 		toString(options = {}) {
 			var str = super.toString(options);
 			if (this.graph.vertexCount() > 0) {
@@ -70,9 +66,6 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			return str;
 		}
 
-		/** {@public}{@method}
-		 *
-		 */
 		conflicts() {
 			/* clone the graph */
 			var g = this.graph.clone();
@@ -95,11 +88,18 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			var resolutions = new Map(); // first -> second -> Set<possible-resolving-delta>
 			var getResolutionsIn = (name) => {
 				if (g.vertexValue(name)) { return }
-				let ancestors = new Map();
+				let ancestors = new Map(); // pred -> Set<ancestors-inc-pred>
 				for (let [pred] of g.verticesTo(name)) {
 					getResolutionsIn(pred);
-					ancestors.set(pred, new Set([pred, ...g.vertexValue(pred).keys()]));
+					let additionalAncestors = new Set([pred]);
+					for (let ancSet of g.vertexValue(pred).values()) {
+						for (let anc of ancSet.values()) {
+							additionalAncestors.add(anc);
+						}
+					}
+					ancestors.set(pred, additionalAncestors);
 				}
+
 				g.setVertex(name, ancestors);
 				for (let pred1 of ancestors.keys()) {
 					for (let pred2 of ancestors.keys()) {

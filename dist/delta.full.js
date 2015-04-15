@@ -2716,12 +2716,6 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 				},
 				toString: {
-	
-					/** {@public}{@method}
-	     * @param options {object?}
-	     * @return {string}
-	     */
-	
 					value: function toString() {
 						var options = arguments[0] === undefined ? {} : arguments[0];
 	
@@ -2762,11 +2756,6 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 				},
 				conflicts: {
-	
-					/** {@public}{@method}
-	     *
-	     */
-	
 					value: function conflicts() {
 						/* clone the graph */
 						var g = this.graph.clone();
@@ -2818,7 +2807,7 @@ return /******/ (function(modules) { // webpackBootstrap
 							if (g.vertexValue(name)) {
 								return;
 							}
-							var ancestors = new Map();
+							var ancestors = new Map(); // pred -> Set<ancestors-inc-pred>
 							var _iteratorNormalCompletion2 = true;
 							var _didIteratorError2 = false;
 							var _iteratorError2 = undefined;
@@ -2830,7 +2819,55 @@ return /******/ (function(modules) { // webpackBootstrap
 									var pred = _step2$value[0];
 	
 									getResolutionsIn(pred);
-									ancestors.set(pred, new Set([pred].concat(_toConsumableArray(g.vertexValue(pred).keys()))));
+									var additionalAncestors = new Set([pred]);
+									var _iteratorNormalCompletion3 = true;
+									var _didIteratorError3 = false;
+									var _iteratorError3 = undefined;
+	
+									try {
+										for (var _iterator3 = g.vertexValue(pred).values()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+											var ancSet = _step3.value;
+											var _iteratorNormalCompletion4 = true;
+											var _didIteratorError4 = false;
+											var _iteratorError4 = undefined;
+	
+											try {
+												for (var _iterator4 = ancSet.values()[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+													var anc = _step4.value;
+	
+													additionalAncestors.add(anc);
+												}
+											} catch (err) {
+												_didIteratorError4 = true;
+												_iteratorError4 = err;
+											} finally {
+												try {
+													if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+														_iterator4["return"]();
+													}
+												} finally {
+													if (_didIteratorError4) {
+														throw _iteratorError4;
+													}
+												}
+											}
+										}
+									} catch (err) {
+										_didIteratorError3 = true;
+										_iteratorError3 = err;
+									} finally {
+										try {
+											if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+												_iterator3["return"]();
+											}
+										} finally {
+											if (_didIteratorError3) {
+												throw _iteratorError3;
+											}
+										}
+									}
+	
+									ancestors.set(pred, additionalAncestors);
 								}
 							} catch (err) {
 								_didIteratorError2 = true;
@@ -2848,74 +2885,24 @@ return /******/ (function(modules) { // webpackBootstrap
 							}
 	
 							g.setVertex(name, ancestors);
-							var _iteratorNormalCompletion3 = true;
-							var _didIteratorError3 = false;
-							var _iteratorError3 = undefined;
+							var _iteratorNormalCompletion5 = true;
+							var _didIteratorError5 = false;
+							var _iteratorError5 = undefined;
 	
 							try {
-								for (var _iterator3 = ancestors.keys()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-									var pred1 = _step3.value;
-									var _iteratorNormalCompletion4 = true;
-									var _didIteratorError4 = false;
-									var _iteratorError4 = undefined;
+								for (var _iterator5 = ancestors.keys()[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+									var pred1 = _step5.value;
+									var _iteratorNormalCompletion6 = true;
+									var _didIteratorError6 = false;
+									var _iteratorError6 = undefined;
 	
 									try {
-										for (var _iterator4 = ancestors.keys()[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-											var pred2 = _step4.value;
+										for (var _iterator6 = ancestors.keys()[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+											var pred2 = _step6.value;
 	
 											if (pred1 < pred2) {
 												var ancs1 = new Set(ancestors.get(pred1));
 												var ancs2 = new Set(ancestors.get(pred2));
-												var _iteratorNormalCompletion5 = true;
-												var _didIteratorError5 = false;
-												var _iteratorError5 = undefined;
-	
-												try {
-													for (var _iterator5 = ancs1[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-														var anc1 = _step5.value;
-														var _iteratorNormalCompletion6 = true;
-														var _didIteratorError6 = false;
-														var _iteratorError6 = undefined;
-	
-														try {
-															for (var _iterator6 = ancs2[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-																var anc2 = _step6.value;
-	
-																if (anc1 === anc2) {
-																	ancs1["delete"](anc1);
-																	ancs2["delete"](anc2);
-																}
-															}
-														} catch (err) {
-															_didIteratorError6 = true;
-															_iteratorError6 = err;
-														} finally {
-															try {
-																if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-																	_iterator6["return"]();
-																}
-															} finally {
-																if (_didIteratorError6) {
-																	throw _iteratorError6;
-																}
-															}
-														}
-													}
-												} catch (err) {
-													_didIteratorError5 = true;
-													_iteratorError5 = err;
-												} finally {
-													try {
-														if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-															_iterator5["return"]();
-														}
-													} finally {
-														if (_didIteratorError5) {
-															throw _iteratorError5;
-														}
-													}
-												}
-	
 												var _iteratorNormalCompletion7 = true;
 												var _didIteratorError7 = false;
 												var _iteratorError7 = undefined;
@@ -2931,7 +2918,10 @@ return /******/ (function(modules) { // webpackBootstrap
 															for (var _iterator8 = ancs2[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
 																var anc2 = _step8.value;
 	
-																s.apply(undefined, [resolutions].concat(_toConsumableArray([anc1, anc2].sort()))).add(name);
+																if (anc1 === anc2) {
+																	ancs1["delete"](anc1);
+																	ancs2["delete"](anc2);
+																}
 															}
 														} catch (err) {
 															_didIteratorError8 = true;
@@ -2962,34 +2952,81 @@ return /******/ (function(modules) { // webpackBootstrap
 														}
 													}
 												}
+	
+												var _iteratorNormalCompletion9 = true;
+												var _didIteratorError9 = false;
+												var _iteratorError9 = undefined;
+	
+												try {
+													for (var _iterator9 = ancs1[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+														var anc1 = _step9.value;
+														var _iteratorNormalCompletion10 = true;
+														var _didIteratorError10 = false;
+														var _iteratorError10 = undefined;
+	
+														try {
+															for (var _iterator10 = ancs2[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+																var anc2 = _step10.value;
+	
+																s.apply(undefined, [resolutions].concat(_toConsumableArray([anc1, anc2].sort()))).add(name);
+															}
+														} catch (err) {
+															_didIteratorError10 = true;
+															_iteratorError10 = err;
+														} finally {
+															try {
+																if (!_iteratorNormalCompletion10 && _iterator10["return"]) {
+																	_iterator10["return"]();
+																}
+															} finally {
+																if (_didIteratorError10) {
+																	throw _iteratorError10;
+																}
+															}
+														}
+													}
+												} catch (err) {
+													_didIteratorError9 = true;
+													_iteratorError9 = err;
+												} finally {
+													try {
+														if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
+															_iterator9["return"]();
+														}
+													} finally {
+														if (_didIteratorError9) {
+															throw _iteratorError9;
+														}
+													}
+												}
 											}
 										}
 									} catch (err) {
-										_didIteratorError4 = true;
-										_iteratorError4 = err;
+										_didIteratorError6 = true;
+										_iteratorError6 = err;
 									} finally {
 										try {
-											if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
-												_iterator4["return"]();
+											if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
+												_iterator6["return"]();
 											}
 										} finally {
-											if (_didIteratorError4) {
-												throw _iteratorError4;
+											if (_didIteratorError6) {
+												throw _iteratorError6;
 											}
 										}
 									}
 								}
 							} catch (err) {
-								_didIteratorError3 = true;
-								_iteratorError3 = err;
+								_didIteratorError5 = true;
+								_iteratorError5 = err;
 							} finally {
 								try {
-									if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-										_iterator3["return"]();
+									if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+										_iterator5["return"]();
 									}
 								} finally {
-									if (_didIteratorError3) {
-										throw _iteratorError3;
+									if (_didIteratorError5) {
+										throw _iteratorError5;
 									}
 								}
 							}
