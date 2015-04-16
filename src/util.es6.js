@@ -28,8 +28,8 @@ var _default = (ds) => (object, ...rest) => {
 		return last[keys[keys.length-1]];
 	}
 };
-export function o(object, ...keys) { return _default(o)(object, ...keys, {}) }
-export function a(object, ...keys) { return _default(o)(object, ...keys, []) }
+export function o(object, ...keys) { return _default(o)(object, ...keys, {})        }
+export function a(object, ...keys) { return _default(o)(object, ...keys, [])        }
 export function m(object, ...keys) { return _default(m)(object, ...keys, new Map()) }
 export function s(object, ...keys) { return _default(m)(object, ...keys, new Set()) }
 
@@ -65,11 +65,12 @@ export function indent(str, amount, char = ' ') {
 
 
 /* run a function only once per obj+string combo */
+let _oncePerSymbols = {};
 export function oncePer(obj, key, fn) {
 	var opFn = (obj) => {
-		var p = `_once per: ${key}`;
-		if (obj[p]) { return }
-		obj[p] = true; // TODO: make non-enumeratable, or use ES6 Symbol
+		if (!_oncePerSymbols[key]) { _oncePerSymbols[key] = Symbol(`once per:${key}`) }
+		if (obj[_oncePerSymbols[key]]) { return }
+		obj[_oncePerSymbols[key]] = true;
 		return fn.call(obj, obj);
 	};
 	if (typeof obj === 'string') {

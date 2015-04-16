@@ -129,12 +129,13 @@ export default oncePer('Delta', (deltaJs) => {
 	 * @param commutative      {Boolean}
 	 */
 	function newMultiDispatch(name, staticMethodName, methodName, {onTrue, onFalse, onDefault, commutative} = {}) {
-		/* store the options */
-		_multiDispatchOptions.set(name, { commutative });
 
 		/* convenience variables */
 		let creationMethodName = `new${name[0].toUpperCase()}${name.slice(1)}`;
-		let privateVarName = `_multiDispatch_${name}`;
+		let storageSymbol = Symbol(`multiDispatch:${name}`);
+
+		/* store the options */
+		_multiDispatchOptions.set(name, { commutative, storageSymbol });
 
 		/* set defaults */
 		if (!onTrue)  { onTrue = (...args) => args }
@@ -144,16 +145,16 @@ export default oncePer('Delta', (deltaJs) => {
 
 		/* set static Delta members */
 		extend(deltaJs.Delta, {
-			[privateVarName]: [],
+			[storageSymbol]: [],
 			[creationMethodName](precondition, value) {
-				deltaJs.Delta[privateVarName].push({ precondition, value });
+				deltaJs.Delta[storageSymbol].push({ precondition, value });
 			},
 			[staticMethodName](d1, d2, d3) {
 				/* use the first composition function for which these deltas satisfy the precondition */
 				let fn = ()=>{};
 				let found = false;
 				let commuting = false;
-				for (let {precondition, value} of deltaJs.Delta[privateVarName]) {
+				for (let {precondition, value} of deltaJs.Delta[storageSymbol]) {
 					if (precondition(d1, d2, d3)) {
 						fn = value;
 						found = true;
@@ -194,12 +195,11 @@ export default oncePer('Delta', (deltaJs) => {
 	}
 
 	function customMultiDispatchGiven(name, d1, d2, d3) {
-		let privateVarName = `_multiDispatch_${name}`;
-		for (let {precondition, value} of deltaJs.Delta[privateVarName]) {
-			if (precondition(d1, d2, d3)) {
-				return typeof value === 'function';
-			} else if (_multiDispatchOptions.get(name).commutative && ( isDefined(d3)   && precondition(d1, d3, d2) ||
-				                                                        isUndefined(d3) && precondition(d2, d1)     )) {
+		let storageSymbol = _multiDispatchOptions.get(name).storageSymbol;
+		for (let {precondition, value} of deltaJs.Delta[storageSymbol]) {
+			if (precondition(d1, d2, d3) || _multiDispatchOptions.get(name).commutative &&
+			                                (isDefined(d3) && precondition(d1, d3, d2) ||
+				                             isUndefined(d3) && precondition(d2, d1)   )) {
 				return typeof value === 'function';
 			}
 		}
