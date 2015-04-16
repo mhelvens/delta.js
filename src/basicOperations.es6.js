@@ -15,23 +15,23 @@ export default oncePer('basic operations', (deltaJs) => {
 	/* declaring the basic operation types **********************************************/
 	deltaJs.newOperationType('NoOp', class NoOp extends deltaJs.Delta {});
 	deltaJs.newOperationType('Add', class Add extends deltaJs.Delta {
-		precondition(target) { return target instanceof WritableTarget && isUndefined(target.value) }
-		applyTo(target) { target.value = this.arg }
+		precondition(target, {weak}) { return target instanceof WritableTarget && (weak || isUndefined(target.value)) }
+		applyTo     (target)         { target.value = this.arg                                                        }
 	});
 	deltaJs.newOperationType('Remove', class Remove extends deltaJs.Delta {
-		precondition(target) { return target instanceof WritableTarget && isDefined(target.value) }
-		applyTo(target) { target.delete() }
+		precondition(target, {weak}) { return target instanceof WritableTarget && (weak || isDefined(target.value)) }
+		applyTo     (target)         { target.delete()                                                              }
 	});
 	deltaJs.newOperationType('Forbid', class Forbid extends deltaJs.Delta {
-		precondition(target) { return isUndefined(target.value) }
+		precondition(target, {weak}) { return weak || isUndefined(target.value) }
 	});
 	deltaJs.newOperationType('Replace', class Replace extends deltaJs.Delta {
-		precondition(target) { return target instanceof WritableTarget && isDefined(target.value) }
-		applyTo(target) { target.value = this.arg }
+		precondition(target, {weak}) { return target instanceof WritableTarget && (weak || isDefined(target.value)) }
+		applyTo     (target)         { target.value = this.arg                                                      }
 	});
 	deltaJs.newOperationType('Update', class Update extends deltaJs.Delta {
-		precondition(target) { return target instanceof WritableTarget && isDefined(target.value) }
-		applyTo(target) { target.value = this.arg(target.value) }
+		precondition(target, {weak}) { return target instanceof WritableTarget && (weak || isDefined(target.value)) }
+		applyTo     (target)         { target.value = this.arg(target.value)                                        }
 	});
 
 
@@ -47,6 +47,7 @@ export default oncePer('basic operations', (deltaJs) => {
 	/* composition - introducing 'Add' **************************************************/
 	deltaJs.newComposition( t('Add'   , 'Modify'), d('Add', ({d2, p1}) => d2.appliedTo(p1)) );
 	deltaJs.newComposition( t('Modify', 'Add'   ), false                                    );
+	deltaJs.newComposition( t('Add'   , 'Add'   ), d('Add', ({p2}) => p2)                   , { weak: true });
 	deltaJs.newComposition( t('Add'   , 'Add'   ), false                                    );
 
 
@@ -55,17 +56,20 @@ export default oncePer('basic operations', (deltaJs) => {
 	deltaJs.newComposition( t('Add'   , 'Remove'), d('Forbid')                );
 	deltaJs.newComposition( t('Remove', 'Modify'), false                      );
 	deltaJs.newComposition( t('Remove', 'Add'   ), d('Replace', ({p2}) => p2) );
+	deltaJs.newComposition( t('Remove', 'Remove'), d('Remove')                , { weak: true });
 	deltaJs.newComposition( t('Remove', 'Remove'), false                      );
 
 
 	/* composition - introducing 'Forbid' ***********************************************/
-	deltaJs.newComposition( t('Modify', 'Forbid'), false                  );
-	deltaJs.newComposition( t('Add'   , 'Forbid'), false                  );
-	deltaJs.newComposition( t('Remove', 'Forbid'), d('Remove')            );
-	deltaJs.newComposition( t('Forbid', 'Modify'), false                  );
-	deltaJs.newComposition( t('Forbid', 'Add'   ), d('Add', ({p2}) => p2) );
-	deltaJs.newComposition( t('Forbid', 'Remove'), false                  );
-	deltaJs.newComposition( t('Forbid', 'Forbid'), d('Forbid')            );
+	deltaJs.newComposition( (d1, d2) => (d1.type === 'Forbid'), (d1, d2) => d2.clone() , { weak: true }); // TODO: test
+	deltaJs.newComposition( (d1, d2) => (d2.type === 'Forbid'), (d1, d2) => d1.clone() , { weak: true }); // TODO: test
+	deltaJs.newComposition( t('Modify', 'Forbid')             , false                  );
+	deltaJs.newComposition( t('Add'   , 'Forbid')             , false                  );
+	deltaJs.newComposition( t('Remove', 'Forbid')             , d('Remove')            );
+	deltaJs.newComposition( t('Forbid', 'Modify')             , false                  );
+	deltaJs.newComposition( t('Forbid', 'Add'   )             , d('Add', ({p2}) => p2) );
+	deltaJs.newComposition( t('Forbid', 'Remove')             , false                  );
+	deltaJs.newComposition( t('Forbid', 'Forbid')             , d('Forbid')            );
 
 
 	/* composition - introducing 'Replace' **********************************************/

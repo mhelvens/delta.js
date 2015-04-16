@@ -28,6 +28,31 @@ export default oncePer('Overloaded', (deltaJs) => {
 			return result;
 		}
 
+		precondition(target, options) {
+			/* find any overload with a precondition satisfied by the target; gather any errors */
+			let errors = [];
+			let success = this.overloads.some((delta) => {
+				var judgment = delta.evaluatePrecondition(target, options);
+				if (judgment !== true) {
+					errors.push(judgment);
+					return false;
+				}
+				return true;
+			});
+			/* if none are satisfied, return the appropriate error */
+			if (!success) {
+				if (errors.length === 0) {
+					return new NoOverloadsApplicationError(this, target.value);
+				} else if (errors.length === 1) {
+					return errors[0];
+				} else {
+					return new MultipleOverloadsApplicationError(this, target.value, errors);
+				}
+			}
+			/* otherwise, return true */
+			return true;
+		}
+
 		/** {@public}{@method}
 		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
 		 * @param options {object?}              - the (optional) options for this delta application
@@ -74,14 +99,14 @@ export default oncePer('Overloaded', (deltaJs) => {
 	deltaJs.newComposition((d1, d2) => (
 		d1 instanceof deltaJs.Delta.Overloaded ||
 		d2 instanceof deltaJs.Delta.Overloaded
-	), (d1, d2) => {
+	), (d1, d2, opt) => {
 		var D1 = d1 instanceof deltaJs.Delta.Overloaded ? d1.overloads : [d1];
 		var D2 = d2 instanceof deltaJs.Delta.Overloaded ? d2.overloads : [d2];
 		var result = new deltaJs.Delta.Overloaded();
 		var errors = [];
 		for (let delta1 of D1) {
 			for (let delta2 of D2) {
-				try { result.overloads.push(delta1.composedWith(delta2)) }
+				try { result.overloads.push(delta1.composedWith(delta2, opt)) }
 				catch (error) { errors.push(error) }
 			}
 		}
@@ -91,8 +116,20 @@ export default oncePer('Overloaded', (deltaJs) => {
 
 
 	/* equality */
-	deltaJs.newEquality( t('Overloaded', 'Overloaded'), (d1, d2) =>
-		arraysEqual(d1.overloads, d2.overloads, (x, y) => x.equals(y)) );
+	deltaJs.newEquality( t('Overloaded', 'Overloaded'), (d1, d2, opt) =>
+		arraysEqual(d1.overloads, d2.overloads, (x, y) => x.equals(y, opt)) );
+
+
+	///* commutation ***********************************************/
+	//deltaJs.newCommutation( t('Overloaded', 'Overloaded'), (d1, d2, opt) => {
+	//	for (let i = 0; i < d1.overloads.length; ++i) {
+	//		if (!d1.overloads[i].commutesWith(d2.overloads[i], opt)) {
+	//			return false;
+	//		}
+	//	}
+	//	// TODO: the above is a hack; fix it properly
+	//	return true;
+	//});
 
 
 });

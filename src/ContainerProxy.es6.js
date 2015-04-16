@@ -72,9 +72,10 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 
 		childDelta(key) {
-			return deltaJs.Delta.composed(
+			let result = deltaJs.Delta.composed(
 				...this.childProxies(key).map(proxy => proxy.delta())
 			);
+			return result;
 		}
 
 

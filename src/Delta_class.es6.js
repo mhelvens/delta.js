@@ -1,23 +1,11 @@
 /* import internal stuff */
-import {extend, oncePer, isDefined, isUndefined, arraysEqual} from './util.es6.js';
-import {ReadableTarget, wt}                                   from './Target.es6.js';
-import {PreconditionFailure, CompositionError}                from './Error.es6.js';
-import define_Composed                                        from './Composed.es6.js';
+import {extend, oncePer, isDefined, isUndefined, arraysEqual, swapLastTwo} from './util.es6.js';
+import {ReadableTarget, wt}                                                from './Target.es6.js';
+import {PreconditionFailure, CompositionError}                             from './Error.es6.js';
+import define_Composed                                                     from './Composed.es6.js';
 
 
 export default oncePer('Delta', (deltaJs) => {
-
-	//
-	//oncePer(deltaJs.constructor, 'Delta', () => {
-	//
-	//	extend(deltaJs.constructor.prototype, {
-	//		newCommutation(precondition, predicate) {
-	//			this.Delta.newCommutation(precondition, predicate);
-	//		}
-	//	});
-	//
-	//});
-
 
 	deltaJs.Delta = class Delta {
 
@@ -29,20 +17,29 @@ export default oncePer('Delta', (deltaJs) => {
 		get arg()  { return this.args[0] }
 		set arg(v) { this.args[0] = v }
 
-		/** {@public}{@abstract}{@method}{@nosideeffects}
+		/**
 		 * This method should be overwritten by subclasses to make a clone of 'this' delta.
+		 * @public
+		 * @abstract
+		 * @method
+		 * @nosideeffects
 		 * @return {DeltaJs#Delta} - a clone of this delta
 		 */
 		clone() { return new this.constructor(this.arg) }
 
-		/** {@private}{@method}
-		 * @param target {DeltaJs.ReadableTarget}
+		/**
+		 * @private
+		 * @method
+		 * @param target                        {DeltaJs.ReadableTarget}
+		 * @param options                       {object}
+		 * @param options.skipWeakPreconditions {boolean}
 		 * @return {Boolean|PreconditionFailure} - `true` if the precondition is satisfied, otherwise
 		 *                                        `false` or an instance of `DeltaJs.PreconditionFailure`
 		 */
-		evaluatePrecondition(target) {
+		evaluatePrecondition(target, options = {}) {
+			let {weak} = options;
 			if (this.precondition) {
-				var judgment = this.precondition(target);
+				let judgment = this.precondition(target, options);
 				if (judgment instanceof PreconditionFailure) {
 					return judgment;
 				} else if (!judgment) {
@@ -52,7 +49,10 @@ export default oncePer('Delta', (deltaJs) => {
 			return true;
 		}
 
-		/** {@public}{@method}{@nosideeffects}
+		/**
+		 * @public
+		 * @method
+		 * @nosideeffects
 		 * @param value   {*}       - any given value
 		 * @param options {object?} - the (optional) options for this delta application
 		 * @return {*} - the value resulting in this delta being applied to the given `value`
@@ -65,14 +65,9 @@ export default oncePer('Delta', (deltaJs) => {
 			return obj.value;
 		}
 
-		///**
-		// * @public
-		// * @method
-		// * @nosideeffects
-		// */
-		//commutesWith(other) { return deltaJs.Delta.commute(this, other) }
-
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param options {object?}
 		 * @return {string}
 		 */
@@ -83,30 +78,6 @@ export default oncePer('Delta', (deltaJs) => {
 			if (options.debug)        { str += ` (${this.id})`                                          }
 			return str;
 		}
-
-		///**
-		// * @public
-		// * @static
-		// * @method
-		// *
-		// */
-		//static newCommutation(precondition, predicate) {
-		//	deltaJs.Delta._commutations.push({precondition, predicate});
-		//}
-
-		///**
-		// *
-		// */
-		//static commute(d1, d2, {weak} = {}) {
-		//	for (let {precondition, predicate} of deltaJs.Delta._commutations) {
-		//		if (precondition(d1, d2)) {
-		//			return predicate(d1, d2);
-		//		} else if (precondition(d2, d1)) {
-		//			return predicate(d2, d1);
-		//		}
-		//	}
-		//	return d1.composedWith(d2).equals(d2.composedWith(d1));
-		//}
 
 	};
 	deltaJs.Delta._nextID = 0;
@@ -120,121 +91,151 @@ export default oncePer('Delta', (deltaJs) => {
 	 * Any number of candidate functions can be created,
 	 * which are then selected based on their precondition predicates.
 	 * @private
-	 * @param name             {String}
-	 * @param staticMethodName {String}
-	 * @param methodName       {String}
-	 * @param onTrue           {Function=undefined}
-	 * @param onFalse          {Function=undefined}
-	 * @param onDefault        {Function|Boolean=false}
-	 * @param commutative      {Boolean}
+	 * @param name                {string}
+	 * @param staticMethodName    {string}
+	 * @param methodName          {string}
+	 * @param options             {object}
+	 * @param options.onTrue      {function=undefined}
+	 * @param options.onFalse     {function=undefined}
+	 * @param options.onDefault   {function|boolean=false}
+	 * @param options.commutative {boolean=false}
+	 * @param options.arity       {number=2}
 	 */
-	function newMultiDispatch(name, staticMethodName, methodName, {onTrue, onFalse, onDefault, commutative} = {}) {
+	function newMultiDispatch(name, staticMethodName, methodName, options = {}) {
 
-		/* convenience variables */
-		let creationMethodName = `new${name[0].toUpperCase()}${name.slice(1)}`;
-		let storageSymbol = Symbol(`multiDispatch:${name}`);
+		/* set option defaults */
+		if (isUndefined(options.commutative)) { options.commutative = false                                                  }
+		if (isUndefined(options.arity))       { options.arity = 2                                                            }
+		if (isUndefined(options.onTrue))      { options.onTrue  = (...args) => args.slice(0, options.arity)                  }
+		if (isUndefined(options.onFalse))     { options.onFalse = () => { throw new Error(`Failure in finding a ${name}!`) } }
+		if      (options.onDefault === 'onTrue')                                    { options.onDefault = options.onTrue  }
+		else if (options.onDefault === 'onFalse' || isUndefined(options.onDefault)) { options.onDefault = options.onFalse }
 
-		/* store the options */
-		_multiDispatchOptions.set(name, { commutative, storageSymbol });
+		/* augment the options and store them */
+		extend(options, {
+			name, staticMethodName, methodName,
+			creationMethodName: `new${name[0].toUpperCase()}${name.slice(1)}`,
+			storageSymbol:      Symbol(`multiDispatch:${name}`)
+		});
+		_multiDispatchOptions.set(name, options);
 
-		/* set defaults */
-		if (!onTrue)  { onTrue = (...args) => args }
-		if (!onFalse) { onFalse = () => { throw new Error(`Failure in finding a ${name}!`) } }
-		if (onDefault === 'onTrue')                { onDefault = onTrue  }
-		if (onDefault === 'onFalse' || !onDefault) { onDefault = onFalse }
+		/* short names for all relevant options */
+		let {creationMethodName, storageSymbol, onTrue, onFalse, onDefault, commutative, arity} = options;
 
 		/* set static Delta members */
 		extend(deltaJs.Delta, {
 			[storageSymbol]: [],
-			[creationMethodName](precondition, value) {
-				deltaJs.Delta[storageSymbol].push({ precondition, value });
+			[creationMethodName](precondition, value, options = {}) {
+				if (isUndefined(options.weak)) { options.weak = false }
+				deltaJs.Delta[storageSymbol].push({ precondition, value, options });
 			},
-			[staticMethodName](d1, d2, d3) {
+			[staticMethodName](...args) {
+				let deltas      = args.slice(0, arity),
+				    callOptions = args[arity] || {};
+
+				/* defaults */
+				if (isUndefined(callOptions.weak)) { callOptions.weak = false }
+
 				/* use the first composition function for which these deltas satisfy the precondition */
-				let fn = ()=>{};
-				let found = false;
-				let commuting = false;
-				for (let {precondition, value} of deltaJs.Delta[storageSymbol]) {
-					if (precondition(d1, d2, d3)) {
+				let fn        = ()=>{},
+				    found     = false,
+				    commuting = false;
+				for (let {precondition, value, options} of deltaJs.Delta[storageSymbol]) {
+					if (options.weak && !callOptions.weak) { continue } // only test weak rules when doing weak invocation
+					if (precondition(...deltas)) {
 						fn = value;
 						found = true;
 						break;
-					} else if (commutative && ( isDefined(d3)   && precondition(d1, d3, d2) ||
-						                        isUndefined(d3) && precondition(d2, d1)     )) {
+					} else if (commutative && precondition(...swapLastTwo(deltas))) {
 						fn = value;
 						found = true;
 						commuting = true;
 						break;
 					}
 				}
+
 				/* if no function was found, set the proper function */
 				if      (!found)       { fn = onDefault }
 				else if (fn === false) { fn = onFalse   }
 				else if (fn === true)  { fn = onTrue    }
+
+
+
+				console.log(`(${staticMethodName})`, deltas[0].type, callOptions); // TODO: remove
+
+
 				/* return the result */
-				if (commuting) {
-					if (isDefined(d3)) { return fn(d1, d3, d2) }
-					else               { return fn(d2, d1)     }
-				} else                 { return fn(d1, d2, d3) }
+				let result;
+				if (commuting) { result = fn(...swapLastTwo(deltas), callOptions) }
+				else           { result = fn(...deltas,              callOptions) }
+
+
+				console.log(`(/ ${staticMethodName})`); // TODO: remove
+
+				return result;
 			}
 		});
 
+		/* set instance Delta members */
 		extend(deltaJs.Delta.prototype, {
-			[methodName](...others) {
-				return deltaJs.Delta[staticMethodName](this, ...others);
+			[methodName](...args) {
+				return deltaJs.Delta[staticMethodName](this, ...args);
 			}
 		});
 
+		/* set static DeltaJs members */
 		oncePer(deltaJs.constructor, `multiDispatch:${name}`, () => {
 			extend(deltaJs.constructor.prototype, {
-				[creationMethodName](precondition, fn) {
-					return this.Delta[creationMethodName](precondition, fn);
+				[creationMethodName](precondition, value, options = {}) {
+					return this.Delta[creationMethodName](precondition, value, options);
 				}
 			});
 		});
 	}
 
-	function customMultiDispatchGiven(name, d1, d2, d3) {
-		let storageSymbol = _multiDispatchOptions.get(name).storageSymbol;
+	function customMultiDispatchGiven(name, ...deltas) {
+		let {storageSymbol, commutative} = _multiDispatchOptions.get(name);
 		for (let {precondition, value} of deltaJs.Delta[storageSymbol]) {
-			if (precondition(d1, d2, d3) || _multiDispatchOptions.get(name).commutative &&
-			                                (isDefined(d3) && precondition(d1, d3, d2) ||
-				                             isUndefined(d3) && precondition(d2, d1)   )) {
+			if (precondition(...deltas) || commutative && precondition(...swapLastTwo(deltas))) {
 				return typeof value === 'function';
 			}
 		}
+		return false;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
 	newMultiDispatch('composition', '_binaryComposed', 'composedWith', {
-		onTrue:    (d1, d2) => new deltaJs.Delta.Composed([d1, d2]),
+		onTrue:    (d1, d2, opt) => new deltaJs.Delta.Composed([d1, d2], opt),
 		onFalse:   (d1, d2) => { throw new CompositionError(d1, d2) },
 		onDefault: 'onFalse'
 	});
-	deltaJs.Delta.composed = function composed(...deltas) {
+	deltaJs.Delta.composed = function composed(...args) {
+		/* separate arguments */
+		let options, deltas;
+		if (!(args[args.length-1] instanceof deltaJs.Delta) && (typeof args[args.length-1] !== 'undefined')) {
+			deltas  = args.slice(0, args.length-1);
+			options = args[args.length-1];
+		} else {
+			deltas  = args;
+			options = {};
+		}
+		/* compose the list of deltas, and pass the options to each binary composition */
 		return deltas.map((d) => d || new deltaJs.Delta.NoOp())
-			         .reduce(deltaJs.Delta._binaryComposed, new deltaJs.Delta.NoOp());
+			         .reduce((d1, d2) => deltaJs.Delta._binaryComposed(d1, d2, options), new deltaJs.Delta.NoOp());
 	};
-	////////////////////////////////////////////////////////////////////////////////
-	newMultiDispatch('commutation', 'commute', 'commutesWith', {
-		onTrue:    (d1, d2) => true,
-		onFalse:   (d1, d2) => false,
-		onDefault: (d1, d2) => d1.composedWith(d2).equals(d2.composedWith(d1)),
-		commutative: true
-	});
 	////////////////////////////////////////////////////////////////////////////////
 	newMultiDispatch('refinement', 'refines', 'refines', {
 		onTrue:    (d1, d2) => true,
 		onFalse:   (d1, d2) => false,
-		onDefault: (d1, d2) => d1.equals(d2)
+		onDefault: (d1, d2, opt) => d1.equals(d2, opt)
 	});
 	////////////////////////////////////////////////////////////////////////////////
 	newMultiDispatch('equality', 'equal', 'equals', {
 		onTrue:    (d1, d2) => true,
 		onFalse:   (d1, d2) => false,
-		onDefault: (d1, d2) => {
+		onDefault: (d1, d2, opt) => {
 			if (customMultiDispatchGiven('refinement', d1, d2)) {
-				return d1.refines(d2) && d2.refines(d1);
+				return d1.refines(d2, opt) && d2.refines(d1, opt);
 			} else {
 				return d1.type === d2.type && arraysEqual(d1.args, d2.args);
 			}
@@ -242,10 +243,22 @@ export default oncePer('Delta', (deltaJs) => {
 		commutative: true
 	});
 	////////////////////////////////////////////////////////////////////////////////
+	newMultiDispatch('commutation', 'commute', 'commutesWith', {
+		onTrue:    (d1, d2) => { if (d1.type === 'PutIntoArray') { console.log('(1)') } return true; },
+		onFalse:   (d1, d2) => { if (d1.type === 'PutIntoArray') { console.log('(2)') } return false; },
+		onDefault: (d1, d2, opt) => {
+			if (d1.type === 'PutIntoArray') { console.log('(3)') }
+			return d1.composedWith(d2, opt).equals(d2.composedWith(d1, opt), opt);
+		},
+		commutative: true
+	});
+	////////////////////////////////////////////////////////////////////////////////
 	newMultiDispatch('resolution', 'resolves', 'resolves', {
 		onTrue:    (d1, d2, d3) => true,
 		onFalse:   (d1, d2, d3) => false,
-		onDefault: (d1, d2, d3) => deltaJs.Delta.composed(d2, d3, d1).equals(deltaJs.Delta.composed(d3, d2, d1)),
+		onDefault: (d1, d2, d3, opt) => deltaJs.Delta.composed(d2, d3, d1, opt)
+		                        .equals(deltaJs.Delta.composed(d3, d2, d1, opt), opt),
+		arity:       3,
 		commutative: true
 	});
 	////////////////////////////////////////////////////////////////////////////////

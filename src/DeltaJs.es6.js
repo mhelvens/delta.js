@@ -19,13 +19,15 @@ import define_applicationConditions             from './applicationConditions.es
 import define_ContainerProxy                    from './ContainerProxy.es6.js';
 
 
-/** {@public}{@class}
+/**
  * This class offers every functionality you need from delta modeling.
  * Each instance offers its own operation types and variation points
  * and acts as a facade (as in design pattern) to the more specific
  * subsystems of delta.js.
  *
  * You will usually need only one DeltaJs instance per application.
+ * @public
+ * @class DeltaJs
  */
 export default class DeltaJs {
 
@@ -77,8 +79,11 @@ export default class DeltaJs {
 					target = new DeltaJs.ReadableTarget(target);
 				}
 
+				/* option defaults */
+				if (isUndefined(options.weak)) { options.weak = false }
+
 				/* does the target satisfy the precondition of the delta? */
-				var judgment = this.evaluatePrecondition(target);
+				let judgment = this.evaluatePrecondition(target, options);
 				if (judgment !== true) { throw judgment }
 
 				/* OK, then apply it if a method to do so was included in the operation */
@@ -98,7 +103,9 @@ export default class DeltaJs {
 	}
 
 
-	/** {@public}{@method}
+	/**
+	 * @public
+	 * @method
 	 * @param method  {string}   - method name
 	 * @param handler {Function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
 	 */

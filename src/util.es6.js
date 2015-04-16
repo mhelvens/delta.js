@@ -140,3 +140,7 @@ export function arraysHaveSameElements(a, b, eq=(x,y)=>x===y) {
 	}
 	return true;
 }
+
+export function swapLastTwo(a) {
+	return a.slice(0, -2).concat([a[a.length-1], a[a.length-2]]);
+}

@@ -35,17 +35,17 @@ describe("DeltaJs instance -", () => {
 	/* declare a delta variable accessible to every test */
 	var delta; // the itCan test is done on this 'delta' variable
 
-	/*  a convenience function for testing that delta through 'triples',        */
-	/*  a nice notation for a bunch of similar tests specified in three parts:  */
-	/*  (1) precondition: some value before applying the delta                  */
-	/*  (2) action: building up the delta                                       */
-	/*  (3) postcondition: the value after delta-application, or an expected    */
-	/*      error, or any custom set of assertions                              */
+	/* a convenience function for testing that delta through 'triples',       */
+	/* a nice notation for a bunch of similar tests specified in three parts: */
+	/* (1) precondition: some value before applying the delta                 */
+	/* (2) action: building up the delta                                      */
+	/* (3) postcondition: the value after delta-application, or an expected   */
+	/*     error, or any custom set of assertions                             */
 	function _itCan(fn) {
 		return function (description, triples) {
 			var counter = 0;
 			triples.forEach(([pre, action, post]) => {
-				fn(`can ${description} (${++counter})`, () => {
+				fn(`can ${description}` + (triples.length > 1 ? ` (${++counter})` : ''), () => {
 					/* creating the initial object using the given 'pre' */
 					var rootObj = typeof pre === 'function' ? pre() : pre;
 
@@ -592,9 +592,9 @@ describe("DeltaJs instance -", () => {
 				{ key: "val", foo: { bar1: "bas1", bar2: "bas2" } }
 			]]);
 
-			// NOTE: We're not expecting Update on an undefined value to throw an error,
-			//       because Update shouldn't have such a precondition. However, that's not
-			//       implemented yet, so the correct behavior isn't tested yet either.
+			// TODO: We're not expecting Update on an undefined value to throw an error,
+			//     : because Update shouldn't have such a precondition. However, that's not
+			//     : implemented yet, so the correct behavior isn't tested yet either.
 
 			itCan("throw an error when the composition is detectably invalid", [
 				() => {
@@ -2193,15 +2193,50 @@ describe("DeltaJs instance -", () => {
 
 
 
-			//itCan("TEST", [[
-			//	{ o: {} },
-			//	() => {
-			//		dm.do('x').add('o.foo', "bar");
-			//		dm.do('y').add('o.foo', "bar");
-			//	},
-			//	{ o: { foo: "bar" } }
-			//]]);
+			itCan("can evaluate preconditions in the context of their partial order", [[
+				{ o: {} },
+				() => {
+					dm.do('x').add('o.foo', "bar");
+					dm.do('y').add('o.foo', "bar");
+				},
+				{ o: { foo: "bar" } }
+			], [
+				{ o: { foo: "bar" } },
+				() => {
+					dm.do('x').remove('o.foo');
+					dm.do('y').remove('o.foo');
+				},
+				{ o: {} }
+			], [
+				{ o: {  } },
+				() => {
+					dm.do('x').remove('o.foo');
+					dm.do('y').remove('o.foo');
+				},
+				expectError(DeltaJs.PreconditionFailure)
+			], [
+				{ a: [0] },
+				() => {
+					dm.do('x').append('a', "x");
+					dm.do('y').append('a', "y");
+				},
+				(obj) => {
+					expect(obj).toEqualOneOf(
+						{ a: [0, "x", "y"] },
+						{ a: [0, "y", "x"] }
+					);
+				}
+			]]);
 
+			// TODO: precondition of delta model should conjunct all preconditions of its source nodes
+			//[
+			//	{ o: {  } },
+			//	() => {
+			//		dm.do('x').remove('o.foo');
+			//		dm.do('y').remove('o.foo');
+			//	},
+			//	EXPECT ERROR
+			//]
 
 
 
@@ -2436,11 +2471,11 @@ describe("DeltaJs instance -", () => {
 		});
 
 		it("apply deltas to a value for which deltas are prepared (1)", () => {
-			deltaJs.do('delta-name', { feature: false }).replace('x', 'new x value');
-			var x = deltaJs.vp('x', 'old x value');
-			var y = deltaJs.vp('y', 'old y value');
-			expect(x).toBe('new x value');
-			expect(y).toBe('old y value');
+			deltaJs.do('delta-name', { feature: false }).replace('x', "new x value");
+			var x = deltaJs.vp('x', "old x value");
+			var y = deltaJs.vp('y', "old y value");
+			expect(x).toBe("new x value");
+			expect(y).toBe("old y value");
 		});
 
 		it("apply deltas to a value for which deltas are prepared (2)", () => {

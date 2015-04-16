@@ -14,6 +14,7 @@ export default oncePer('Composed', (deltaJs) => {
 		constructor(...args) {
 			super(...args);
 			this._components = this.arg || [];
+			this.options = args[1] || {};
 		}
 
 		clone() {
@@ -28,7 +29,9 @@ export default oncePer('Composed', (deltaJs) => {
 			}
 		}
 
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param options {object?}
 		 * @return {string}
 		 */
@@ -44,9 +47,9 @@ export default oncePer('Composed', (deltaJs) => {
 			return str;
 		}
 
-		precondition(target) {
+		precondition(target, options) {
 			if (this._components.length === 0) { return true }
-			return this._components[0].precondition(target);
+			return this._components[0].precondition(target, options);
 		}
 
 		_collapse() {
@@ -71,7 +74,7 @@ export default oncePer('Composed', (deltaJs) => {
 				this._components = (() => {
 					let newComponents = [];
 					for (var i = 0; i < this._components.length - 1; i += 1) {
-						let composedPair = this._components[i].composedWith(this._components[i+1]);
+						let composedPair = this._components[i].composedWith(this._components[i+1], this.options);
 						if (composedPair instanceof deltaJs.Delta.Composed) {
 							newComponents.push(this._components[i]);
 						} else {
@@ -97,10 +100,10 @@ export default oncePer('Composed', (deltaJs) => {
 	deltaJs.newComposition((d1, d2) => (
 		d1 instanceof deltaJs.Delta.Composed ||
 		d2 instanceof deltaJs.Delta.Composed
-	), (d1, d2) => {
+	), (d1, d2, opt) => {
 		var D1 = d1 instanceof deltaJs.Delta.Composed ? d1._components : [d1];
 		var D2 = d2 instanceof deltaJs.Delta.Composed ? d2._components : [d2];
-		var result = new deltaJs.Delta.Composed([...D1, ...D2]);
+		var result = new deltaJs.Delta.Composed([...D1, ...D2], opt);
 		result._collapse();
 		return result;
 	});

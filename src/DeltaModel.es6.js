@@ -38,20 +38,30 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			}
 		}
 
+		precondition(target, options) {
+			for (let [name, delta] of this.graph.vertices()) {
+				if ([...this.graph.verticesTo(name)].length === 0) { // source vertices
+					let judgment = delta.evaluatePrecondition(target, options);
+					if (judgment !== true) { return judgment }
+				}
+			}
+			return true;
+		}
+
 		applyTo(target, options = {}) {
 			/* throw an exception if there are unresolved conflicts */
 			this._assertNoUnresolvedConflicts();
 
 			/* no unresolved conflicts: apply the delta model */
 			for (let [, subDelta] of this.graph.vertices_topologically()) {
-				subDelta.applyTo(target, options);
+				subDelta.applyTo(target, extend({}, options, { weak: true }));
 			}
 		}
 
 		toString(options = {}) {
-			var str = super.toString(options);
+			let str = super.toString(options);
 			if (this.graph.vertexCount() > 0) {
-				var deltas = '';
+				let deltas = '';
 				for (let [name, delta] of this.graph.vertices_topologically()) {
 					deltas += `[${name}] ${delta.toString(options)}\n`;
 				}
@@ -125,7 +135,12 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				for (let second of resolutions.get(first).keys()) {
 					let x = this.graph.vertexValue(first);
 					let y = this.graph.vertexValue(second);
-					if (!x.commutesWith(y)) {
+
+					console.log('(...commutesWith)');
+
+					if (!x.commutesWith(y, { weak: true })) {
+						console.log('(/...commutesWith-in)');
+
 						var conflictInfo = {
 							conflictingDeltas:       new Set([first, second]),
 							conflictResolvingDeltas: new Set()
@@ -133,12 +148,14 @@ export default oncePer('DeltaModel', (deltaJs) => {
 						for (let nearestResolver of resolutions.get(first).get(second)) {
 							for (let [resolver] of [[nearestResolver], ...g.verticesWithPathFrom(nearestResolver)]) {
 								let z = this.graph.vertexValue(resolver);
-								if (resolver !== sink && z.resolves(x, y)) {
+								if (resolver !== sink && z.resolves(x, y, { weak: true })) {
 									conflictInfo.conflictResolvingDeltas.add(resolver);
 								}
 							}
 						}
 						result.add(conflictInfo);
+					} else {
+						console.log('(/...commutesWith-out)');
 					}
 				}
 			}
@@ -146,8 +163,6 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			/* return the conflict results */
 			return result;
 		}
-
-		// TODO: add precondition method which checks 'source' deltas
 
 	}, class DeltaModelProxy extends deltaJs.ContainerProxy {
 
@@ -157,7 +172,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			this._childApplicationConditions = new Map(); // key -> application-condition
 		}
 
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param rawArgs {*[]}
 		 * @return {?{ options: Object, args: *[] }}
 		 */
@@ -176,7 +193,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			return { options, args: rawArgs };
 		}
 
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param delta   {DeltaJs#Delta}
 		 * @param options {{path: Path, name: string, feature: boolean}}
 		 * @return {DeltaJs#Proxy}
@@ -221,9 +240,10 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			return deepestProxy;
 		}
 
-		/** {@public}{@method}
+		/**
 		 * Dynamically compute and return the delta belonging to this proxy.
-		 *
+		 * @public
+		 * @method
 		 * @return the delta belonging to this proxy
 		 */
 		delta() {

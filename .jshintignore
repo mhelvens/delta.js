@@ -1,2 +1,4 @@
 gulpfile.js
 karma.conf.js
+karma.ci.conf.js
+karma.common.js

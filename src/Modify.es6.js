@@ -19,7 +19,10 @@ export default oncePer('Modify', (deltaJs) => {
 			this.subDeltas = new Map(this.arg && Object.keys(this.arg).map(key => [key, this.arg[key]]));
 		}
 
-		/** {@public}{@method}{@nosideeffects}
+		/**
+		 * @public
+		 * @method
+		 * @nosideeffects
 		 * @return {DeltaJs#Delta.Modify} - a clone of this delta
 		 */
 		clone() {
@@ -30,12 +33,27 @@ export default oncePer('Modify', (deltaJs) => {
 			return result;
 		}
 
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param target {*}
+		 * @param options {object}
 		 */
-		precondition(target) { return target.value instanceof Object }
+		precondition(target, options = {}) {
+			if (!(target.value instanceof Object)) { return false }
+			for (let [prop, delta] of this.subDeltas) {
+				if (!options.restrictToProperty || options.restrictToProperty === prop) {
+					let judgment = delta.evaluatePrecondition(wt(target.value, prop),
+						extend({}, options, { restrictToProperty: null }));
+					if (judgment !== true) { return judgment }
+				}
+			}
+			return true;
+		}
 
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
 		 * @param options {object?}              - the (optional) options for this delta application
 		 */
@@ -48,7 +66,9 @@ export default oncePer('Modify', (deltaJs) => {
 			}
 		}
 
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param options {object?}
 		 * @return {string}
 		 */
@@ -66,7 +86,9 @@ export default oncePer('Modify', (deltaJs) => {
 	}, class ModifyProxy extends deltaJs.ContainerProxy {
 
 		//noinspection JSMethodCanBeStatic
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param rawArgs {*[]}
 		 * @return {?{ options: Object, args: *[] }}
 		 */
@@ -83,7 +105,9 @@ export default oncePer('Modify', (deltaJs) => {
 			return { options, args: rawArgs };
 		}
 
-		/** {@public}{@method}
+		/**
+		 * @public
+		 * @method
 		 * @param delta   {DeltaJs#Delta}
 		 * @param options {{path: Path}}
 		 * @return {DeltaJs#Proxy} - the deepest proxy created for this operation
@@ -108,9 +132,10 @@ export default oncePer('Modify', (deltaJs) => {
 			return deepestProxy;
 		}
 
-		/** {@public}{@method}
+		/**
 		 * Dynamically compute and return the delta belonging to this proxy.
-		 *
+		 * @public
+		 * @method
 		 * @return the delta belonging to this proxy
 		 */
 		delta() {
@@ -125,10 +150,10 @@ export default oncePer('Modify', (deltaJs) => {
 
 
 	/* composition - introducing 'Modify' ***********************************************/
-	deltaJs.newComposition( t('Modify', 'Modify'), (d1, d2) => {
+	deltaJs.newComposition( t('Modify', 'Modify'), (d1, d2, opt) => {
 		var result = d1.clone();
 		for (let prop of d2.subDeltas.keys()) {
-			result.subDeltas.set(prop, deltaJs.Delta.composed(result.subDeltas.get(prop), d2.subDeltas.get(prop)));
+			result.subDeltas.set(prop, deltaJs.Delta.composed(result.subDeltas.get(prop), d2.subDeltas.get(prop), opt));
 		}
 		return result;
 	});
@@ -136,7 +161,21 @@ export default oncePer('Modify', (deltaJs) => {
 
 	/* equality ***********************************************/
 	deltaJs.newEquality( t('Modify', 'Modify'),
-		(d1, d2) => mapEqual(d1.subDeltas, d2.subDeltas, (x, y) => x.equals(y)));
+		(d1, d2) => mapEqual(d1.subDeltas, d2.subDeltas, (x, y) => x.equals(y)) );
+
+
+	/* commutation ***********************************************/
+	deltaJs.newCommutation( t('Modify', 'Modify'), (d1, d2, opt) => {
+		for (let prop of d1.subDeltas.keys()) {
+			if (d2.subDeltas.has(prop)) {
+				let sub1 = d1.subDeltas.get(prop);
+				let sub2 = d2.subDeltas.get(prop);
+				if (!sub1.commutesWith(sub2, opt)) { return false }
+			}
+		}
+		return true;
+	});
+
 
 
 });

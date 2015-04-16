@@ -27,7 +27,7 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 			return result;
 		}
 
-		precondition(target) { return isDefined(target.value) && Array.isArray(target.value) }
+		precondition(target, {weak}) { return weak || isDefined(target.value) && Array.isArray(target.value) }
 
 		applyTo(target) {
 			var arr = target.value;
@@ -123,6 +123,13 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 		/* OK, it's a refinement */
 		return true;
 	});
+
+
+	/* weak commutation - allow two PutIntoFunction deltas to always commute in a weak context*/
+	deltaJs.newCommutation( t('PutIntoArray', 'PutIntoArray'), (d1, d2, opt) => {
+		console.log('???');
+		return true;
+	}, { weak: true });
 
 
 });

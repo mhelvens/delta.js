@@ -14,6 +14,10 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 	define_Proxy          (deltaJs);
 
 
+	/* a symbol under which function parts can be stored in public functions */
+	let functionPartsSymbol = Symbol('DeltaJs:function-parts');
+
+
 	/* declaring the function operation type */
 	deltaJs.newOperationType('PutIntoFunction', class PutIntoFunction extends deltaJs.Delta {
 
@@ -30,23 +34,23 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 
 		precondition(target) {
 			return isDefined(target.value) && typeof target.value === 'function' &&
-				(isDefined(target.value._DeltaJs_functions) || target instanceof WritableTarget);
+				(isDefined(target.value[functionPartsSymbol]) || target instanceof WritableTarget);
 		}
 
 		applyTo(target) {
-			if (isUndefined(target.value._DeltaJs_functions)) {
+			if (isUndefined(target.value[functionPartsSymbol])) {
 				var originalFn = target.value;
 				var newFn = function (...args) {
 					let result;
-					for (let fn of newFn._DeltaJs_functions) {
+					for (let fn of newFn[functionPartsSymbol]) {
 						result = fn.apply(this, args);
 					}
 					return result;
 				};
-				newFn._DeltaJs_functions = [function (...args) { originalFn.apply(this, args) }];
+				newFn[functionPartsSymbol] = [function (...args) { originalFn.apply(this, args) }];
 				target.value = newFn;
 			}
-			var arr = target.value._DeltaJs_functions;
+			var arr = target.value[functionPartsSymbol];
 			for (let {method, value} of this.values) {
 				switch (method) {
 					case 'prepend': {
@@ -101,6 +105,10 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 	// TODO: refinement function instead of equals function (look at PutIntoArray.es6.js)
 	deltaJs.newEquality( t('PutIntoFunction', 'PutIntoFunction'), (d1, d2) =>
 		arraysEqual(d1.values, d2.values, (a, b) => a.method === b.method && a.value && b.value) );
+
+
+	/* weak commutation - allow two PutIntoFunction deltas to always commute in a weak context*/
+	deltaJs.newCommutation( t('PutIntoFunction', 'PutIntoFunction'), (d1, d2) => true, { weak: true });
 
 
 });
