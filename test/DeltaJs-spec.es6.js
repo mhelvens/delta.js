@@ -2018,31 +2018,17 @@ describe("DeltaJs instance -", () => {
 				},
 				expectError(DeltaJs.UnresolvedDeltaConflict)
 			], [
-				{ key: [] },
+				{},
 				() => {
-					dm.do('X').prepend('key', "X value");
-					dm.do('Y').prepend('key', "Y value");
+					dm.do('X').add('key', "X value");
+					dm.do('Y').add('key', "Y value");
 				},
 				expectError(DeltaJs.UnresolvedDeltaConflict)
 			], [
-				{ key: [] },
+				{ o: {} },
 				() => {
-					dm.do('X').append('key', "X value");
-					dm.do('Y').append('key', "Y value");
-				},
-				expectError(DeltaJs.UnresolvedDeltaConflict)
-			], [
-				{ key() {} },
-				() => {
-					dm.do('X').prepend('key', function () { console.log("something") });
-					dm.do('Y').prepend('key', function () { console.log("something") }); // equivalence of functions cannot be detected
-				},
-				expectError(DeltaJs.UnresolvedDeltaConflict)
-			], [
-				{ key() {} },
-				() => {
-					dm.do('X').append('key', function () { console.log("something") });
-					dm.do('Y').append('key', function () { console.log("something") }); // equivalence of functions cannot be detected
+					dm.do('X').modify('o').add('key', "X value");
+					dm.do('Y').modify('o').add('key', "Y value");
 				},
 				expectError(DeltaJs.UnresolvedDeltaConflict)
 			]]);
