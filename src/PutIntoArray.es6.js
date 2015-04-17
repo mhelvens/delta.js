@@ -126,10 +126,7 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 
 
 	/* weak commutation - allow two PutIntoFunction deltas to always commute in a weak context*/
-	deltaJs.newCommutation( t('PutIntoArray', 'PutIntoArray'), (d1, d2, opt) => {
-		console.log('???');
-		return true;
-	}, { weak: true });
+	deltaJs.newCommutation( t('PutIntoArray', 'PutIntoArray'), (d1, d2, opt) => true, { weak: true });
 
 
 });

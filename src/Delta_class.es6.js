@@ -159,20 +159,9 @@ export default oncePer('Delta', (deltaJs) => {
 				else if (fn === false) { fn = onFalse   }
 				else if (fn === true)  { fn = onTrue    }
 
-
-
-				console.log(`(${staticMethodName})`, deltas[0].type, callOptions); // TODO: remove
-
-
 				/* return the result */
-				let result;
-				if (commuting) { result = fn(...swapLastTwo(deltas), callOptions) }
-				else           { result = fn(...deltas,              callOptions) }
-
-
-				console.log(`(/ ${staticMethodName})`); // TODO: remove
-
-				return result;
+				if (commuting) { return fn(...swapLastTwo(deltas), callOptions) }
+				else           { return fn(...deltas,              callOptions) }
 			}
 		});
 
@@ -244,12 +233,9 @@ export default oncePer('Delta', (deltaJs) => {
 	});
 	////////////////////////////////////////////////////////////////////////////////
 	newMultiDispatch('commutation', 'commute', 'commutesWith', {
-		onTrue:    (d1, d2) => { if (d1.type === 'PutIntoArray') { console.log('(1)') } return true; },
-		onFalse:   (d1, d2) => { if (d1.type === 'PutIntoArray') { console.log('(2)') } return false; },
-		onDefault: (d1, d2, opt) => {
-			if (d1.type === 'PutIntoArray') { console.log('(3)') }
-			return d1.composedWith(d2, opt).equals(d2.composedWith(d1, opt), opt);
-		},
+		onTrue:    (d1, d2) => true,
+		onFalse:   (d1, d2) => false,
+		onDefault: (d1, d2, opt) => d1.composedWith(d2, opt).equals(d2.composedWith(d1, opt), opt),
 		commutative: true
 	});
 	////////////////////////////////////////////////////////////////////////////////

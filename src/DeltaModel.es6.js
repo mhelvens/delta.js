@@ -135,12 +135,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				for (let second of resolutions.get(first).keys()) {
 					let x = this.graph.vertexValue(first);
 					let y = this.graph.vertexValue(second);
-
-					console.log('(...commutesWith)');
-
 					if (!x.commutesWith(y, { weak: true })) {
-						console.log('(/...commutesWith-in)');
-
 						var conflictInfo = {
 							conflictingDeltas:       new Set([first, second]),
 							conflictResolvingDeltas: new Set()
@@ -154,8 +149,6 @@ export default oncePer('DeltaModel', (deltaJs) => {
 							}
 						}
 						result.add(conflictInfo);
-					} else {
-						console.log('(/...commutesWith-out)');
 					}
 				}
 			}

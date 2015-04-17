@@ -120,16 +120,16 @@ export default oncePer('Overloaded', (deltaJs) => {
 		arraysEqual(d1.overloads, d2.overloads, (x, y) => x.equals(y, opt)) );
 
 
-	///* commutation ***********************************************/
-	//deltaJs.newCommutation( t('Overloaded', 'Overloaded'), (d1, d2, opt) => {
-	//	for (let i = 0; i < d1.overloads.length; ++i) {
-	//		if (!d1.overloads[i].commutesWith(d2.overloads[i], opt)) {
-	//			return false;
-	//		}
-	//	}
-	//	// TODO: the above is a hack; fix it properly
-	//	return true;
-	//});
+	/* commutation ***********************************************/
+	deltaJs.newCommutation( t('Overloaded', 'Overloaded'), (d1, d2, opt) => {
+		for (let i = 0; i < d1.overloads.length; ++i) {
+			if (!d1.overloads[i].commutesWith(d2.overloads[i], opt)) {
+				return false;
+			}
+		}
+		// TODO: the above is a hack; fix it properly
+		return true;
+	});
 
 
 });
