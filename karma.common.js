@@ -10,7 +10,7 @@ module.exports = {
 	colors: true,
 	autoWatch: false,
 	browsers: ['PhantomJS'],
-	browserNoActivityTimeout: 30000,
+	browserNoActivityTimeout: 60000,
 	singleRun: true,
 	files: [
 		'./node_modules/phantomjs-polyfill/bind-polyfill.js',
