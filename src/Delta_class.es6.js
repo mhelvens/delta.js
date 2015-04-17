@@ -127,6 +127,9 @@ export default oncePer('Delta', (deltaJs) => {
 			[storageSymbol]: [],
 			[creationMethodName](precondition, value, options = {}) {
 				if (isUndefined(options.weak)) { options.weak = false }
+				if (isUndefined(deltaJs.Delta[storageSymbol])) {
+					deltaJs.Delta[storageSymbol] = [];
+				} // TODO: investigate why this is sometimes necessary
 				deltaJs.Delta[storageSymbol].push({ precondition, value, options });
 			},
 			[staticMethodName](...args) {
@@ -140,6 +143,9 @@ export default oncePer('Delta', (deltaJs) => {
 				let fn        = ()=>{},
 				    found     = false,
 				    commuting = false;
+				if (isUndefined(deltaJs.Delta[storageSymbol])) {
+					deltaJs.Delta[storageSymbol] = [];
+				} // TODO: investigate why this is sometimes necessary
 				for (let {precondition, value, options} of deltaJs.Delta[storageSymbol]) {
 					if (options.weak && !callOptions.weak) { continue } // only test weak rules when doing weak invocation
 					if (precondition(...deltas)) {

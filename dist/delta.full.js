@@ -169,13 +169,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	/* shift every line in a string right by a given number of spaces */
 	exports.indent = indent;
-	
-	/* run a function only once per obj+string combo */
 	exports.oncePer = oncePer;
 	exports.mapEqual = mapEqual;
 	exports.customIndexOf = customIndexOf;
 	exports.arraysEqual = arraysEqual;
 	exports.arraysHaveSameElements = arraysHaveSameElements;
+	exports.swapLastTwo = swapLastTwo;
 	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
@@ -317,13 +316,18 @@ return /******/ (function(modules) { // webpackBootstrap
 		return str.replace(/^(?!\s*$)/mg, repeat(amount, char));
 	}
 	
+	/* run a function only once per obj+string combo */
+	var _oncePerSymbols = {};
+	
 	function oncePer(obj, key, fn) {
 		var opFn = function (obj) {
-			var p = "_once per: " + key;
-			if (obj[p]) {
+			if (!_oncePerSymbols[key]) {
+				_oncePerSymbols[key] = Symbol("once per:" + key);
+			}
+			if (obj[_oncePerSymbols[key]]) {
 				return;
 			}
-			obj[p] = true; // TODO: make non-enumeratable, or use ES6 Symbol
+			obj[_oncePerSymbols[key]] = true;
 			return fn.call(obj, obj);
 		};
 		if (typeof obj === "string") {
@@ -440,6 +444,10 @@ return /******/ (function(modules) { // webpackBootstrap
 		}
 		return true;
 	}
+	
+	function swapLastTwo(a) {
+		return a.slice(0, -2).concat([a[a.length - 1], a[a.length - 2]]);
+	}
 
 /***/ },
 /* 5 */
@@ -500,13 +508,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var define_ContainerProxy = _interopRequire(__webpack_require__(19));
 	
-	/** {@public}{@class}
+	/**
 	 * This class offers every functionality you need from delta modeling.
 	 * Each instance offers its own operation types and variation points
 	 * and acts as a facade (as in design pattern) to the more specific
 	 * subsystems of delta.js.
 	 *
 	 * You will usually need only one DeltaJs instance per application.
+	 * @public
+	 * @class DeltaJs
 	 */
 	
 	var DeltaJs = (function () {
@@ -566,8 +576,13 @@ return /******/ (function(modules) { // webpackBootstrap
 								target = new DeltaJs.ReadableTarget(target);
 							}
 	
+							/* option defaults */
+							if (isUndefined(options.weak)) {
+								options.weak = false;
+							}
+	
 							/* does the target satisfy the precondition of the delta? */
-							var judgment = this.evaluatePrecondition(target);
+							var judgment = this.evaluatePrecondition(target, options);
 							if (judgment !== true) {
 								throw judgment;
 							}
@@ -617,7 +632,9 @@ return /******/ (function(modules) { // webpackBootstrap
 			},
 			newProxyMethod: {
 	
-				/** {@public}{@method}
+				/**
+	    * @public
+	    * @method
 	    * @param method  {string}   - method name
 	    * @param handler {Function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
 	    */
@@ -991,6 +1008,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 	
+	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
+	
 	var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
 	
 	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -1006,6 +1025,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var isDefined = _utilEs6Js.isDefined;
 	var isUndefined = _utilEs6Js.isUndefined;
 	var arraysEqual = _utilEs6Js.arraysEqual;
+	var swapLastTwo = _utilEs6Js.swapLastTwo;
 	
 	var _TargetEs6Js = __webpack_require__(6);
 	
@@ -1020,17 +1040,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var define_Composed = _interopRequire(__webpack_require__(23));
 	
 	module.exports = oncePer("Delta", function (deltaJs) {
-	
-		//
-		//oncePer(deltaJs.constructor, 'Delta', () => {
-		//
-		//	extend(deltaJs.constructor.prototype, {
-		//		newCommutation(precondition, predicate) {
-		//			this.Delta.newCommutation(precondition, predicate);
-		//		}
-		//	});
-		//
-		//});
 	
 		deltaJs.Delta = (function () {
 			function Delta() {
@@ -1055,8 +1064,12 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				clone: {
 	
-					/** {@public}{@abstract}{@method}{@nosideeffects}
+					/**
 	     * This method should be overwritten by subclasses to make a clone of 'this' delta.
+	     * @public
+	     * @abstract
+	     * @method
+	     * @nosideeffects
 	     * @return {DeltaJs#Delta} - a clone of this delta
 	     */
 	
@@ -1066,15 +1079,22 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				evaluatePrecondition: {
 	
-					/** {@private}{@method}
-	     * @param target {DeltaJs.ReadableTarget}
+					/**
+	     * @private
+	     * @method
+	     * @param target                        {DeltaJs.ReadableTarget}
+	     * @param options                       {object}
+	     * @param options.skipWeakPreconditions {boolean}
 	     * @return {Boolean|PreconditionFailure} - `true` if the precondition is satisfied, otherwise
 	     *                                        `false` or an instance of `DeltaJs.PreconditionFailure`
 	     */
 	
 					value: function evaluatePrecondition(target) {
+						var options = arguments[1] === undefined ? {} : arguments[1];
+						var weak = options.weak;
+	
 						if (this.precondition) {
-							var judgment = this.precondition(target);
+							var judgment = this.precondition(target, options);
 							if (judgment instanceof PreconditionFailure) {
 								return judgment;
 							} else if (!judgment) {
@@ -1086,7 +1106,10 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				appliedTo: {
 	
-					/** {@public}{@method}{@nosideeffects}
+					/**
+	     * @public
+	     * @method
+	     * @nosideeffects
 	     * @param value   {*}       - any given value
 	     * @param options {object?} - the (optional) options for this delta application
 	     * @return {*} - the value resulting in this delta being applied to the given `value`
@@ -1108,14 +1131,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				toString: {
 	
-					///**
-					// * @public
-					// * @method
-					// * @nosideeffects
-					// */
-					//commutesWith(other) { return deltaJs.Delta.commute(this, other) }
-	
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param options {object?}
 	     * @return {string}
 	     */
@@ -1137,31 +1155,6 @@ return /******/ (function(modules) { // webpackBootstrap
 						}
 						return str;
 					}
-	
-					///**
-					// * @public
-					// * @static
-					// * @method
-					// *
-					// */
-					//static newCommutation(precondition, predicate) {
-					//	deltaJs.Delta._commutations.push({precondition, predicate});
-					//}
-	
-					///**
-					// *
-					// */
-					//static commute(d1, d2, {weak} = {}) {
-					//	for (let {precondition, predicate} of deltaJs.Delta._commutations) {
-					//		if (precondition(d1, d2)) {
-					//			return predicate(d1, d2);
-					//		} else if (precondition(d2, d1)) {
-					//			return predicate(d2, d1);
-					//		}
-					//	}
-					//	return d1.composedWith(d2).equals(d2.composedWith(d1));
-					//}
-	
 				}
 			});
 	
@@ -1177,81 +1170,120 @@ return /******/ (function(modules) { // webpackBootstrap
 	  * Any number of candidate functions can be created,
 	  * which are then selected based on their precondition predicates.
 	  * @private
-	  * @param name             {String}
-	  * @param staticMethodName {String}
-	  * @param methodName       {String}
-	  * @param onTrue           {Function=undefined}
-	  * @param onFalse          {Function=undefined}
-	  * @param onDefault        {Function|Boolean=false}
-	  * @param commutative      {Boolean}
+	  * @param name                {string}
+	  * @param staticMethodName    {string}
+	  * @param methodName          {string}
+	  * @param options             {object}
+	  * @param options.onTrue      {function=undefined}
+	  * @param options.onFalse     {function=undefined}
+	  * @param options.onDefault   {function|boolean=false}
+	  * @param options.commutative {boolean=false}
+	  * @param options.arity       {number=2}
 	  */
 		function newMultiDispatch(name, staticMethodName, methodName) {
-			var _ref = arguments[3] === undefined ? {} : arguments[3];
+			var options = arguments[3] === undefined ? {} : arguments[3];
 	
-			var onTrue = _ref.onTrue;
-			var onFalse = _ref.onFalse;
-			var onDefault = _ref.onDefault;
-			var commutative = _ref.commutative;
-	
-			/* store the options */
-			_multiDispatchOptions.set(name, { commutative: commutative });
-	
-			/* convenience variables */
-			var creationMethodName = "new" + name[0].toUpperCase() + "" + name.slice(1);
-			var privateVarName = "_multiDispatch_" + name;
-	
-			/* set defaults */
-			if (!onTrue) {
-				onTrue = function () {
+			/* set option defaults */
+			if (isUndefined(options.commutative)) {
+				options.commutative = false;
+			}
+			if (isUndefined(options.arity)) {
+				options.arity = 2;
+			}
+			if (isUndefined(options.onTrue)) {
+				options.onTrue = function () {
 					for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 						args[_key] = arguments[_key];
 					}
 	
-					return args;
+					return args.slice(0, options.arity);
 				};
 			}
-			if (!onFalse) {
-				onFalse = function () {
+			if (isUndefined(options.onFalse)) {
+				options.onFalse = function () {
 					throw new Error("Failure in finding a " + name + "!");
 				};
 			}
-			if (onDefault === "onTrue") {
-				onDefault = onTrue;
+			if (options.onDefault === "onTrue") {
+				options.onDefault = options.onTrue;
+			} else if (options.onDefault === "onFalse" || isUndefined(options.onDefault)) {
+				options.onDefault = options.onFalse;
 			}
-			if (onDefault === "onFalse" || !onDefault) {
-				onDefault = onFalse;
-			}
+	
+			/* augment the options and store them */
+			extend(options, {
+				name: name, staticMethodName: staticMethodName, methodName: methodName,
+				creationMethodName: "new" + name[0].toUpperCase() + "" + name.slice(1),
+				storageSymbol: Symbol("multiDispatch:" + name)
+			});
+			_multiDispatchOptions.set(name, options);
+	
+			/* short names for all relevant options */
+			var creationMethodName = options.creationMethodName;
+			var storageSymbol = options.storageSymbol;
+			var onTrue = options.onTrue;
+			var onFalse = options.onFalse;
+			var onDefault = options.onDefault;
+			var commutative = options.commutative;
+			var arity = options.arity;
 	
 			/* set static Delta members */
 			extend(deltaJs.Delta, (function () {
 				var _extend = {};
 	
-				_defineProperty(_extend, privateVarName, []);
+				_defineProperty(_extend, storageSymbol, []);
 	
 				_defineProperty(_extend, creationMethodName, function (precondition, value) {
-					deltaJs.Delta[privateVarName].push({ precondition: precondition, value: value });
+					var options = arguments[2] === undefined ? {} : arguments[2];
+	
+					if (isUndefined(options.weak)) {
+						options.weak = false;
+					}
+					if (isUndefined(deltaJs.Delta[storageSymbol])) {
+						deltaJs.Delta[storageSymbol] = [];
+					} // TODO: investigate why this is sometimes necessary
+					deltaJs.Delta[storageSymbol].push({ precondition: precondition, value: value, options: options });
 				});
 	
-				_defineProperty(_extend, staticMethodName, function (d1, d2, d3) {
+				_defineProperty(_extend, staticMethodName, function () {
+					for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+						args[_key] = arguments[_key];
+					}
+	
+					var deltas = args.slice(0, arity),
+					    callOptions = args[arity] || {};
+	
+					/* defaults */
+					if (isUndefined(callOptions.weak)) {
+						callOptions.weak = false;
+					}
+	
 					/* use the first composition function for which these deltas satisfy the precondition */
-					var fn = function () {};
-					var found = false;
-					var commuting = false;
+					var fn = function () {},
+					    found = false,
+					    commuting = false;
+					if (isUndefined(deltaJs.Delta[storageSymbol])) {
+						deltaJs.Delta[storageSymbol] = [];
+					} // TODO: investigate why this is sometimes necessary
 					var _iteratorNormalCompletion = true;
 					var _didIteratorError = false;
 					var _iteratorError = undefined;
 	
 					try {
-						for (var _iterator = deltaJs.Delta[privateVarName][Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						for (var _iterator = deltaJs.Delta[storageSymbol][Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 							var _step$value = _step.value;
 							var precondition = _step$value.precondition;
 							var value = _step$value.value;
+							var _options = _step$value.options;
 	
-							if (precondition(d1, d2, d3)) {
+							if (_options.weak && !callOptions.weak) {
+								continue;
+							} // only test weak rules when doing weak invocation
+							if (precondition.apply(undefined, _toConsumableArray(deltas))) {
 								fn = value;
 								found = true;
 								break;
-							} else if (commutative && (isDefined(d3) && precondition(d1, d3, d2) || isUndefined(d3) && precondition(d2, d1))) {
+							} else if (commutative && precondition.apply(undefined, _toConsumableArray(swapLastTwo(deltas)))) {
 								fn = value;
 								found = true;
 								commuting = true;
@@ -1281,53 +1313,59 @@ return /******/ (function(modules) { // webpackBootstrap
 					} else if (fn === true) {
 						fn = onTrue;
 					}
+	
 					/* return the result */
 					if (commuting) {
-						if (isDefined(d3)) {
-							return fn(d1, d3, d2);
-						} else {
-							return fn(d2, d1);
-						}
+						return fn.apply(undefined, _toConsumableArray(swapLastTwo(deltas)).concat([callOptions]));
 					} else {
-						return fn(d1, d2, d3);
+						return fn.apply(undefined, _toConsumableArray(deltas).concat([callOptions]));
 					}
 				});
 	
 				return _extend;
 			})());
 	
+			/* set instance Delta members */
 			extend(deltaJs.Delta.prototype, _defineProperty({}, methodName, function () {
 				var _deltaJs$Delta;
 	
-				for (var _len = arguments.length, others = Array(_len), _key = 0; _key < _len; _key++) {
-					others[_key] = arguments[_key];
+				for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+					args[_key] = arguments[_key];
 				}
 	
-				return (_deltaJs$Delta = deltaJs.Delta)[staticMethodName].apply(_deltaJs$Delta, [this].concat(others));
+				return (_deltaJs$Delta = deltaJs.Delta)[staticMethodName].apply(_deltaJs$Delta, [this].concat(args));
 			}));
 	
+			/* set static DeltaJs members */
 			oncePer(deltaJs.constructor, "multiDispatch:" + name, function () {
-				extend(deltaJs.constructor.prototype, _defineProperty({}, creationMethodName, function (precondition, fn) {
-					return this.Delta[creationMethodName](precondition, fn);
+				extend(deltaJs.constructor.prototype, _defineProperty({}, creationMethodName, function (precondition, value) {
+					var options = arguments[2] === undefined ? {} : arguments[2];
+	
+					return this.Delta[creationMethodName](precondition, value, options);
 				}));
 			});
 		}
 	
-		function customMultiDispatchGiven(name, d1, d2, d3) {
-			var privateVarName = "_multiDispatch_" + name;
+		function customMultiDispatchGiven(name) {
+			for (var _len = arguments.length, deltas = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+				deltas[_key - 1] = arguments[_key];
+			}
+	
+			var _multiDispatchOptions$get = _multiDispatchOptions.get(name);
+	
+			var storageSymbol = _multiDispatchOptions$get.storageSymbol;
+			var commutative = _multiDispatchOptions$get.commutative;
 			var _iteratorNormalCompletion = true;
 			var _didIteratorError = false;
 			var _iteratorError = undefined;
 	
 			try {
-				for (var _iterator = deltaJs.Delta[privateVarName][Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+				for (var _iterator = deltaJs.Delta[storageSymbol][Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 					var _step$value = _step.value;
 					var precondition = _step$value.precondition;
 					var value = _step$value.value;
 	
-					if (precondition(d1, d2, d3)) {
-						return typeof value === "function";
-					} else if (_multiDispatchOptions.get(name).commutative && (isDefined(d3) && precondition(d1, d3, d2) || isUndefined(d3) && precondition(d2, d1))) {
+					if (precondition.apply(undefined, deltas) || commutative && precondition.apply(undefined, _toConsumableArray(swapLastTwo(deltas)))) {
 						return typeof value === "function";
 					}
 				}
@@ -1345,12 +1383,14 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 				}
 			}
+	
+			return false;
 		}
 	
 		////////////////////////////////////////////////////////////////////////////////
 		newMultiDispatch("composition", "_binaryComposed", "composedWith", {
-			onTrue: function (d1, d2) {
-				return new deltaJs.Delta.Composed([d1, d2]);
+			onTrue: function (d1, d2, opt) {
+				return new deltaJs.Delta.Composed([d1, d2], opt);
 			},
 			onFalse: function (d1, d2) {
 				throw new CompositionError(d1, d2);
@@ -1358,27 +1398,27 @@ return /******/ (function(modules) { // webpackBootstrap
 			onDefault: "onFalse"
 		});
 		deltaJs.Delta.composed = function composed() {
-			for (var _len = arguments.length, deltas = Array(_len), _key = 0; _key < _len; _key++) {
-				deltas[_key] = arguments[_key];
+			for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+				args[_key] = arguments[_key];
 			}
 	
+			/* separate arguments */
+			var options = undefined,
+			    deltas = undefined;
+			if (!(args[args.length - 1] instanceof deltaJs.Delta) && typeof args[args.length - 1] !== "undefined") {
+				deltas = args.slice(0, args.length - 1);
+				options = args[args.length - 1];
+			} else {
+				deltas = args;
+				options = {};
+			}
+			/* compose the list of deltas, and pass the options to each binary composition */
 			return deltas.map(function (d) {
 				return d || new deltaJs.Delta.NoOp();
-			}).reduce(deltaJs.Delta._binaryComposed, new deltaJs.Delta.NoOp());
+			}).reduce(function (d1, d2) {
+				return deltaJs.Delta._binaryComposed(d1, d2, options);
+			}, new deltaJs.Delta.NoOp());
 		};
-		////////////////////////////////////////////////////////////////////////////////
-		newMultiDispatch("commutation", "commute", "commutesWith", {
-			onTrue: function (d1, d2) {
-				return true;
-			},
-			onFalse: function (d1, d2) {
-				return false;
-			},
-			onDefault: function (d1, d2) {
-				return d1.composedWith(d2).equals(d2.composedWith(d1));
-			},
-			commutative: true
-		});
 		////////////////////////////////////////////////////////////////////////////////
 		newMultiDispatch("refinement", "refines", "refines", {
 			onTrue: function (d1, d2) {
@@ -1387,8 +1427,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			onFalse: function (d1, d2) {
 				return false;
 			},
-			onDefault: function (d1, d2) {
-				return d1.equals(d2);
+			onDefault: function (d1, d2, opt) {
+				return d1.equals(d2, opt);
 			}
 		});
 		////////////////////////////////////////////////////////////////////////////////
@@ -1399,12 +1439,25 @@ return /******/ (function(modules) { // webpackBootstrap
 			onFalse: function (d1, d2) {
 				return false;
 			},
-			onDefault: function (d1, d2) {
+			onDefault: function (d1, d2, opt) {
 				if (customMultiDispatchGiven("refinement", d1, d2)) {
-					return d1.refines(d2) && d2.refines(d1);
+					return d1.refines(d2, opt) && d2.refines(d1, opt);
 				} else {
 					return d1.type === d2.type && arraysEqual(d1.args, d2.args);
 				}
+			},
+			commutative: true
+		});
+		////////////////////////////////////////////////////////////////////////////////
+		newMultiDispatch("commutation", "commute", "commutesWith", {
+			onTrue: function (d1, d2) {
+				return true;
+			},
+			onFalse: function (d1, d2) {
+				return false;
+			},
+			onDefault: function (d1, d2, opt) {
+				return d1.composedWith(d2, opt).equals(d2.composedWith(d1, opt), opt);
 			},
 			commutative: true
 		});
@@ -1416,9 +1469,10 @@ return /******/ (function(modules) { // webpackBootstrap
 			onFalse: function (d1, d2, d3) {
 				return false;
 			},
-			onDefault: function (d1, d2, d3) {
-				return deltaJs.Delta.composed(d2, d3, d1).equals(deltaJs.Delta.composed(d3, d2, d1));
+			onDefault: function (d1, d2, d3, opt) {
+				return deltaJs.Delta.composed(d2, d3, d1, opt).equals(deltaJs.Delta.composed(d3, d2, d1, opt), opt);
 			},
+			arity: 3,
 			commutative: true
 		});
 		////////////////////////////////////////////////////////////////////////////////
@@ -1492,6 +1546,32 @@ return /******/ (function(modules) { // webpackBootstrap
 						return result;
 					}
 				},
+				precondition: {
+					value: function precondition(target, options) {
+						/* find any overload with a precondition satisfied by the target; gather any errors */
+						var errors = [];
+						var success = this.overloads.some(function (delta) {
+							var judgment = delta.evaluatePrecondition(target, options);
+							if (judgment !== true) {
+								errors.push(judgment);
+								return false;
+							}
+							return true;
+						});
+						/* if none are satisfied, return the appropriate error */
+						if (!success) {
+							if (errors.length === 0) {
+								return new NoOverloadsApplicationError(this, target.value);
+							} else if (errors.length === 1) {
+								return errors[0];
+							} else {
+								return new MultipleOverloadsApplicationError(this, target.value, errors);
+							}
+						}
+						/* otherwise, return true */
+						return true;
+					}
+				},
 				applyTo: {
 	
 					/** {@public}{@method}
@@ -1551,7 +1631,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		/* composition */
 		deltaJs.newComposition(function (d1, d2) {
 			return d1 instanceof deltaJs.Delta.Overloaded || d2 instanceof deltaJs.Delta.Overloaded;
-		}, function (d1, d2) {
+		}, function (d1, d2, opt) {
 			var D1 = d1 instanceof deltaJs.Delta.Overloaded ? d1.overloads : [d1];
 			var D2 = d2 instanceof deltaJs.Delta.Overloaded ? d2.overloads : [d2];
 			var result = new deltaJs.Delta.Overloaded();
@@ -1572,7 +1652,7 @@ return /******/ (function(modules) { // webpackBootstrap
 							var delta2 = _step2.value;
 	
 							try {
-								result.overloads.push(delta1.composedWith(delta2));
+								result.overloads.push(delta1.composedWith(delta2, opt));
 							} catch (error) {
 								errors.push(error);
 							}
@@ -1614,10 +1694,21 @@ return /******/ (function(modules) { // webpackBootstrap
 		});
 	
 		/* equality */
-		deltaJs.newEquality(t("Overloaded", "Overloaded"), function (d1, d2) {
+		deltaJs.newEquality(t("Overloaded", "Overloaded"), function (d1, d2, opt) {
 			return arraysEqual(d1.overloads, d2.overloads, function (x, y) {
-				return x.equals(y);
+				return x.equals(y, opt);
 			});
+		});
+	
+		/* commutation ***********************************************/
+		deltaJs.newCommutation(t("Overloaded", "Overloaded"), function (d1, d2, opt) {
+			for (var i = 0; i < d1.overloads.length; ++i) {
+				if (!d1.overloads[i].commutesWith(d2.overloads[i], opt)) {
+					return false;
+				}
+			}
+			// TODO: the above is a hack; fix it properly
+			return true;
 		});
 	});
 
@@ -1681,7 +1772,10 @@ return /******/ (function(modules) { // webpackBootstrap
 			_createClass(Modify, {
 				clone: {
 	
-					/** {@public}{@method}{@nosideeffects}
+					/**
+	     * @public
+	     * @method
+	     * @nosideeffects
 	     * @return {DeltaJs#Delta.Modify} - a clone of this delta
 	     */
 	
@@ -1720,17 +1814,60 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				precondition: {
 	
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param target {*}
+	     * @param options {object}
 	     */
 	
 					value: function precondition(target) {
-						return target.value instanceof Object;
+						var options = arguments[1] === undefined ? {} : arguments[1];
+	
+						if (!(target.value instanceof Object)) {
+							return false;
+						}
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
+	
+						try {
+							for (var _iterator = this.subDeltas[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _step$value = _slicedToArray(_step.value, 2);
+	
+								var prop = _step$value[0];
+								var delta = _step$value[1];
+	
+								if (!options.restrictToProperty || options.restrictToProperty === prop) {
+									var judgment = delta.evaluatePrecondition(wt(target.value, prop), extend({}, options, { restrictToProperty: null }));
+									if (judgment !== true) {
+										return judgment;
+									}
+								}
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
+	
+						return true;
 					}
 				},
 				applyTo: {
 	
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param target  {Delta.WritableTarget} - the target to which to apply this delta
 	     * @param options {object?}              - the (optional) options for this delta application
 	     */
@@ -1770,7 +1907,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				toString: {
 	
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param options {object?}
 	     * @return {string}
 	     */
@@ -1810,7 +1949,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				processProxyArguments: {
 	
 					//noinspection JSMethodCanBeStatic
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param rawArgs {*[]}
 	     * @return {?{ options: Object, args: *[] }}
 	     */
@@ -1839,7 +1980,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				addOperation: {
 	
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param delta   {DeltaJs#Delta}
 	     * @param options {{path: Path}}
 	     * @return {DeltaJs#Proxy} - the deepest proxy created for this operation
@@ -1870,9 +2013,10 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				delta: {
 	
-					/** {@public}{@method}
+					/**
 	     * Dynamically compute and return the delta belonging to this proxy.
-	     *
+	     * @public
+	     * @method
 	     * @return the delta belonging to this proxy
 	     */
 	
@@ -1912,7 +2056,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		})(deltaJs.ContainerProxy));
 	
 		/* composition - introducing 'Modify' ***********************************************/
-		deltaJs.newComposition(t("Modify", "Modify"), function (d1, d2) {
+		deltaJs.newComposition(t("Modify", "Modify"), function (d1, d2, opt) {
 			var result = d1.clone();
 			var _iteratorNormalCompletion = true;
 			var _didIteratorError = false;
@@ -1922,7 +2066,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				for (var _iterator = d2.subDeltas.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 					var prop = _step.value;
 	
-					result.subDeltas.set(prop, deltaJs.Delta.composed(result.subDeltas.get(prop), d2.subDeltas.get(prop)));
+					result.subDeltas.set(prop, deltaJs.Delta.composed(result.subDeltas.get(prop), d2.subDeltas.get(prop), opt));
 				}
 			} catch (err) {
 				_didIteratorError = true;
@@ -1947,6 +2091,42 @@ return /******/ (function(modules) { // webpackBootstrap
 			return mapEqual(d1.subDeltas, d2.subDeltas, function (x, y) {
 				return x.equals(y);
 			});
+		});
+	
+		/* commutation ***********************************************/
+		deltaJs.newCommutation(t("Modify", "Modify"), function (d1, d2, opt) {
+			var _iteratorNormalCompletion = true;
+			var _didIteratorError = false;
+			var _iteratorError = undefined;
+	
+			try {
+				for (var _iterator = d1.subDeltas.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+					var prop = _step.value;
+	
+					if (d2.subDeltas.has(prop)) {
+						var sub1 = d1.subDeltas.get(prop);
+						var sub2 = d2.subDeltas.get(prop);
+						if (!sub1.commutesWith(sub2, opt)) {
+							return false;
+						}
+					}
+				}
+			} catch (err) {
+				_didIteratorError = true;
+				_iteratorError = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion && _iterator["return"]) {
+						_iterator["return"]();
+					}
+				} finally {
+					if (_didIteratorError) {
+						throw _iteratorError;
+					}
+				}
+			}
+	
+			return true;
 		});
 	});
 
@@ -2017,8 +2197,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 			_createClass(Add, {
 				precondition: {
-					value: function precondition(target) {
-						return target instanceof WritableTarget && isUndefined(target.value);
+					value: function precondition(target, _ref) {
+						var weak = _ref.weak;
+						return target instanceof WritableTarget && (weak || isUndefined(target.value));
 					}
 				},
 				applyTo: {
@@ -2043,8 +2224,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 			_createClass(Remove, {
 				precondition: {
-					value: function precondition(target) {
-						return target instanceof WritableTarget && isDefined(target.value);
+					value: function precondition(target, _ref) {
+						var weak = _ref.weak;
+						return target instanceof WritableTarget && (weak || isDefined(target.value));
 					}
 				},
 				applyTo: {
@@ -2069,8 +2251,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 			_createClass(Forbid, {
 				precondition: {
-					value: function precondition(target) {
-						return isUndefined(target.value);
+					value: function precondition(target, _ref) {
+						var weak = _ref.weak;
+						return weak || isUndefined(target.value);
 					}
 				}
 			});
@@ -2090,8 +2273,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 			_createClass(Replace, {
 				precondition: {
-					value: function precondition(target) {
-						return target instanceof WritableTarget && isDefined(target.value);
+					value: function precondition(target, _ref) {
+						var weak = _ref.weak;
+						return target instanceof WritableTarget && (weak || isDefined(target.value));
 					}
 				},
 				applyTo: {
@@ -2116,8 +2300,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 			_createClass(Update, {
 				precondition: {
-					value: function precondition(target) {
-						return target instanceof WritableTarget && isDefined(target.value);
+					value: function precondition(target, _ref) {
+						var weak = _ref.weak;
+						return target instanceof WritableTarget && (weak || isDefined(target.value));
 					}
 				},
 				applyTo: {
@@ -2152,6 +2337,12 @@ return /******/ (function(modules) { // webpackBootstrap
 			return d2.appliedTo(p1);
 		}));
 		deltaJs.newComposition(t("Modify", "Add"), false);
+		deltaJs.newComposition(function (d1, d2) {
+			return d2.type === "Add";
+		}, d("Add", function (_ref) {
+			var p2 = _ref.p2;
+			return p2;
+		}), { weak: true });
 		deltaJs.newComposition(t("Add", "Add"), false);
 	
 		/* composition - introducing 'Remove' ***********************************************/
@@ -2162,9 +2353,22 @@ return /******/ (function(modules) { // webpackBootstrap
 			var p2 = _ref.p2;
 			return p2;
 		}));
+		deltaJs.newComposition(function (d1, d2) {
+			return d2.type === "Remove";
+		}, d("Remove"), { weak: true });
 		deltaJs.newComposition(t("Remove", "Remove"), false);
 	
 		/* composition - introducing 'Forbid' ***********************************************/
+		deltaJs.newComposition(function (d1, d2) {
+			return d1.type === "Forbid";
+		}, function (d1, d2) {
+			return d2.clone();
+		}, { weak: true }); // TODO: test
+		deltaJs.newComposition(function (d1, d2) {
+			return d2.type === "Forbid";
+		}, function (d1, d2) {
+			return d1.clone();
+		}, { weak: true }); // TODO: test
 		deltaJs.newComposition(t("Modify", "Forbid"), false);
 		deltaJs.newComposition(t("Add", "Forbid"), false);
 		deltaJs.newComposition(t("Remove", "Forbid"), d("Remove"));
@@ -2297,8 +2501,9 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 				},
 				precondition: {
-					value: function precondition(target) {
-						return isDefined(target.value) && Array.isArray(target.value);
+					value: function precondition(target, _ref) {
+						var weak = _ref.weak;
+						return weak || isDefined(target.value) && Array.isArray(target.value);
 					}
 				},
 				applyTo: {
@@ -2453,6 +2658,11 @@ return /******/ (function(modules) { // webpackBootstrap
 			/* OK, it's a refinement */
 			return true;
 		});
+	
+		/* weak commutation - allow two PutIntoFunction deltas to always commute in a weak context*/
+		deltaJs.newCommutation(t("PutIntoArray", "PutIntoArray"), function (d1, d2, opt) {
+			return true;
+		}, { weak: true });
 	});
 
 /***/ },
@@ -2498,6 +2708,9 @@ return /******/ (function(modules) { // webpackBootstrap
 		define_BasicOperations(deltaJs);
 		define_Proxy(deltaJs);
 	
+		/* a symbol under which function parts can be stored in public functions */
+		var functionPartsSymbol = Symbol("DeltaJs:function-parts");
+	
 		/* declaring the function operation type */
 		deltaJs.newOperationType("PutIntoFunction", (function (_deltaJs$Delta) {
 			function PutIntoFunction() {
@@ -2523,12 +2736,12 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				precondition: {
 					value: function precondition(target) {
-						return isDefined(target.value) && typeof target.value === "function" && (isDefined(target.value._DeltaJs_functions) || target instanceof WritableTarget);
+						return isDefined(target.value) && typeof target.value === "function" && (isDefined(target.value[functionPartsSymbol]) || target instanceof WritableTarget);
 					}
 				},
 				applyTo: {
 					value: function applyTo(target) {
-						if (isUndefined(target.value._DeltaJs_functions)) {
+						if (isUndefined(target.value[functionPartsSymbol])) {
 							var originalFn = target.value;
 							var newFn = (function (_newFn) {
 								var _newFnWrapper = function newFn(_x) {
@@ -2551,7 +2764,7 @@ return /******/ (function(modules) { // webpackBootstrap
 								var _iteratorError = undefined;
 	
 								try {
-									for (var _iterator = newFn._DeltaJs_functions[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+									for (var _iterator = newFn[functionPartsSymbol][Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 										var fn = _step.value;
 	
 										result = fn.apply(this, args);
@@ -2573,7 +2786,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 								return result;
 							});
-							newFn._DeltaJs_functions = [function () {
+							newFn[functionPartsSymbol] = [function () {
 								for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 									args[_key] = arguments[_key];
 								}
@@ -2582,7 +2795,7 @@ return /******/ (function(modules) { // webpackBootstrap
 							}];
 							target.value = newFn;
 						}
-						var arr = target.value._DeltaJs_functions;
+						var arr = target.value[functionPartsSymbol];
 						var _iteratorNormalCompletion = true;
 						var _didIteratorError = false;
 						var _iteratorError = undefined;
@@ -2687,6 +2900,11 @@ return /******/ (function(modules) { // webpackBootstrap
 				return a.method === b.method && a.value && b.value;
 			});
 		});
+	
+		/* weak commutation - allow two PutIntoFunction deltas to always commute in a weak context*/
+		deltaJs.newCommutation(t("PutIntoFunction", "PutIntoFunction"), function (d1, d2) {
+			return true;
+		}, { weak: true });
 	});
 
 /***/ },
@@ -2793,6 +3011,45 @@ return /******/ (function(modules) { // webpackBootstrap
 						}
 					}
 				},
+				precondition: {
+					value: function precondition(target, options) {
+						var _iteratorNormalCompletion = true;
+						var _didIteratorError = false;
+						var _iteratorError = undefined;
+	
+						try {
+							for (var _iterator = this.graph.vertices()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+								var _step$value = _slicedToArray(_step.value, 2);
+	
+								var _name = _step$value[0];
+								var delta = _step$value[1];
+	
+								if ([].concat(_toConsumableArray(this.graph.verticesTo(_name))).length === 0) {
+									// source vertices
+									var judgment = delta.evaluatePrecondition(target, options);
+									if (judgment !== true) {
+										return judgment;
+									}
+								}
+							}
+						} catch (err) {
+							_didIteratorError = true;
+							_iteratorError = err;
+						} finally {
+							try {
+								if (!_iteratorNormalCompletion && _iterator["return"]) {
+									_iterator["return"]();
+								}
+							} finally {
+								if (_didIteratorError) {
+									throw _iteratorError;
+								}
+							}
+						}
+	
+						return true;
+					}
+				},
 				applyTo: {
 					value: function applyTo(target) {
 						var options = arguments[1] === undefined ? {} : arguments[1];
@@ -2811,7 +3068,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 								var subDelta = _step$value[1];
 	
-								subDelta.applyTo(target, options);
+								subDelta.applyTo(target, extend({}, options, { weak: true }));
 							}
 						} catch (err) {
 							_didIteratorError = true;
@@ -3166,7 +3423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 										var x = this.graph.vertexValue(first);
 										var y = this.graph.vertexValue(second);
-										if (!x.commutesWith(y)) {
+										if (!x.commutesWith(y, { weak: true })) {
 											var conflictInfo = {
 												conflictingDeltas: new Set([first, second]),
 												conflictResolvingDeltas: new Set()
@@ -3189,7 +3446,7 @@ return /******/ (function(modules) { // webpackBootstrap
 															var resolver = _step5$value[0];
 	
 															var z = this.graph.vertexValue(resolver);
-															if (resolver !== sink && z.resolves(x, y)) {
+															if (resolver !== sink && z.resolves(x, y, { weak: true })) {
 																conflictInfo.conflictResolvingDeltas.add(resolver);
 															}
 														}
@@ -3259,9 +3516,6 @@ return /******/ (function(modules) { // webpackBootstrap
 						/* return the conflict results */
 						return result;
 					}
-	
-					// TODO: add precondition method which checks 'source' deltas
-	
 				}
 			});
 	
@@ -3284,7 +3538,9 @@ return /******/ (function(modules) { // webpackBootstrap
 			_createClass(DeltaModelProxy, {
 				processProxyArguments: {
 	
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param rawArgs {*[]}
 	     * @return {?{ options: Object, args: *[] }}
 	     */
@@ -3317,7 +3573,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				addOperation: {
 	
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param delta   {DeltaJs#Delta}
 	     * @param options {{path: Path, name: string, feature: boolean}}
 	     * @return {DeltaJs#Proxy}
@@ -3370,9 +3628,10 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				delta: {
 	
-					/** {@public}{@method}
+					/**
 	     * Dynamically compute and return the delta belonging to this proxy.
-	     *
+	     * @public
+	     * @method
 	     * @return the delta belonging to this proxy
 	     */
 	
@@ -4144,9 +4403,10 @@ return /******/ (function(modules) { // webpackBootstrap
 					value: function childDelta(key) {
 						var _deltaJs$Delta;
 	
-						return (_deltaJs$Delta = deltaJs.Delta).composed.apply(_deltaJs$Delta, _toConsumableArray(this.childProxies(key).map(function (proxy) {
+						var result = (_deltaJs$Delta = deltaJs.Delta).composed.apply(_deltaJs$Delta, _toConsumableArray(this.childProxies(key).map(function (proxy) {
 							return proxy.delta();
 						})));
+						return result;
 					}
 				},
 				"do": {
@@ -9041,6 +9301,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 				_get(Object.getPrototypeOf(Composed.prototype), "constructor", this).apply(this, args);
 				this._components = this.arg || [];
+				this.options = args[1] || {};
 			}
 	
 			_inherits(Composed, _deltaJs$Delta);
@@ -9086,7 +9347,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				},
 				toString: {
 	
-					/** {@public}{@method}
+					/**
+	     * @public
+	     * @method
 	     * @param options {object?}
 	     * @return {string}
 	     */
@@ -9128,11 +9391,11 @@ return /******/ (function(modules) { // webpackBootstrap
 					}
 				},
 				precondition: {
-					value: function precondition(target) {
+					value: function precondition(target, options) {
 						if (this._components.length === 0) {
 							return true;
 						}
-						return this._components[0].precondition(target);
+						return this._components[0].precondition(target, options);
 					}
 				},
 				_collapse: {
@@ -9182,7 +9445,7 @@ return /******/ (function(modules) { // webpackBootstrap
 							this._components = (function () {
 								var newComponents = [];
 								for (var i = 0; i < _this._components.length - 1; i += 1) {
-									var composedPair = _this._components[i].composedWith(_this._components[i + 1]);
+									var composedPair = _this._components[i].composedWith(_this._components[i + 1], _this.options);
 									if (composedPair instanceof deltaJs.Delta.Composed) {
 										newComponents.push(_this._components[i]);
 									} else {
@@ -9212,10 +9475,10 @@ return /******/ (function(modules) { // webpackBootstrap
 		/* composition */
 		deltaJs.newComposition(function (d1, d2) {
 			return d1 instanceof deltaJs.Delta.Composed || d2 instanceof deltaJs.Delta.Composed;
-		}, function (d1, d2) {
+		}, function (d1, d2, opt) {
 			var D1 = d1 instanceof deltaJs.Delta.Composed ? d1._components : [d1];
 			var D2 = d2 instanceof deltaJs.Delta.Composed ? d2._components : [d2];
-			var result = new deltaJs.Delta.Composed([].concat(_toConsumableArray(D1), _toConsumableArray(D2)));
+			var result = new deltaJs.Delta.Composed([].concat(_toConsumableArray(D1), _toConsumableArray(D2)), opt);
 			result._collapse();
 			return result;
 		});

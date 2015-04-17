@@ -2212,6 +2212,19 @@ describe("DeltaJs instance -", () => {
 						{ a: [0, "y", "x"] }
 					);
 				}
+			], [
+				{},
+				() => {
+					dm.do('w').add('a', [0]);
+					dm.do('x', { after: ['w'] }).append('a', "x");
+					dm.do('y', { after: ['w'] }).append('a', "y");
+				},
+				(obj) => {
+					expect(obj).toEqualOneOf(
+						{ a: [0, "x", "y"] },
+						{ a: [0, "y", "x"] }
+					);
+				}
 			]]);
 
 			// TODO: precondition of delta model should conjunct all preconditions of its source nodes

@@ -47,7 +47,7 @@ export default oncePer('basic operations', (deltaJs) => {
 	/* composition - introducing 'Add' **************************************************/
 	deltaJs.newComposition( t('Add'   , 'Modify'), d('Add', ({d2, p1}) => d2.appliedTo(p1)) );
 	deltaJs.newComposition( t('Modify', 'Add'   ), false                                    );
-	deltaJs.newComposition( t('Add'   , 'Add'   ), d('Add', ({p2}) => p2)                   , { weak: true });
+	deltaJs.newComposition( (d1, d2) => (d2.type === 'Add'), d('Add', ({p2}) => p2)         , { weak: true });
 	deltaJs.newComposition( t('Add'   , 'Add'   ), false                                    );
 
 
@@ -56,7 +56,7 @@ export default oncePer('basic operations', (deltaJs) => {
 	deltaJs.newComposition( t('Add'   , 'Remove'), d('Forbid')                );
 	deltaJs.newComposition( t('Remove', 'Modify'), false                      );
 	deltaJs.newComposition( t('Remove', 'Add'   ), d('Replace', ({p2}) => p2) );
-	deltaJs.newComposition( t('Remove', 'Remove'), d('Remove')                , { weak: true });
+	deltaJs.newComposition( (d1, d2) => (d2.type === 'Remove'), d('Remove')   , { weak: true });
 	deltaJs.newComposition( t('Remove', 'Remove'), false                      );
 
 
