@@ -6,3 +6,6 @@ install:
 script:
  - npm run-script build
  - npm run-script test-ci
+branches:
+  only:
+    - master
