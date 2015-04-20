@@ -1,7 +1,3 @@
-/* import external libraries */
-import JsGraph from 'js-graph';
-
-
 /* import internal stuff */
 import {extend, oncePer} from './util.es6.js';
 import define_Delta      from './Delta_class.es6.js';

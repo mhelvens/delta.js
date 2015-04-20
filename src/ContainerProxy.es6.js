@@ -1,7 +1,3 @@
-/* import external libraries */
-import JsGraph from 'js-graph';
-
-
 /* import internal stuff */
 import {extend, a, isUndefined, oncePer} from './util.es6.js';
 import Path                              from './Path.es6.js';

@@ -58,12 +58,11 @@ export class ConstraintFailure extends Error {
 }
 
 export class ApplicationOrderCycle extends Error {
-	constructor(from, to) {
+	constructor(cycle) {
 		super();
 		this.name = 'ApplicationOrderCycle';
-		this.message = `The new application order between ${from} and ${to} created a cycle.`;
-		this.from = from;
-		this.to   = to;
+		this.message = `The new application order created a cycle: ${cycle}}`;
+		this.cycle = cycle;
 	}
 }
 

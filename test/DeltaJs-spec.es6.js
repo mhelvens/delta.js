@@ -54,14 +54,14 @@ describe("DeltaJs instance -", () => {
 						expect(() => {
 							action();
 							_afterAction();
-						}).toThrowSpecific(post.type, post.content);
+						}).toThrowSpecific(post.type, ...post.content);
 					} else {
 						action();
 						_afterAction();
 
 						/* applying the delta to the given 'pre' value */
 						if (post instanceof ExpectedError) {
-							expect(() => { delta.applyTo(rootObj) }).toThrowSpecific(post.type, post.content);
+							expect(() => { delta.applyTo(rootObj) }).toThrowSpecific(post.type, ...post.content);
 						} else {
 							delta.applyTo(rootObj);
 							if (typeof post === 'function') {
@@ -84,11 +84,11 @@ describe("DeltaJs instance -", () => {
 	function afterAction(fn) { _afterAction = fn }
 
 	/* a way to specify an expected error thrown */
-	function ExpectedError(type, content) {
-		this.type = type;
+	function ExpectedError(type, ...content) {
+		this.type    = type;
 		this.content = content;
 	}
-	function expectError(type, content) { return new ExpectedError(type, content) }
+	function expectError(type, ...content) { return new ExpectedError(type, ...content) }
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1972,7 +1972,10 @@ describe("DeltaJs instance -", () => {
 					dm.do('X', { after: ['Y'] }).add('keyX', "value X");
 					dm.do('Y', { after: ['X'] }).add('keyY', "value Y");
 				},
-				expectError(DeltaJs.ApplicationOrderCycle, { from: "X", to: "Y" })
+				expectError(DeltaJs.ApplicationOrderCycle,
+						{ cycle: ['X', 'Y'] },
+						{ cycle: ['Y', 'X'] }
+				)
 			], [
 				{},
 				() => {
@@ -1981,33 +1984,11 @@ describe("DeltaJs instance -", () => {
 					dm.do('Y', { after: ['X'] }).add('keyY', "Y value");
 					dm.do('Z', { after: ['Y'] }).add('keyZ', "Z value");
 				},
-				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
-			]]);
-
-			itCan("throw an error if there is an application order cycle", [[
-				{},
-				() => {
-					dm.do('X', { after: ['Y'] }).add('keyX', "value X");
-					dm.do('Y', { after: ['X'] }).add('keyY', "value Y");
-				},
-				expectError(DeltaJs.ApplicationOrderCycle, { from: "X", to: "Y" })
-			], [
-				{},
-				() => {
-					dm.do('W').add('keyW', "W value");
-					dm.do('X', { after: ['W', 'Z'] }).add('keyX', "X value");
-					dm.do('Y', { after: ['X'] }).add('keyY', "Y value");
-					dm.do('Z', { after: ['Y'] }).add('keyZ', "Z value");
-				},
-				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
-			], [
-				{},
-				() => {
-					dm.do('X', { after: ['Z'] }).add('keyX', "value X");
-					dm.do('Y', { after: ['X'] }).add('keyY', "value Y");
-					dm.do('Z', { after: ['Y'] }).add('keyZ', "value Z");
-				}, // it's about the last connection that connects the cycle:
-				expectError(DeltaJs.ApplicationOrderCycle, { from: "Y", to: "Z" })
+				expectError(DeltaJs.ApplicationOrderCycle,
+						{ cycle: ['X', 'Y', 'Z'] },
+						{ cycle: ['Z', 'X', 'Y'] },
+						{ cycle: ['Y', 'Z', 'X'] }
+				)
 			]]);
 
 			itCan("throw an error if there is an unresolved conflict", [[

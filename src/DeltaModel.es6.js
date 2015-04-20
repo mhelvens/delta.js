@@ -1,5 +1,5 @@
 /* import external libraries */
-import JsGraph from 'js-graph';
+import Graph from 'graph.js';
 
 
 /* import internal stuff */
@@ -21,7 +21,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		constructor(...args) {
 			super(...args);
-			this.graph = new JsGraph();
+			this.graph = new Graph();
 		}
 
 		clone() {
@@ -254,9 +254,10 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				                      ...options['after']    || [],
 				                      ...options['requires'] || [] ]) {
 					result.graph.createEdge(subName, name);
-					if (result.graph.hasCycle()) {
+					let cycle = result.graph.cycle();
+					if (cycle) {
 						result.graph.removeExistingEdge(subName, name);
-						throw new ApplicationOrderCycle(subName, name);
+						throw new ApplicationOrderCycle(cycle);
 					}
 				}
 
