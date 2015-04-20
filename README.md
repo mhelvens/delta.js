@@ -402,10 +402,9 @@ MyClass.prototype.construct = function () {};
 deltaJs.vp('MyClass', MyClass)
 ```
 ```javascript
-deltaJs.delta('my-delta').modify('my-vp')
-    .append('MyClass.prototype.construct', function (a, b, c) {
-        this.doExtraThings(a, b, c);
-    });
+deltaJs.do('my-delta').append('MyClass.prototype.construct', function (a, b, c) {
+    this.doExtraThings(a, b, c);
+});
 ```
 
 
