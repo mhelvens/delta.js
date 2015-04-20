@@ -168,8 +168,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 		/**
 		 * @public
 		 * @method
-		 * @param rawArgs {*[]}
-		 * @return {?{ options: Object, args: *[] }}
+		 * @param rawArgs {Array.<*>}
+		 * @return {?{ options: Object, args: Array.<*> }}
 		 */
 		processProxyArguments(...rawArgs) {
 			// rawArgs is parsed as (...options, name, ...options, path, ...args),

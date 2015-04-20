@@ -12,6 +12,19 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 	define_Proxy(deltaJs);
 
 
+	oncePer(deltaJs.constructor, 'ContainerProxy', (DeltaJs) => {
+		extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
+			/**
+			 * @param method  {string}   - method name
+			 * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
+			 */
+			newProxyMethod(method, handler) {
+				this.ContainerProxy.newProxyMethod(method, handler);
+			}
+		});
+	});
+
+
 	/* a Proxy class for container operation types like Modify and DeltaModel */
 	deltaJs.ContainerProxy = class ContainerProxy extends deltaJs.Proxy {
 
@@ -117,12 +130,11 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 
 		//noinspection JSCommentMatchesSignature
-		/** {@public}{@abstract}{@method}
+		/**
 		 * Subclasses of `ContainerProxy` should implement this method to extract an
 		 * options object, path and final argument list from a given 'raw' argument list.
-		 *
-		 * @param args {[*]}
-		 * @return {{options: Object, args: [*]}}
+		 * @abstract
+		 * @protected
 		 */
 		processProxyArguments() {
 			throw new Error(`A 'ContainerProxy' subclass needs to implement the 'processProxyArguments' method.`);
@@ -133,10 +145,8 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		/** {@public}{@abstract}{@method}
 		 * Subclasses of `ContainerProxy` should implement this method to add a given delta
 		 * under a given path with the given options, and return its corresponding Proxy.
-		 *
-		 * @param delta   {DeltaJs#Delta}
-		 * @param options {Object}
-		 * @return {DeltaJs#Proxy}
+		 * @abstract
+		 * @protected
 		 */
 		addOperation() {
 			throw new Error(`A 'ContainerProxy' subclass needs to implement the 'addOperation' method.`);
@@ -146,13 +156,13 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-		/** {@public}{@abstract}{@method}
+		/**
 		 * Create a delta based on a method-name and argument-list.
 		 * If the method-name is overloaded, you'll automatically get
 		 * an `Delta.Overloaded` instance.
 		 *
 		 * @param method {string}
-		 * @param args   {[*]}
+		 * @param [args] {*}
 		 * @return {DeltaJs#Delta}
 		 */
 		static _newDeltaByMethod(method, args) {
@@ -166,9 +176,10 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		}
 
 
-		/** {@public}{@static}{@method}
+		/**
+		 * @static
 		 * @param method  {string}   - method name
-		 * @param handler {Function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
+		 * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
 		 */
 		static newProxyMethod(method, handler) {
 
@@ -183,7 +194,6 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 			a(deltaJs.ContainerProxy, '_methodHandlers', method).push(handler);
 
 		}
-
 
 	};
 

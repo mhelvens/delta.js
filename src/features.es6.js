@@ -6,10 +6,10 @@ import {ConstraintFailure}                       from './Error.es6.js';
 export default oncePer('features', (deltaJs) => {
 
 
-	oncePer(deltaJs.constructor, 'features', () => {
+	oncePer(deltaJs.constructor, 'features', (DeltaJs) => {
 
-		extend(deltaJs.constructor.prototype, {
-			/** {@public}{@method}
+		extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
+			/**
 			 * @param name    {string}  - the name of the new feature
 			 * @param options {object?} - the (optional) options for the new feature
 			 * @return {DeltaJs#Feature} - the object representing the new feature

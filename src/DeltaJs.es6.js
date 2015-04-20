@@ -1,18 +1,18 @@
 /* import internal stuff */
 import {extend, assert, isUndefined, isDefined, arraysEqual} from './util.es6.js';
-import Path                                     from './Path.es6.js';
-import {ReadableTarget, WritableTarget, rt, wt} from './Target.es6.js';
-import define_Delta                             from './Delta_class.es6.js';
-import define_Overloaded                        from './Overloaded.es6.js';
-import define_Modify                            from './Modify.es6.js';
-import define_basicOperations                   from './basicOperations.es6.js';
-import define_PutIntoArray                      from './PutIntoArray.es6.js';
-import define_PutIntoFunction                   from './PutIntoFunction.es6.js';
-import define_DeltaModel                        from './DeltaModel.es6.js';
-import define_features                          from './features.es6.js';
-import define_variationPoints                   from './variationPoints.es6.js';
-import define_applicationConditions             from './applicationConditions.es6.js';
-import define_ContainerProxy                    from './ContainerProxy.es6.js';
+import Path                                                  from './Path.es6.js';
+import {ReadableTarget, WritableTarget, rt, wt}              from './Target.es6.js';
+import define_Delta                                          from './Delta_class.es6.js';
+import define_Overloaded                                     from './Overloaded.es6.js';
+import define_Modify                                         from './Modify.es6.js';
+import define_basicOperations                                from './basicOperations.es6.js';
+import define_PutIntoArray                                   from './PutIntoArray.es6.js';
+import define_PutIntoFunction                                from './PutIntoFunction.es6.js';
+import define_DeltaModel                                     from './DeltaModel.es6.js';
+import define_features                                       from './features.es6.js';
+import define_variationPoints                                from './variationPoints.es6.js';
+import define_applicationConditions                          from './applicationConditions.es6.js';
+import define_ContainerProxy                                 from './ContainerProxy.es6.js';
 
 
 /**
@@ -21,7 +21,10 @@ import define_ContainerProxy                    from './ContainerProxy.es6.js';
  * and acts as a facade (as in design pattern) to the more specific
  * subsystems of delta.js.
  *
- * You will usually need only one DeltaJs instance per application.
+ * Using multiple `DeltaJs` instances allows you to use different sets
+ * of deltas and rules in the same project that work independently
+ * from each other. But you will usually need only one DeltaJs
+ * instance per application.
  * @public
  * @class DeltaJs
  */
@@ -44,14 +47,16 @@ export default class DeltaJs {
 
 
 	/**
-	 * @param name       {string}   - name of the new operation type
-	 * @param DeltaClass {Function} - the new operation class
-	 * @param ProxyClass {?Function} - the optional custom Proxy subclass for this operation-type
+	 * This method allows you to tell delta.js about a new kind of delta operation.
+	 * This was also done for existing operations like `modify`, `add`, `remove`, and so on.
+	 * @param name       {string}    - name of the new operation type
+	 * @param DeltaClass {function}  - the new operation class
+	 * @param ProxyClass {?function} - the optional custom `Proxy` subclass for this operation-type
 	 */
 	newOperationType(name, DeltaClass, ProxyClass = null) {
 		/* sanity checks */
 		assert(name[0] === name[0].toUpperCase(),
-			`Delta operation classes must have a name starting with a capital letter - '${name}' does not.`);
+			`Names of delta operation classes must start with a capital letter - '${name}' does not.`);
 		assert(isUndefined(this.Delta[name]),
 			`The '${name}' operation type already exists.`);
 
@@ -97,17 +102,5 @@ export default class DeltaJs {
 		/* return the new class */
 		return DeltaClass;
 	}
-
-
-	/**
-	 * @public
-	 * @method
-	 * @param method  {string}   - method name
-	 * @param handler {Function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
-	 */
-	newProxyMethod(method, handler) {
-		this.ContainerProxy.newProxyMethod(method, handler);
-	}
-
 
 }

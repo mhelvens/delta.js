@@ -24,7 +24,7 @@ export default oncePer('Proxy', (deltaJs) => {
 	extend(deltaJs.Delta.prototype, {
 
 		/** {@public}{@method}
-		 * @param args {*[]}
+		 * @param args {Array.<*>}
 		 * @return {DeltaJs#Proxy}
 		 */
 		do(...args) {

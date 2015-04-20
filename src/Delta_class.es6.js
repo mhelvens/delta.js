@@ -7,6 +7,9 @@ import define_Composed                                                     from 
 
 export default oncePer('Delta', (deltaJs) => {
 
+	/**
+	 * @class DeltaJs#Delta
+	 */
 	deltaJs.Delta = class Delta {
 
 		constructor(...args) {
@@ -19,17 +22,14 @@ export default oncePer('Delta', (deltaJs) => {
 
 		/**
 		 * This method should be overwritten by subclasses to make a clone of 'this' delta.
-		 * @public
 		 * @abstract
-		 * @method
 		 * @nosideeffects
 		 * @return {DeltaJs#Delta} - a clone of this delta
 		 */
 		clone() { return new this.constructor(this.arg) }
 
 		/**
-		 * @private
-		 * @method
+		 * @protected
 		 * @param target                        {DeltaJs.ReadableTarget}
 		 * @param options                       {object}
 		 * @param options.skipWeakPreconditions {boolean}
@@ -50,11 +50,9 @@ export default oncePer('Delta', (deltaJs) => {
 		}
 
 		/**
-		 * @public
-		 * @method
 		 * @nosideeffects
 		 * @param value   {*}       - any given value
-		 * @param options {object?} - the (optional) options for this delta application
+		 * @param options {?object} - the (optional) options for this delta application
 		 * @return {*} - the value resulting in this delta being applied to the given `value`
 		 */
 		appliedTo(value, options = {}) {
@@ -66,8 +64,6 @@ export default oncePer('Delta', (deltaJs) => {
 		}
 
 		/**
-		 * @public
-		 * @method
 		 * @param options {object?}
 		 * @return {string}
 		 */
@@ -81,7 +77,6 @@ export default oncePer('Delta', (deltaJs) => {
 
 	};
 	deltaJs.Delta._nextID = 0;
-	//deltaJs.Delta._commutations = []; // [{precondition, predicate}]
 
 
 	let _multiDispatchOptions = new Map();
@@ -91,15 +86,15 @@ export default oncePer('Delta', (deltaJs) => {
 	 * Any number of candidate functions can be created,
 	 * which are then selected based on their precondition predicates.
 	 * @private
-	 * @param name                {string}
-	 * @param staticMethodName    {string}
-	 * @param methodName          {string}
-	 * @param options             {object}
-	 * @param options.onTrue      {function=undefined}
-	 * @param options.onFalse     {function=undefined}
-	 * @param options.onDefault   {function|boolean=false}
-	 * @param options.commutative {boolean=false}
-	 * @param options.arity       {number=2}
+	 * @param name                        {string}
+	 * @param staticMethodName            {string}
+	 * @param methodName                  {string}
+	 * @param options                     {object}
+	 * @param [options.onTrue=undefined]  {function}
+	 * @param [options.onFalse=undefined] {function}
+	 * @param [options.onDefault=false]   {function|boolean}
+	 * @param [options.commutative=false] {boolean}
+	 * @param [options.arity=2]           {number}
 	 */
 	function newMultiDispatch(name, staticMethodName, methodName, options = {}) {
 

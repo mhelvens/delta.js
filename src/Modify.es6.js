@@ -20,8 +20,6 @@ export default oncePer('Modify', (deltaJs) => {
 		}
 
 		/**
-		 * @public
-		 * @method
 		 * @nosideeffects
 		 * @return {DeltaJs#Delta.Modify} - a clone of this delta
 		 */
@@ -87,10 +85,8 @@ export default oncePer('Modify', (deltaJs) => {
 
 		//noinspection JSMethodCanBeStatic
 		/**
-		 * @public
-		 * @method
-		 * @param rawArgs {*[]}
-		 * @return {?{ options: Object, args: *[] }}
+		 * @param rawArgs {Array.<*>}
+		 * @return {?{ options: Object, args: Array.<*> }}
 		 */
 		processProxyArguments(...rawArgs) {
 			// rawArgs is parsed as (...options, path, ...args),
@@ -106,8 +102,6 @@ export default oncePer('Modify', (deltaJs) => {
 		}
 
 		/**
-		 * @public
-		 * @method
 		 * @param delta   {DeltaJs#Delta}
 		 * @param options {{path: Path}}
 		 * @return {DeltaJs#Proxy} - the deepest proxy created for this operation
