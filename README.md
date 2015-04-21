@@ -7,7 +7,7 @@ achieve modularity and separation of concerns through feature-oriented programmi
 
 ## Description
 
-<img align="right" width="300px" margin="15px" src="./docs/sculptor.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/images/sculptor.jpg" />
 
 Programming is an activity very prone to human error, especially if you have
 multiple developers changing the same code-base at the same time.
@@ -43,7 +43,7 @@ applied by a preprocessor. This will be supported by a future version.
 
 ## Installation
 
-<img align="right" width="300px" margin="15px" src="./docs/foundation.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/images/foundation.jpg" />
 
 This library depends only on the [Babel ES6 polyfill](https://babeljs.io/docs/usage/polyfill/). For your convenience, a delta.js version is provided with this polyfill already baked in, but you also have the option of providing it yourself.
 
@@ -104,7 +104,7 @@ If you don't know which you need, you probably want `delta.full.min.js`, because
 
 ## Using `DeltaJs`
 
-<img align="right" width="300px" margin="15px" src="./docs/selection.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/images/selection.jpg" />
 
 `DeltaJs` is a class that can be instantiated:
 
@@ -121,7 +121,7 @@ the same project that work independently from each other. But you'll usually nee
 
 ## The `DeltaJs` API
 
-<img align="right" width="300px" margin="15px" src="./docs/coder-generic.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/images/coder-generic.jpg" />
 
 Given a `DeltaJs` instance, the following methods are available:
 
@@ -241,7 +241,7 @@ something you want to do very early in your application.
 
 ## The `Proxy` API
 
-<img align="right" width="300px" margin="15px" src="./docs/coder-generic.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/images/coder-generic.jpg" />
 
 Deltas can modify values in any number of ways, from completely
 replacing them with other values, to making fine-grained modifications in a deeply nested
@@ -410,7 +410,7 @@ deltaJs.do('my-delta').append('MyClass.prototype.construct', function (a, b, c) 
 
 ## Future Plans
 
-<img align="right" width="300px" margin="15px" src="./docs/factory.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/images/factory.jpg" />
 
 Here is an incomplete list of future plans for this library:
 
