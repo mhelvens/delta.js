@@ -1,10 +1,110 @@
+# delta.js
+[![Build Status](http://img.shields.io/travis/mhelvens/delta.js.svg)](https://travis-ci.org/mhelvens/delta.js)
+[![Coverage Status](http://img.shields.io/coveralls/mhelvens/delta.js.svg)](https://coveralls.io/r/mhelvens/delta.js?branch=master)
+
+achieve modularity and separation of concerns through feature-oriented programming
 
 
+## Description
+
+<img align="right" width="300px" margin="15px" src="./docs/sculptor.jpg" />
+
+Programming is an activity very prone to human error, especially if you have
+multiple developers changing the same code-base at the same time.
+As more and more features are implemented by different programmers, progress will
+often slow to a crawl. Programmers can easily lose overview and step on each others
+toes when their code is spread across the code base surrounded by
+the code of others.
+
+*delta.js* helps you organize your JavaScript code in terms of *features*.
+As it turns out, files, modules, objects, functions (and so on), are not
+the right abstractions for describing a feature. But they are very good at
+other stuff! This library introduces the notion of a *delta*, which complements
+those other constructs.
+
+A delta is the place to gather all the code belonging to a specific feature.
+Basically, for each piece of code, you instruct the delta to put that code in
+the file, module, object or function where it belongs. That way, the code
+can *physically* be gathered in one place, and therefore be easy to maintain.
+
+This has other benefits as well. By having some deltas be explicitly applied
+*after* others, you give them permission to overwrite things.
+If two deltas that are *unordered* try to overwrite each others code,
+you will get a friendly error message. Moreover, by separating your features
+so explicitly, you will be able to turn them on or off with a switch, for
+either debugging or production.
+
+This might all seem overly complicated at first. But once you get started,
+you'll soon fall in love with this approach.
+
+At this time, delta.js is a runtime library. But in concept, deltas could be
+applied by a preprocessor. This will be supported by a future version.
+
+
+## Installation
+
+<img align="right" width="300px" margin="15px" src="./docs/foundation.jpg" />
+
+This library depends only on the [Babel ES6 polyfill](https://babeljs.io/docs/usage/polyfill/). For your convenience, a delta.js version is provided with this polyfill already baked in, but you also have the option of providing it yourself.
+
+
+### Install using Bower
+
+`delta.js` is available as a [Bower](http://bower.io/) package:
+
+```shell
+bower install delta.js
+```
+
+Unfortunately, the Babel polyfill is [not distributed through Bower](https://github.com/babel/babel/issues/315). So you'll have to either use the version of delta.js with the polyfill baked in, or you'll have to get the polyfill from someplace else, like NPM.
+
+
+### Install using NPM
+
+`delta.js` is available as an [NPM](https://www.npmjs.org) package:
+
+```shell
+npm install delta.js
+```
+
+## Importing `DeltaJs`
+
+The delta.js package offers a [UMD](https://github.com/umdjs/umd) API, so it supports
+AMD ([RequireJS](http://requirejs.org/)), CommonJS and script-tags:
+
+```javascript
+requirejs(['lib/delta.js/dist/delta.js'], function (DeltaJs) {
+    // use DeltaJs
+});
+```
+
+```javascript
+var DeltaJs = require('lib/delta.js/dist/delta.js')
+// use DeltaJs
+```
+
+```html
+<script src="lib/delta.js/dist/delta.js"></script>
+<!-- use DeltaJs -->
+```
+
+
+###Files
+
+The `dist` directory offers different files for use in different circumstances.
+Use the following table to determine which file to use in your situation.
+
+| File                          | Description                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| `delta.js`,<br>`delta.min.js` | requires you to load the [Babel polyfill](https://babeljs.io/docs/usage/polyfill/) yourself |
+| `delta.full.js`,<br>`delta.full.min.js` | already includes the Babel polyfill |
+
+If you don't know which you need, you probably want `delta.full.min.js`, because it will work out-of-the-box. But it is generally more elegant to load the polyfill yourself, especially if you use other libraries that depend on it.
 
 
 ## Using `DeltaJs`
 
-<img align="right" width="300px" margin="15px" src="./docs/images/selection.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/selection.jpg" />
 
 `DeltaJs` is a class that can be instantiated:
 
@@ -21,7 +121,7 @@ the same project that work independently from each other. But you'll usually nee
 
 ## The `DeltaJs` API
 
-<img align="right" width="300px" margin="15px" src="./docs/images/coder-generic.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/coder-generic.jpg" />
 
 Given a `DeltaJs` instance, the following methods are available:
 
@@ -141,7 +241,7 @@ something you want to do very early in your application.
 
 ## The `Proxy` API
 
-<img align="right" width="300px" margin="15px" src="./docs/images/coder-generic.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/coder-generic.jpg" />
 
 Deltas can modify values in any number of ways, from completely
 replacing them with other values, to making fine-grained modifications in a deeply nested
@@ -308,3 +408,21 @@ deltaJs.do('my-delta').append('MyClass.prototype.construct', function (a, b, c) 
 ```
 
 
+## Future Plans
+
+<img align="right" width="300px" margin="15px" src="./docs/factory.jpg" />
+
+Here is an incomplete list of future plans for this library:
+
+* support for changing HTML and CSS with deltas
+* transpiler to resolve deltas at build-time
+
+<div style="clear: both">&nbsp;</div>
+
+
+## License
+
+`delta.js` is released under the terms of the [MIT license](http://en.wikipedia.org/wiki/MIT_License).
+It permits reuse within both open and proprietary software, provided
+all copies of the licensed software include a copy of the MIT License
+terms and the copyright notice.
