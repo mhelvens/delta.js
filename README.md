@@ -108,7 +108,6 @@ If you don't know which you need, you probably want `delta.full.min.js`, because
 
 
 * [DeltaJs](#DeltaJs)
-    * [new DeltaJs()](#new_DeltaJs_new)
     * [.Delta](#DeltaJs#Delta)
     * [.newProxyMethod(method, handler)](#DeltaJs#newProxyMethod)
     * [.newOperationType(name, DeltaClass, ProxyClass)](#DeltaJs#newOperationType)
@@ -120,7 +119,15 @@ If you don't know which you need, you probably want `delta.full.min.js`, because
 ### Classes
 <dl>
 <dt><a href="#DeltaJs">DeltaJs</a></dt>
-<dd></dd>
+<dd><p>This class offers every functionality you need from delta modeling.
+Each instance offers its own operation types and variation points
+and acts as a facade (as in design pattern) to the more specific
+subsystems of delta.js.</p>
+<p>Using multiple <code>DeltaJs</code> instances allows you to use different sets
+of deltas and rules in the same project that work independently
+from each other. But you will usually need only one DeltaJs
+instance per application.</p>
+</dd>
 </dl>
 ### Functions
 <dl>
@@ -142,11 +149,6 @@ overwritten manually.</p>
 </dl>
 <a name="DeltaJs"></a>
 ### DeltaJs
-
------
-
-<a name="new_DeltaJs_new"></a>
-#### new DeltaJs()
 This class offers every functionality you need from delta modeling.
 Each instance offers its own operation types and variation points
 and acts as a facade (as in design pattern) to the more specific

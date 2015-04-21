@@ -1,9 +1,12 @@
 /* import internal stuff */
 import {indent, oncePer, arraysEqual, t} from './util.es6.js';
+import define_OperationTypes             from './operationTypes.es6.js';
 
 
 export default oncePer('Composed', (deltaJs) => {
 
+
+	define_OperationTypes(deltaJs);
 
 	// NOTE: Not importing the circular dependency deltaJs.Delta here.
 	//       That file will import this one at the proper time.

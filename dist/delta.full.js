@@ -492,14 +492,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _define_ContainerProxy2 = _interopRequireWildcard(_define_ContainerProxy);
 	
 	/**
+	 * @public
+	 * @class DeltaJs
+	 * @classdesc
 	 * This class offers every functionality you need from delta modeling.
 	 * Each instance offers its own operation types and variation points
 	 * and acts as a facade (as in design pattern) to the more specific
 	 * subsystems of delta.js.
 	 *
-	 * You will usually need only one DeltaJs instance per application.
-	 * @public
-	 * @class DeltaJs
+	 * Using multiple `DeltaJs` instances allows you to use different sets
+	 * of deltas and rules in the same project that work independently
+	 * from each other. But you will usually need only one DeltaJs
+	 * instance per application.
 	 */
 	
 	var DeltaJs = (function () {
@@ -523,15 +527,17 @@ return /******/ (function(modules) { // webpackBootstrap
 			key: 'newOperationType',
 	
 			/**
-	   * @param name       {string}   - name of the new operation type
-	   * @param DeltaClass {Function} - the new operation class
-	   * @param ProxyClass {?Function} - the optional custom Proxy subclass for this operation-type
+	   * This method allows you to tell delta.js about a new kind of delta operation.
+	   * This was also done for existing operations like `modify`, `add`, `remove`, and so on.
+	   * @param name       {string}    - name of the new operation type
+	   * @param DeltaClass {function}  - the new operation class
+	   * @param ProxyClass {?function} - the optional custom `Proxy` subclass for this operation-type
 	   */
 			value: function newOperationType(name, DeltaClass) {
 				var ProxyClass = arguments[2] === undefined ? null : arguments[2];
 	
 				/* sanity checks */
-				_extend$assert$isUndefined$isDefined$arraysEqual.assert(name[0] === name[0].toUpperCase(), 'Delta operation classes must have a name starting with a capital letter - \'' + name + '\' does not.');
+				_extend$assert$isUndefined$isDefined$arraysEqual.assert(name[0] === name[0].toUpperCase(), 'Names of delta operation classes must start with a capital letter - \'' + name + '\' does not.');
 				_extend$assert$isUndefined$isDefined$arraysEqual.assert(_extend$assert$isUndefined$isDefined$arraysEqual.isUndefined(this.Delta[name]), 'The \'' + name + '\' operation type already exists.');
 	
 				/* store the operation class */
@@ -610,18 +616,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 				/* return the new class */
 				return DeltaClass;
-			}
-		}, {
-			key: 'newProxyMethod',
-	
-			/**
-	   * @public
-	   * @method
-	   * @param method  {string}   - method name
-	   * @param handler {Function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
-	   */
-			value: function newProxyMethod(method, handler) {
-				this.ContainerProxy.newProxyMethod(method, handler);
 			}
 		}]);
 	
@@ -1067,6 +1061,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	exports['default'] = _extend$oncePer$isDefined$isUndefined$arraysEqual$swapLastTwo.oncePer('Delta', function (deltaJs) {
 	
+		/**
+	  * @class DeltaJs#Delta
+	  */
 		deltaJs.Delta = (function () {
 			function Delta() {
 				for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
@@ -1092,9 +1089,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 				/**
 	    * This method should be overwritten by subclasses to make a clone of 'this' delta.
-	    * @public
 	    * @abstract
-	    * @method
 	    * @nosideeffects
 	    * @return {DeltaJs#Delta} - a clone of this delta
 	    */
@@ -1105,8 +1100,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				key: 'evaluatePrecondition',
 	
 				/**
-	    * @private
-	    * @method
+	    * @protected
 	    * @param target                        {DeltaJs.ReadableTarget}
 	    * @param options                       {object}
 	    * @param options.skipWeakPreconditions {boolean}
@@ -1131,11 +1125,9 @@ return /******/ (function(modules) { // webpackBootstrap
 				key: 'appliedTo',
 	
 				/**
-	    * @public
-	    * @method
 	    * @nosideeffects
 	    * @param value   {*}       - any given value
-	    * @param options {object?} - the (optional) options for this delta application
+	    * @param options {?object} - the (optional) options for this delta application
 	    * @return {*} - the value resulting in this delta being applied to the given `value`
 	    */
 				value: function appliedTo(value) {
@@ -1155,8 +1147,6 @@ return /******/ (function(modules) { // webpackBootstrap
 				key: 'toString',
 	
 				/**
-	    * @public
-	    * @method
 	    * @param options {object?}
 	    * @return {string}
 	    */
@@ -1182,7 +1172,6 @@ return /******/ (function(modules) { // webpackBootstrap
 			return Delta;
 		})();
 		deltaJs.Delta._nextID = 0;
-		//deltaJs.Delta._commutations = []; // [{precondition, predicate}]
 	
 		var _multiDispatchOptions = new Map();
 	
@@ -1191,15 +1180,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  * Any number of candidate functions can be created,
 	  * which are then selected based on their precondition predicates.
 	  * @private
-	  * @param name                {string}
-	  * @param staticMethodName    {string}
-	  * @param methodName          {string}
-	  * @param options             {object}
-	  * @param options.onTrue      {function=undefined}
-	  * @param options.onFalse     {function=undefined}
-	  * @param options.onDefault   {function|boolean=false}
-	  * @param options.commutative {boolean=false}
-	  * @param options.arity       {number=2}
+	  * @param name                        {string}
+	  * @param staticMethodName            {string}
+	  * @param methodName                  {string}
+	  * @param options                     {object}
+	  * @param [options.onTrue=undefined]  {function}
+	  * @param [options.onFalse=undefined] {function}
+	  * @param [options.onDefault=false]   {function|boolean}
+	  * @param [options.commutative=false] {boolean}
+	  * @param [options.arity=2]           {number}
 	  */
 		function newMultiDispatch(name, staticMethodName, methodName) {
 			var _extend;
@@ -1782,8 +1771,6 @@ return /******/ (function(modules) { // webpackBootstrap
 				key: 'clone',
 	
 				/**
-	    * @public
-	    * @method
 	    * @nosideeffects
 	    * @return {DeltaJs#Delta.Modify} - a clone of this delta
 	    */
@@ -1954,10 +1941,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 				//noinspection JSMethodCanBeStatic
 				/**
-	    * @public
-	    * @method
-	    * @param rawArgs {*[]}
-	    * @return {?{ options: Object, args: *[] }}
+	    * @param rawArgs {Array.<*>}
+	    * @return {?{ options: Object, args: Array.<*> }}
 	    */
 				value: function processProxyArguments() {
 					for (var _len2 = arguments.length, rawArgs = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
@@ -1984,8 +1969,6 @@ return /******/ (function(modules) { // webpackBootstrap
 				key: 'addOperation',
 	
 				/**
-	    * @public
-	    * @method
 	    * @param delta   {DeltaJs#Delta}
 	    * @param options {{path: Path}}
 	    * @return {DeltaJs#Proxy} - the deepest proxy created for this operation
@@ -3532,8 +3515,8 @@ return /******/ (function(modules) { // webpackBootstrap
 				/**
 	    * @public
 	    * @method
-	    * @param rawArgs {*[]}
-	    * @return {?{ options: Object, args: *[] }}
+	    * @param rawArgs {Array.<*>}
+	    * @return {?{ options: Object, args: Array.<*> }}
 	    */
 				value: function processProxyArguments() {
 					for (var _len3 = arguments.length, rawArgs = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
@@ -3722,10 +3705,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	exports['default'] = _extend$a$assert$isUndefined$oncePer.oncePer('features', function (deltaJs) {
 	
-		_extend$a$assert$isUndefined$oncePer.oncePer(deltaJs.constructor, 'features', function () {
+		_extend$a$assert$isUndefined$oncePer.oncePer(deltaJs.constructor, 'features', function (DeltaJs) {
 	
-			_extend$a$assert$isUndefined$oncePer.extend(deltaJs.constructor.prototype, {
-				/** {@public}{@method}
+			_extend$a$assert$isUndefined$oncePer.extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */{
+				/**
 	    * @param name    {string}  - the name of the new feature
 	    * @param options {object?} - the (optional) options for the new feature
 	    * @return {DeltaJs#Feature} - the object representing the new feature
@@ -4281,6 +4264,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 		_define_Proxy2['default'](deltaJs);
 	
+		_extend$a$isUndefined$oncePer.oncePer(deltaJs.constructor, 'ContainerProxy', function (DeltaJs) {
+			_extend$a$isUndefined$oncePer.extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */{
+				/**
+	    * @param method  {string}   - method name
+	    * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
+	    */
+				newProxyMethod: function newProxyMethod(method, handler) {
+					this.ContainerProxy.newProxyMethod(method, handler);
+				}
+			});
+		});
+	
 		/* a Proxy class for container operation types like Modify and DeltaModel */
 		deltaJs.ContainerProxy = (function (_deltaJs$Proxy) {
 	
@@ -4440,12 +4435,11 @@ return /******/ (function(modules) { // webpackBootstrap
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 				//noinspection JSCommentMatchesSignature
-				/** {@public}{@abstract}{@method}
+				/**
 	    * Subclasses of `ContainerProxy` should implement this method to extract an
 	    * options object, path and final argument list from a given 'raw' argument list.
-	    *
-	    * @param args {[*]}
-	    * @return {{options: Object, args: [*]}}
+	    * @abstract
+	    * @protected
 	    */
 				value: function processProxyArguments() {
 					throw new Error('A \'ContainerProxy\' subclass needs to implement the \'processProxyArguments\' method.');
@@ -4457,10 +4451,8 @@ return /******/ (function(modules) { // webpackBootstrap
 				/** {@public}{@abstract}{@method}
 	    * Subclasses of `ContainerProxy` should implement this method to add a given delta
 	    * under a given path with the given options, and return its corresponding Proxy.
-	    *
-	    * @param delta   {DeltaJs#Delta}
-	    * @param options {Object}
-	    * @return {DeltaJs#Proxy}
+	    * @abstract
+	    * @protected
 	    */
 				value: function addOperation() {
 					throw new Error('A \'ContainerProxy\' subclass needs to implement the \'addOperation\' method.');
@@ -4470,13 +4462,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-				/** {@public}{@abstract}{@method}
+				/**
 	    * Create a delta based on a method-name and argument-list.
 	    * If the method-name is overloaded, you'll automatically get
 	    * an `Delta.Overloaded` instance.
 	    *
 	    * @param method {string}
-	    * @param args   {[*]}
+	    * @param [args] {*}
 	    * @return {DeltaJs#Delta}
 	    */
 				value: function _newDeltaByMethod(method, args) {
@@ -4494,9 +4486,10 @@ return /******/ (function(modules) { // webpackBootstrap
 			}, {
 				key: 'newProxyMethod',
 	
-				/** {@public}{@static}{@method}
+				/**
+	    * @static
 	    * @param method  {string}   - method name
-	    * @param handler {Function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
+	    * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
 	    */
 				value: function newProxyMethod(method, handler) {
 	
@@ -4828,7 +4821,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		_extend$oncePer.extend(deltaJs.Delta.prototype, {
 	
 			/** {@public}{@method}
-	   * @param args {*[]}
+	   * @param args {Array.<*>}
 	   * @return {DeltaJs#Proxy}
 	   */
 			'do': function _do() {
@@ -7139,8 +7132,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	__webpack_require__(61);
 	__webpack_require__(62);
 	__webpack_require__(63);
-	__webpack_require__(64);
 	__webpack_require__(65);
+	__webpack_require__(64);
 	__webpack_require__(66);
 	__webpack_require__(67);
 	__webpack_require__(68);
@@ -9283,6 +9276,21 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// https://github.com/DavidBruant/Map-Set.prototype.toJSON
+	var $def  = __webpack_require__(72)
+	  , forOf = __webpack_require__(84).forOf;
+	$def($def.P, 'Set', {
+	  toJSON: function(){
+	    var arr = [];
+	    forOf(this, false, arr.push, arr);
+	    return arr;
+	  }
+	});
+
+/***/ },
+/* 65 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// http://goo.gl/XkBrjD
 	var $    = __webpack_require__(70)
 	  , $def = __webpack_require__(72);
@@ -9302,21 +9310,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	$def($def.S, 'Object', {
 	  values:  createObjectToArray(false),
 	  entries: createObjectToArray(true)
-	});
-
-/***/ },
-/* 65 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// https://github.com/DavidBruant/Map-Set.prototype.toJSON
-	var $def  = __webpack_require__(72)
-	  , forOf = __webpack_require__(84).forOf;
-	$def($def.P, 'Set', {
-	  toJSON: function(){
-	    var arr = [];
-	    forOf(this, false, arr.push, arr);
-	    return arr;
-	  }
 	});
 
 /***/ },

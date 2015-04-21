@@ -5,6 +5,7 @@ import Graph from 'graph.js';
 /* import internal stuff */
 import {extend, isDefined, indent, oncePer, s, t}       from './util.es6.js';
 import Path                                             from './Path.es6.js';
+import define_OperationTypes                            from './operationTypes.es6.js';
 import define_Modify                                    from './Modify.es6.js';
 import define_ContainerProxy                            from './ContainerProxy.es6.js';
 import {ApplicationOrderCycle, UnresolvedDeltaConflict} from './Error.es6.js';
@@ -13,6 +14,7 @@ import {ApplicationOrderCycle, UnresolvedDeltaConflict} from './Error.es6.js';
 export default oncePer('DeltaModel', (deltaJs) => {
 
 
+	define_OperationTypes(deltaJs);
 	define_ContainerProxy(deltaJs);
 
 

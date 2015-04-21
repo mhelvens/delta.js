@@ -2,12 +2,14 @@
 import {extend, indent, t, oncePer, mapEqual} from './util.es6.js';
 import Path                                   from './Path.es6.js';
 import {wt}                                   from './Target.es6.js';
+import define_OperationTypes                  from './operationTypes.es6.js';
 import define_ContainerProxy                  from './ContainerProxy.es6.js';
 
 
 export default oncePer('Modify', (deltaJs) => {
 
 
+	define_OperationTypes(deltaJs);
 	define_ContainerProxy(deltaJs);
 
 

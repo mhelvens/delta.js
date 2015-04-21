@@ -6,13 +6,13 @@ import define_DeltaModel from './DeltaModel.es6.js';
 export default oncePer('variation points', (deltaJs) => {
 
 
-	oncePer(deltaJs.constructor, 'variation points', () => {
+	define_DeltaModel(deltaJs);
 
-		define_DeltaModel(deltaJs);
 
-		extend(deltaJs.constructor.prototype, {
+	oncePer(deltaJs.constructor, 'variation points', (DeltaJs) => {
+		extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
 
-			/** {@public}{@method}
+			/**
 			 * This method indicates a variation point.
 			 * @param name {string} - a hook by which operations from the core delta model can be applied
 			 * @param val  {*}      - the initial value of this variation point
@@ -26,7 +26,7 @@ export default oncePer('variation points', (deltaJs) => {
 				return root[name];
 			},
 
-			/** {@public}{@method}
+			/**
 			 * A {DeltaJs} instance has one fundamental {DeltaJs#DeltaModel} instance, which is applied
 			 * to any variation points that are encountered. This method is an alias to the eponymous
 			 * method on that 'root' delta model. It returns the proxy that allows new delta operations
@@ -39,7 +39,6 @@ export default oncePer('variation points', (deltaJs) => {
 			}
 
 		});
-
 	});
 
 

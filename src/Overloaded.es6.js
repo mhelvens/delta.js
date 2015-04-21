@@ -1,5 +1,6 @@
 /* import internal stuff */
 import {indent, oncePer, arraysEqual, t} from './util.es6.js';
+import define_OperationTypes             from './operationTypes.es6.js';
 import define_Delta                      from './Delta_class.es6.js';
 import {MultipleOverloadsApplicationError,
 		NoOverloadsApplicationError,
@@ -9,7 +10,8 @@ import {MultipleOverloadsApplicationError,
 export default oncePer('Overloaded', (deltaJs) => {
 
 
-	define_Delta(deltaJs);
+	define_OperationTypes(deltaJs);
+	define_Delta         (deltaJs);
 
 
 	deltaJs.newOperationType('Overloaded', class Overloaded extends deltaJs.Delta {

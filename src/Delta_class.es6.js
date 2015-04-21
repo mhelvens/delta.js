@@ -7,6 +7,11 @@ import define_Composed                                                     from 
 
 export default oncePer('Delta', (deltaJs) => {
 
+
+
+
+
+
 	/**
 	 * @class DeltaJs#Delta
 	 */

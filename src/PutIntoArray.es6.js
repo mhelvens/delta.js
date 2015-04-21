@@ -1,13 +1,16 @@
 /* import internal stuff */
-import {isDefined, t, define_d, oncePer, arraysEqual, arraysHaveSameElements, customIndexOf} from './util.es6.js';
-import define_Modify                                  from './Modify.es6.js';
-import define_basicOperations                         from './basicOperations.es6.js';
-import define_Proxy                                   from './Proxy.es6.js';
+import define_OperationTypes  from './operationTypes.es6.js';
+import define_Modify          from './Modify.es6.js';
+import define_basicOperations from './basicOperations.es6.js';
+import define_Proxy           from './Proxy.es6.js';
+import {isDefined, t, define_d, oncePer, arraysEqual,
+        arraysHaveSameElements, customIndexOf} from './util.es6.js';
 
 
 export default oncePer('PutIntoArray', (deltaJs) => {
 
 
+	define_OperationTypes (deltaJs);
 	define_Modify         (deltaJs);
 	define_basicOperations(deltaJs);
 	define_Proxy          (deltaJs);
