@@ -7,7 +7,7 @@ export default oncePer('application conditions', (deltaJs) => {
 
 	oncePer(deltaJs.constructor, 'application conditions', () => {
 		//noinspection JSCommentMatchesSignature
-		Object.assign(deltaJs.constructor.prototype, {
+		Object.assign(deltaJs.constructor.prototype, /** @lends DeltaJs.prototype */ {
 
 			/**
 			 *
@@ -27,7 +27,7 @@ export default oncePer('application conditions', (deltaJs) => {
 	});
 
 
-	extend(deltaJs.Delta.prototype, {
+	extend(deltaJs.Delta.prototype, /** @lends DeltaJs#Delta.prototype */ {
 
 		/**
 		 *

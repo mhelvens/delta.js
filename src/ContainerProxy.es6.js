@@ -12,20 +12,13 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 	define_Proxy(deltaJs);
 
 
-	oncePer(deltaJs.constructor, 'ContainerProxy', (DeltaJs) => {
-		Object.assign(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
-			/**
-			 * @param method  {string}   - method name
-			 * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
-			 */
-			newProxyMethod(method, handler) {
-				this.ContainerProxy.newProxyMethod(method, handler);
-			}
-		});
-	});
-
-
 	/* a Proxy class for container operation types like Modify and DeltaModel */
+	/**
+	 * @class DeltaJs#ContainerProxyProxy
+	 * @extends DeltaJs#Proxy
+	 * @classdesc
+	 *
+	 */
 	deltaJs.ContainerProxy = class ContainerProxy extends deltaJs.Proxy {
 
 		// A Proxy instance exposes operation methods directly. Arguments
@@ -38,7 +31,9 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 			this._children = new Map(); // key -> [proxies]
 		}
 
-
+		/**
+		 *
+		 */
 		deactivate() {
 			for (let key of this._children.keys()) {
 				this.childProxy(key).deactivate();
@@ -46,7 +41,12 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 			super.deactivate();
 		}
 
-
+		/**
+		 *
+		 * @param key   {string}        -
+		 * @param delta {DeltaJs#Delta} -
+		 * @returns {DeltaJs#Proxy} -
+		 */
 		addChildProxy(key, delta) {
 			/* get the current proxy for the given key */
 			var current = this.childProxy(key);
@@ -67,19 +67,38 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 			return proxy;
 		}
 
+		/**
+		 *
+		 * @returns {}
+		 */
+		childKeys() {
+			return [...this._children.keys()];
+		} // TODO: Is an iterable a good return value?
 
-		childKeys() { return [...this._children.keys()] } // TODO: Is an iterable a good return value?
+		/**
+		 *
+		 * @param key
+		 * @returns {*}
+		 */
+		childProxies(key) {
+			return a(this._children, key);
+		}
 
-
-		childProxies(key) { return a(this._children, key) }
-
-
+		/**
+		 *
+		 * @param key {string} -
+		 * @returns {}
+		 */
 		childProxy(key) {
 			if (!this._children.has(key)) { this._children.set(key, []) }
 			return this._children.get(key)[this._children.get(key).length-1];
 		}
 
-
+		/**
+		 *
+		 * @param key {string} -
+		 * @returns {DeltaJs#Delta} -
+		 */
 		childDelta(key) {
 			let result = deltaJs.Delta.composed(
 				...this.childProxies(key).map(proxy => proxy.delta())
@@ -87,7 +106,12 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 			return result;
 		}
 
-
+		//noinspection JSCommentMatchesSignature
+		/**
+		 *
+		 * @param ...doArgs {Array} -
+		 * @returns {DeltaJs#Proxy} -
+		 */
 		do(...doArgs) {
 			/* is this proxy active? */
 			if (!this.active) { throw new MultipleActiveProxiesError() }
@@ -105,6 +129,12 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+		/**
+		 * @private
+		 * @param method {string} -
+		 * @param doArgs {Array}  -
+		 * @returns {DeltaJs#Proxy} -
+		 */
 		_do(method, doArgs) {
 			/* is this proxy active? */
 			if (!this.active) { throw new MultipleActiveProxiesError() }
@@ -129,24 +159,20 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-		//noinspection JSCommentMatchesSignature
 		/**
 		 * Subclasses of `ContainerProxy` should implement this method to extract an
 		 * options object, path and final argument list from a given 'raw' argument list.
 		 * @abstract
-		 * @protected
 		 */
 		processProxyArguments() {
 			throw new Error(`A 'ContainerProxy' subclass needs to implement the 'processProxyArguments' method.`);
 		}
 
 
-		//noinspection JSCommentMatchesSignature
-		/** {@public}{@abstract}{@method}
+		/**
 		 * Subclasses of `ContainerProxy` should implement this method to add a given delta
 		 * under a given path with the given options, and return its corresponding Proxy.
 		 * @abstract
-		 * @protected
 		 */
 		addOperation() {
 			throw new Error(`A 'ContainerProxy' subclass needs to implement the 'addOperation' method.`);
@@ -160,9 +186,10 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		 * Create a delta based on a method-name and argument-list.
 		 * If the method-name is overloaded, you'll automatically get
 		 * an `Delta.Overloaded` instance.
-		 *
-		 * @param method {string}
-		 * @param [args] {*}
+		 * @private
+		 * @static
+		 * @param method {string} -
+		 * @param [args] {*}      -
 		 * @return {DeltaJs#Delta}
 		 */
 		static _newDeltaByMethod(method, args) {
@@ -196,6 +223,21 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		}
 
 	};
+
+
+	oncePer(deltaJs.constructor, 'ContainerProxy', (DeltaJs) => {
+		Object.assign(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
+
+			/**
+			 * @param method  {string}   - method name
+			 * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
+			 */
+			newProxyMethod(method, handler) {
+				this.ContainerProxy.newProxyMethod(method, handler);
+			}
+
+		});
+	});
 
 
 });

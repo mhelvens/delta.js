@@ -1,17 +1,17 @@
 /* import internal stuff */
-import define_OperationTypes                                 from './operationTypes.es6.js';
-import define_Delta                                          from './Delta_class.es6.js';
-import define_Composed                                       from './Composed.es6.js';
-import define_Overloaded                                     from './Overloaded.es6.js';
-import define_Modify                                         from './Modify.es6.js';
-import define_basicOperations                                from './basicOperations.es6.js';
-import define_PutIntoArray                                   from './PutIntoArray.es6.js';
-import define_PutIntoFunction                                from './PutIntoFunction.es6.js';
-import define_DeltaModel                                     from './DeltaModel.es6.js';
-import define_features                                       from './features.es6.js';
-import define_variationPoints                                from './variationPoints.es6.js';
-import define_applicationConditions                          from './applicationConditions.es6.js';
-import define_ContainerProxy                                 from './ContainerProxy.es6.js';
+import define_OperationTypes        from './operationTypes.es6.js';
+import define_Delta                 from './Delta_class.es6.js';
+import define_Composed              from './Composed.es6.js';
+import define_Overloaded            from './Overloaded.es6.js';
+import define_Modify                from './Modify.es6.js';
+import define_basicOperations       from './basicOperations.es6.js';
+import define_PutIntoArray          from './PutIntoArray.es6.js';
+import define_PutIntoFunction       from './PutIntoFunction.es6.js';
+import define_DeltaModel            from './DeltaModel.es6.js';
+import define_features              from './features.es6.js';
+import define_variationPoints       from './variationPoints.es6.js';
+import define_applicationConditions from './applicationConditions.es6.js';
+import define_ContainerProxy        from './ContainerProxy.es6.js';
 
 
 /**

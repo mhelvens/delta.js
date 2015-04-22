@@ -22,6 +22,10 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 
 
 	/* declaring the function operation type */
+	/**
+	 * @class DeltaJs#Delta.PutIntoFunction
+	 * @extends DeltaJs#Delta
+	 */
 	deltaJs.newOperationType('PutIntoFunction', class PutIntoFunction extends deltaJs.Delta {
 
 		constructor(...args) {
@@ -79,6 +83,7 @@ export default oncePer('PutIntoFunction', (deltaJs) => {
 
 
 	/* Proxy methods ****************************************************************************/
+	// TODO: docs
 	deltaJs.newProxyMethod('prepend', (value) => new deltaJs.Delta.PutIntoFunction({ method: 'prepend', value }));
 	deltaJs.newProxyMethod('insert',  (value) => new deltaJs.Delta.PutIntoFunction({ method: 'insert',  value }));
 	deltaJs.newProxyMethod('append',  (value) => new deltaJs.Delta.PutIntoFunction({ method: 'append',  value }));

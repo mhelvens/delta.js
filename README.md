@@ -108,45 +108,166 @@ If you don't know which you need, you probably want `delta.full.min.js`, because
 
 
 * [DeltaJs](#DeltaJs)
+    * ___instance___
+    * [.ContainerProxyProxy](#DeltaJs#ContainerProxyProxy) ⇐ <code>[Proxy](#DeltaJs#Proxy)</code>
     * [.Delta](#DeltaJs#Delta)
+        * ___instance___
+        * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+        * [.applicationCondition](#DeltaJs#Delta#applicationCondition)
+        * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+        * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+        * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+        * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+        * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+        * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+        * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * ___static___
+        * [.Composed](#DeltaJs#Delta.Composed) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.DeltaModel](#DeltaJs#Delta.DeltaModel) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * ___instance___
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+            * ___static___
+            * [.Proxy](#DeltaJs#Delta.DeltaModel.Proxy) ⇐ <code>DeltaJs#ContainerProxy</code>
+        * [.Modify](#DeltaJs#Delta.Modify) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * ___instance___
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+            * ___static___
+            * [.Proxy](#DeltaJs#Delta.Modify.Proxy) ⇐ <code>DeltaJs#ContainerProxy</code>
+        * [.Overloaded](#DeltaJs#Delta.Overloaded) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.PutIntoArray](#DeltaJs#Delta.PutIntoArray) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.PutIntoFunction](#DeltaJs#Delta.PutIntoFunction) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.NoOp](#DeltaJs#Delta.NoOp) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.Add](#DeltaJs#Delta.Add) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.Remove](#DeltaJs#Delta.Remove) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.Forbid](#DeltaJs#Delta.Forbid) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.Replace](#DeltaJs#Delta.Replace) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.Update](#DeltaJs#Delta.Update) ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.applicationCondition](#DeltaJs#Delta#applicationCondition) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+            * [.selected](#DeltaJs#Delta#selected) ⇒ <code>boolean</code>
+            * [.do(...args)](#DeltaJs#Delta#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+            * [.composedWith(other, [options])](#DeltaJs#Delta#composedWith) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+            * [.refines(other, [options])](#DeltaJs#Delta#refines) ⇒ <code>boolean</code>
+            * [.equals(other, [options])](#DeltaJs#Delta#equals) ⇒ <code>boolean</code>
+            * [.commutesWith(other, [options])](#DeltaJs#Delta#commutesWith) ⇒ <code>boolean</code>
+            * [.resolves(conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta#resolves) ⇒ <code>boolean</code>
+        * [.composed(...deltas, [options])](#DeltaJs#Delta.composed) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+        * [.refines(delta1, delta2, [options])](#DeltaJs#Delta.refines) ⇒ <code>boolean</code>
+        * [.equal(delta1, delta2, [options])](#DeltaJs#Delta.equal) ⇒ <code>boolean</code>
+        * [.commute(delta1, delta2, [options])](#DeltaJs#Delta.commute) ⇒ <code>boolean</code>
+        * [.resolves(conflictResolvingDelta, conflictingDelta1, conflictingDelta2, [options])](#DeltaJs#Delta.resolves) ⇒ <code>boolean</code>
+    * [.Proxy](#DeltaJs#Proxy)
+    * [.Feature](#DeltaJs#Feature)
+        * [.addOption(optionName, value)](#DeltaJs#Feature#addOption)
     * [.newProxyMethod(method, handler)](#DeltaJs#newProxyMethod)
-    * [.newOperationType(name, DeltaClass, ProxyClass)](#DeltaJs#newOperationType)
-    * [.newFeature(name, options)](#DeltaJs#newFeature) ⇒ <code>DeltaJs#Feature</code>
+    * [.select(...features)](#DeltaJs#select)
+    * [.newFeature(name, options)](#DeltaJs#newFeature) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+    * [.newOperationType(name, DeltaSubclass, ProxySubclass)](#DeltaJs#newOperationType)
+    * [.vp(name, val)](#DeltaJs#vp) ⇒ <code>\*</code>
+    * [.do()](#DeltaJs#do) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+    * ___static___
+    * [.ApplicationError](#DeltaJs.ApplicationError) ⇐ <code>Error</code>
+    * [.PreconditionFailure](#DeltaJs.PreconditionFailure) ⇐ <code>[ApplicationError](#DeltaJs.ApplicationError)</code>
+    * [.MultipleOverloadsApplicationError](#DeltaJs.MultipleOverloadsApplicationError) ⇐ <code>[PreconditionFailure](#DeltaJs.PreconditionFailure)</code>
+    * [.NoOverloadsApplicationError](#DeltaJs.NoOverloadsApplicationError) ⇐ <code>[PreconditionFailure](#DeltaJs.PreconditionFailure)</code>
+    * [.UnresolvedDeltaConflict](#DeltaJs.UnresolvedDeltaConflict) ⇐ <code>[ApplicationError](#DeltaJs.ApplicationError)</code>
+    * [.CompositionError](#DeltaJs.CompositionError) ⇐ <code>Error</code>
+    * [.MultipleOverloadsCompositionError](#DeltaJs.MultipleOverloadsCompositionError) ⇐ <code>[CompositionError](#DeltaJs.CompositionError)</code>
+    * [.ConstraintFailure](#DeltaJs.ConstraintFailure) ⇐ <code>Error</code>
+    * [.ApplicationOrderCycle](#DeltaJs.ApplicationOrderCycle) ⇐ <code>Error</code>
+    * [.MultipleActiveProxiesError](#DeltaJs.MultipleActiveProxiesError) ⇐ <code>Error</code>
+    * [.Path](#DeltaJs.Path)
+    * [.ReadableTarget](#DeltaJs.ReadableTarget)
+    * [.WritableTarget](#DeltaJs.WritableTarget) ⇐ <code>[ReadableTarget](#DeltaJs.ReadableTarget)</code>
 
 
 -----
 
-### Classes
-<dl>
-<dt><a href="#DeltaJs">DeltaJs</a></dt>
-<dd><p>This class offers every functionality you need from delta modeling.
-Each instance offers its own operation types and variation points
-and acts as a facade (as in design pattern) to the more specific
-subsystems of delta.js.</p>
-<p>Using multiple <code>DeltaJs</code> instances allows you to use different sets
-of deltas and rules in the same project that work independently
-from each other. But you will usually need only one DeltaJs
-instance per application.</p>
-</dd>
-</dl>
-### Functions
-<dl>
-<dt><a href="#do">do(args)</a> ⇒ <code>DeltaJs#Proxy</code></dt>
-<dd><p>{@public}{@method}</p>
-</dd>
-<dt><a href="#vp">vp(name, val)</a> ⇒ <code>*</code></dt>
-<dd><p>{@public}{@method}
-This method indicates a variation point.</p>
-</dd>
-<dt><a href="#do">do()</a> ⇒ <code>DeltaJs#Proxy</code></dt>
-<dd><p>{@public}{@method}
-A {DeltaJs} instance has one fundamental {DeltaJs#DeltaModel} instance, which is applied
-to any variation points that are encountered. This method is an alias to the eponymous
-method on that &#39;root&#39; delta model. It returns the proxy that allows new delta operations
-to be added more easily. It presets the &#39;feature&#39; option to &#39;true&#39;, but this can be
-overwritten manually.</p>
-</dd>
-</dl>
 <a name="DeltaJs"></a>
 ### DeltaJs
 This class offers every functionality you need from delta modeling.
@@ -162,8 +283,1310 @@ instance per application.
 
 -----
 
+<a name="DeltaJs#ContainerProxyProxy"></a>
+#### *deltaJs*.ContainerProxyProxy ⇐ <code>[Proxy](#DeltaJs#Proxy)</code>
+**Extends:** <code>[Proxy](#DeltaJs#Proxy)</code>  
+
+-----
+
 <a name="DeltaJs#Delta"></a>
 #### *deltaJs*.Delta
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+##### *delta*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+##### *delta*.applicationCondition
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ac | <code>[Feature](#DeltaJs#Feature)</code> | - |
+
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+##### *delta*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+##### *delta*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+##### *delta*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+##### *delta*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+##### *delta*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+##### *delta*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+##### *delta*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.Composed"></a>
+##### *Delta*.Composed ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *composed*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *composed*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *composed*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *composed*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *composed*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *composed*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *composed*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *composed*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.DeltaModel"></a>
+##### *Delta*.DeltaModel ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *deltaModel*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *deltaModel*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *deltaModel*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *deltaModel*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *deltaModel*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *deltaModel*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *deltaModel*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *deltaModel*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.DeltaModel.Proxy"></a>
+###### *DeltaModel*.Proxy ⇐ <code>DeltaJs#ContainerProxy</code>
+**Extends:** <code>DeltaJs#ContainerProxy</code>  
+
+-----
+
+<a name="DeltaJs#Delta.Modify"></a>
+##### *Delta*.Modify ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *modify*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *modify*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *modify*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *modify*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *modify*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *modify*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *modify*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *modify*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.Modify.Proxy"></a>
+###### *Modify*.Proxy ⇐ <code>DeltaJs#ContainerProxy</code>
+**Extends:** <code>DeltaJs#ContainerProxy</code>  
+
+-----
+
+<a name="DeltaJs#Delta.Overloaded"></a>
+##### *Delta*.Overloaded ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *overloaded*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *overloaded*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *overloaded*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *overloaded*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *overloaded*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *overloaded*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *overloaded*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *overloaded*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.PutIntoArray"></a>
+##### *Delta*.PutIntoArray ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *putIntoArray*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *putIntoArray*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *putIntoArray*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *putIntoArray*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *putIntoArray*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *putIntoArray*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *putIntoArray*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *putIntoArray*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.PutIntoFunction"></a>
+##### *Delta*.PutIntoFunction ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *putIntoFunction*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *putIntoFunction*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *putIntoFunction*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *putIntoFunction*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *putIntoFunction*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *putIntoFunction*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *putIntoFunction*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *putIntoFunction*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.NoOp"></a>
+##### *Delta*.NoOp ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+an operation type that changes nothing
+
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *noOp*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *noOp*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *noOp*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *noOp*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *noOp*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *noOp*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *noOp*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *noOp*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.Add"></a>
+##### *Delta*.Add ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+an operation type for adding a new value
+
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *add*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *add*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *add*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *add*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *add*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *add*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *add*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *add*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.Remove"></a>
+##### *Delta*.Remove ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+an operation type for removing an existing value, i.e., making it `undefined`
+
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *remove*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *remove*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *remove*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *remove*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *remove*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *remove*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *remove*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *remove*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.Forbid"></a>
+##### *Delta*.Forbid ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+an operation type that merely forbids a value from existing, i.e., asserts that it is `undefined`
+
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *forbid*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *forbid*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *forbid*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *forbid*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *forbid*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *forbid*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *forbid*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *forbid*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.Replace"></a>
+##### *Delta*.Replace ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+an operation type for replacing a value with another
+
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *replace*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *replace*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *replace*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *replace*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *replace*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *replace*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *replace*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *replace*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.Update"></a>
+##### *Delta*.Update ⇐ <code>[Delta](#DeltaJs#Delta)</code>
+an operation type for arbitrarily transforming a value using a transformation function
+
+**Extends:** <code>[Delta](#DeltaJs#Delta)</code>  
+
+-----
+
+<a name="DeltaJs#Delta#applicationCondition"></a>
+###### *update*.applicationCondition ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+**Overrides:** <code>[applicationCondition](#DeltaJs#Delta#applicationCondition)</code>  
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#selected"></a>
+###### *update*.selected ⇒ <code>boolean</code>
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#do"></a>
+###### *update*.do(...args) ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...args | <code>Array.&lt;\*&gt;</code> | - |
+
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#composedWith"></a>
+###### *update*.composedWith(other, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta#refines"></a>
+###### *update*.refines(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#equals"></a>
+###### *update*.equals(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#commutesWith"></a>
+###### *update*.commutesWith(other, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| other | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta#resolves"></a>
+###### *update*.resolves(conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.composed"></a>
+##### *Delta*.composed(...deltas, [options]) ⇒ <code>[Delta](#DeltaJs#Delta)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...deltas | <code>[Array.&lt;Delta&gt;](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>[Delta](#DeltaJs#Delta)</code> - - the result of composing this delta with the `other` delta  
+
+-----
+
+<a name="DeltaJs#Delta.refines"></a>
+##### *Delta*.refines(delta1, delta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| delta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| delta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.equal"></a>
+##### *Delta*.equal(delta1, delta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| delta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| delta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.commute"></a>
+##### *Delta*.commute(delta1, delta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| delta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| delta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Delta.resolves"></a>
+##### *Delta*.resolves(conflictResolvingDelta, conflictingDelta1, conflictingDelta2, [options]) ⇒ <code>boolean</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conflictResolvingDelta | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta1 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| conflictingDelta2 | <code>[Delta](#DeltaJs#Delta)</code> | - |
+| [options] | <code>object</code> | - |
+
+**Returns**: <code>boolean</code> - -  
+
+-----
+
+<a name="DeltaJs#Proxy"></a>
+#### *deltaJs*.Proxy
+
+-----
+
+<a name="DeltaJs#Feature"></a>
+#### *deltaJs*.Feature
+
+-----
+
+<a name="DeltaJs#Feature#addOption"></a>
+##### *feature*.addOption(optionName, value)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| optionName | <code>string</code> | - |
+| value |  | - |
+
 
 -----
 
@@ -178,8 +1601,30 @@ instance per application.
 
 -----
 
+<a name="DeltaJs#select"></a>
+#### *deltaJs*.select(...features)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...features | <code>Array.&lt;string&gt;</code> | - |
+
+
+-----
+
+<a name="DeltaJs#newFeature"></a>
+#### *deltaJs*.newFeature(name, options) ⇒ <code>[Feature](#DeltaJs#Feature)</code>
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>string</code> | the name of the new feature |
+| options | <code>object</code> | the (optional) options for the new feature |
+
+**Returns**: <code>[Feature](#DeltaJs#Feature)</code> - - the object representing the new feature  
+
+-----
+
 <a name="DeltaJs#newOperationType"></a>
-#### *deltaJs*.newOperationType(name, DeltaClass, ProxyClass)
+#### *deltaJs*.newOperationType(name, DeltaSubclass, ProxySubclass)
 This method allows you to tell delta.js about a new kind of delta operation.
 This was also done for existing operations like `modify`, `add`, `remove`, and so on.
 
@@ -187,39 +1632,14 @@ This was also done for existing operations like `modify`, `add`, `remove`, and s
 | Param | Type | Description |
 | --- | --- | --- |
 | name | <code>string</code> | name of the new operation type |
-| DeltaClass | <code>function</code> | the new operation class |
-| ProxyClass | <code>function</code> | the optional custom `Proxy` subclass for this operation-type |
+| DeltaSubclass | <code>function</code> | the new operation class |
+| ProxySubclass | <code>function</code> | the optional custom `Proxy` subclass for this operation-type |
 
 
 -----
 
-<a name="DeltaJs#newFeature"></a>
-#### *deltaJs*.newFeature(name, options) ⇒ <code>DeltaJs#Feature</code>
-
-| Param | Type | Description |
-| --- | --- | --- |
-| name | <code>string</code> | the name of the new feature |
-| options | <code>object</code> | the (optional) options for the new feature |
-
-**Returns**: <code>DeltaJs#Feature</code> - - the object representing the new feature  
-
------
-
-<a name="do"></a>
-### do(args) ⇒ <code>DeltaJs#Proxy</code>
-{@public}{@method}
-
-
-| Param | Type |
-| --- | --- |
-| args | <code>Array.&lt;\*&gt;</code> | 
-
-
------
-
-<a name="vp"></a>
-### vp(name, val) ⇒ <code>\*</code>
-{@public}{@method}
+<a name="DeltaJs#vp"></a>
+#### *deltaJs*.vp(name, val) ⇒ <code>\*</code>
 This method indicates a variation point.
 
 
@@ -232,16 +1652,91 @@ This method indicates a variation point.
 
 -----
 
-<a name="do"></a>
-### do() ⇒ <code>DeltaJs#Proxy</code>
-{@public}{@method}
+<a name="DeltaJs#do"></a>
+#### *deltaJs*.do() ⇒ <code>[Proxy](#DeltaJs#Proxy)</code>
 A {DeltaJs} instance has one fundamental {DeltaJs#DeltaModel} instance, which is applied
 to any variation points that are encountered. This method is an alias to the eponymous
 method on that 'root' delta model. It returns the proxy that allows new delta operations
 to be added more easily. It presets the 'feature' option to 'true', but this can be
 overwritten manually.
 
-**Returns**: <code>DeltaJs#Proxy</code> - - the proxy to this delta, for easily adding operations  
+**Returns**: <code>[Proxy](#DeltaJs#Proxy)</code> - - the proxy to this delta, for easily adding operations  
+
+-----
+
+<a name="DeltaJs.ApplicationError"></a>
+#### *DeltaJs*.ApplicationError ⇐ <code>Error</code>
+**Extends:** <code>Error</code>  
+
+-----
+
+<a name="DeltaJs.PreconditionFailure"></a>
+#### *DeltaJs*.PreconditionFailure ⇐ <code>[ApplicationError](#DeltaJs.ApplicationError)</code>
+**Extends:** <code>[ApplicationError](#DeltaJs.ApplicationError)</code>  
+
+-----
+
+<a name="DeltaJs.MultipleOverloadsApplicationError"></a>
+#### *DeltaJs*.MultipleOverloadsApplicationError ⇐ <code>[PreconditionFailure](#DeltaJs.PreconditionFailure)</code>
+**Extends:** <code>[PreconditionFailure](#DeltaJs.PreconditionFailure)</code>  
+
+-----
+
+<a name="DeltaJs.NoOverloadsApplicationError"></a>
+#### *DeltaJs*.NoOverloadsApplicationError ⇐ <code>[PreconditionFailure](#DeltaJs.PreconditionFailure)</code>
+**Extends:** <code>[PreconditionFailure](#DeltaJs.PreconditionFailure)</code>  
+
+-----
+
+<a name="DeltaJs.UnresolvedDeltaConflict"></a>
+#### *DeltaJs*.UnresolvedDeltaConflict ⇐ <code>[ApplicationError](#DeltaJs.ApplicationError)</code>
+**Extends:** <code>[ApplicationError](#DeltaJs.ApplicationError)</code>  
+
+-----
+
+<a name="DeltaJs.CompositionError"></a>
+#### *DeltaJs*.CompositionError ⇐ <code>Error</code>
+**Extends:** <code>Error</code>  
+
+-----
+
+<a name="DeltaJs.MultipleOverloadsCompositionError"></a>
+#### *DeltaJs*.MultipleOverloadsCompositionError ⇐ <code>[CompositionError](#DeltaJs.CompositionError)</code>
+**Extends:** <code>[CompositionError](#DeltaJs.CompositionError)</code>  
+
+-----
+
+<a name="DeltaJs.ConstraintFailure"></a>
+#### *DeltaJs*.ConstraintFailure ⇐ <code>Error</code>
+**Extends:** <code>Error</code>  
+
+-----
+
+<a name="DeltaJs.ApplicationOrderCycle"></a>
+#### *DeltaJs*.ApplicationOrderCycle ⇐ <code>Error</code>
+**Extends:** <code>Error</code>  
+
+-----
+
+<a name="DeltaJs.MultipleActiveProxiesError"></a>
+#### *DeltaJs*.MultipleActiveProxiesError ⇐ <code>Error</code>
+**Extends:** <code>Error</code>  
+
+-----
+
+<a name="DeltaJs.Path"></a>
+#### *DeltaJs*.Path
+
+-----
+
+<a name="DeltaJs.ReadableTarget"></a>
+#### *DeltaJs*.ReadableTarget
+
+-----
+
+<a name="DeltaJs.WritableTarget"></a>
+#### *DeltaJs*.WritableTarget ⇐ <code>[ReadableTarget](#DeltaJs.ReadableTarget)</code>
+**Extends:** <code>[ReadableTarget](#DeltaJs.ReadableTarget)</code>  
 
 -----
 

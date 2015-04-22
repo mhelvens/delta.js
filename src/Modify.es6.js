@@ -13,7 +13,10 @@ export default oncePer('Modify', (deltaJs) => {
 	define_ContainerProxy(deltaJs);
 
 
-	//noinspection JSUnusedLocalSymbols
+	/**
+	 * @class DeltaJs#Delta.Modify
+	 * @extends DeltaJs#Delta
+	 */
 	deltaJs.newOperationType('Modify', class Modify extends deltaJs.Delta {
 
 		constructor(...args) {
@@ -83,7 +86,12 @@ export default oncePer('Modify', (deltaJs) => {
 			return str;
 		}
 
-	}, class ModifyProxy extends deltaJs.ContainerProxy {
+	},
+	/**
+	 * @class DeltaJs#Delta.Modify.Proxy
+	 * @extends DeltaJs#ContainerProxy
+	 */
+	class ModifyProxy extends deltaJs.ContainerProxy {
 
 		//noinspection JSMethodCanBeStatic
 		/**

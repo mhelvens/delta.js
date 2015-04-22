@@ -1,6 +1,9 @@
 import {assert, isDefined} from './util.es6.js';
 
 
+/**
+ * @class DeltaJs.Path
+ */
 export default class Path {
 
 	constructor(str = "") {

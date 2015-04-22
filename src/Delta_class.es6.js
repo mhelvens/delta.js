@@ -19,6 +19,11 @@ export default oncePer('Delta', (deltaJs) => {
 			this.args = args;
 		}
 
+		/**
+		 *
+		 * @property arg
+		 * @type {*}
+		 */
 		get arg()  { return this.args[0] }
 		set arg(v) { this.args[0] = v }
 
@@ -32,11 +37,11 @@ export default oncePer('Delta', (deltaJs) => {
 
 		/**
 		 * @protected
-		 * @param target                        {DeltaJs.ReadableTarget}
-		 * @param options                       {object}
-		 * @param options.skipWeakPreconditions {boolean}
-		 * @return {Boolean|PreconditionFailure} - `true` if the precondition is satisfied, otherwise
-		 *                                        `false` or an instance of `DeltaJs.PreconditionFailure`
+		 * @param target                          {DeltaJs.ReadableTarget}
+		 * @param [options]                       {object}
+		 * @param [options.skipWeakPreconditions] {boolean}
+		 * @return {boolean|DeltaJs.PreconditionFailure} - `true` if the precondition is satisfied, otherwise
+		 *                                                `false` or an instance of `DeltaJs.PreconditionFailure`
 		 */
 		evaluatePrecondition(target, options = {}) {
 			let {weak} = options;
@@ -53,8 +58,8 @@ export default oncePer('Delta', (deltaJs) => {
 
 		/**
 		 * @nosideeffects
-		 * @param value   {*}       - any given value
-		 * @param options {?object} - the (optional) options for this delta application
+		 * @param value     {*}      - any given value
+		 * @param [options] {object} - the (optional) options for this delta application
 		 * @return {*} - the value resulting in this delta being applied to the given `value`
 		 */
 		appliedTo(value, options = {}) {
@@ -66,8 +71,8 @@ export default oncePer('Delta', (deltaJs) => {
 		}
 
 		/**
-		 * @param options {object?}
-		 * @return {string}
+		 * @param [options] {object} -
+		 * @return {string} -
 		 */
 		toString(options = {}) {
 			var str = this.type;

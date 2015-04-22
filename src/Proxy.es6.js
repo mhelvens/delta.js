@@ -8,7 +8,11 @@ export default oncePer('Proxy', (deltaJs) => {
 
 	define_Delta(deltaJs);
 
-
+	/**
+	 * @class DeltaJs#Proxy
+	 * @classdesc
+	 *
+	 */
 	deltaJs.Proxy = class Proxy {
 		constructor({parent, delta} = {}) {
 			this._parent = parent;
@@ -21,11 +25,12 @@ export default oncePer('Proxy', (deltaJs) => {
 	};
 
 
-	Object.assign(deltaJs.Delta.prototype, {
+	//noinspection JSCommentMatchesSignature
+	Object.assign(deltaJs.Delta.prototype, /** @lends DeltaJs#Delta.prototype */ {
 
-		/** {@public}{@method}
-		 * @param args {Array.<*>}
-		 * @return {DeltaJs#Proxy}
+		/**
+		 * @param ...args {Array.<*>} -
+		 * @return {DeltaJs#Proxy} -
 		 */
 		do(...args) {
 			var ProxyClass = this.constructor.Proxy;

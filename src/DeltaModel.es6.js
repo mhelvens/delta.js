@@ -17,8 +17,10 @@ export default oncePer('DeltaModel', (deltaJs) => {
 	define_OperationTypes(deltaJs);
 	define_ContainerProxy(deltaJs);
 
-
-	//noinspection JSUnusedLocalSymbols
+	/**
+	 * @class DeltaJs#Delta.DeltaModel
+	 * @extends DeltaJs#Delta
+	 */
 	deltaJs.newOperationType('DeltaModel', class DeltaModel extends deltaJs.Delta {
 
 		constructor(...args) {
@@ -26,12 +28,20 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			this.graph = new Graph();
 		}
 
+		/**
+		 *
+		 * @returns {DeltaJs#Delta.DeltaModel} - a clone of this delta model
+		 */
 		clone() {
 			var result = super.clone();
 			result.graph = this.graph.clone(d => d.clone());
 			return result;
 		}
 
+		/**
+		 * Assert that this delta model has no unresolved conflicts.
+		 * @private
+		 */
 		_assertNoUnresolvedConflicts() {
 			for (let conflictInfo of this.conflicts()) {
 				if (conflictInfo.conflictResolvingDeltas.size === 0) {
@@ -40,9 +50,15 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			}
 		}
 
-		precondition(target, options) {
+		/**
+		 *
+		 * @param  target   {DeltaJs.ReadableTarget|*} -
+		 * @param [options] {object}                   -
+		 * @returns {boolean|DeltaJs.PreconditionFailure} -
+		 */
+		precondition(target, options = {}) {
 			for (let [name, delta] of this.graph.vertices()) {
-				if ([...this.graph.verticesTo(name)].length === 0) { // source vertices
+				if ([...this.graph.verticesTo(name)].length === 0) { // source vertices // TODO: create graph.inDegree method
 					let judgment = delta.evaluatePrecondition(target, options);
 					if (judgment !== true) { return judgment }
 				}
@@ -50,16 +66,26 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			return true;
 		}
 
+		/**
+		 *
+		 * @param  target   {DeltaJs.ReadableTarget|*} -
+		 * @param [options] {object}                   -
+		 */
 		applyTo(target, options = {}) {
 			/* throw an exception if there are unresolved conflicts */
 			this._assertNoUnresolvedConflicts();
-
 			/* no unresolved conflicts: apply the delta model */
 			for (let [, subDelta] of this.graph.vertices_topologically()) {
 				subDelta.applyTo(target, Object.assign({}, options, { weak: true }));
 			}
 		}
 
+		/**
+		 *
+		 * @param [options]       {object}  -
+		 * @param [options.debug] {boolean} -
+		 * @returns {string} - a string representation of this delta model
+		 */
 		toString(options = {}) {
 			let str = super.toString(options);
 			if (this.graph.vertexCount() > 0) {
@@ -72,6 +98,11 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			return str;
 		}
 
+		/**
+		 *
+		 * @returns {Set.<{ conflictingDeltas: Set.<string>, conflictResolvingDeltas: Set.<string> }>}
+		 *          - information about all conflicts
+		 */
 		conflicts() {
 			/* clone the graph */
 			var g = this.graph.clone();
@@ -159,7 +190,12 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			return result;
 		}
 
-	}, class DeltaModelProxy extends deltaJs.ContainerProxy {
+	},
+	/**
+	 * @class DeltaJs#Delta.DeltaModel.Proxy
+	 * @extends DeltaJs#ContainerProxy
+	 */
+	class DeltaModelProxy extends deltaJs.ContainerProxy {
 
 		constructor(...args) {
 			super(...args);
@@ -168,10 +204,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 		}
 
 		/**
-		 * @public
-		 * @method
-		 * @param rawArgs {Array.<*>}
-		 * @return {?{ options: Object, args: Array.<*> }}
+		 *
+		 * @param rawArgs {Array.<*>} -
+		 * @return {{ options: Object, args: Array.<*> }} -
 		 */
 		processProxyArguments(...rawArgs) {
 			// rawArgs is parsed as (...options, name, ...options, path, ...args),
@@ -189,11 +224,10 @@ export default oncePer('DeltaModel', (deltaJs) => {
 		}
 
 		/**
-		 * @public
-		 * @method
-		 * @param delta   {DeltaJs#Delta}
-		 * @param options {{path: Path, name: string, feature: boolean}}
-		 * @return {DeltaJs#Proxy}
+		 *
+		 * @param delta   {DeltaJs#Delta} -
+		 * @param options {{path: Path, name: string, feature: boolean}} -
+		 * @return {DeltaJs#Proxy} -
 		 */
 		addOperation(delta, options) {
 			var {path, name, feature} = options;
@@ -237,9 +271,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/**
 		 * Dynamically compute and return the delta belonging to this proxy.
-		 * @public
-		 * @method
-		 * @return the delta belonging to this proxy
+		 * @return {DeltaJs#Delta} - the delta belonging to this proxy
 		 */
 		delta() {
 			var result = super.delta();

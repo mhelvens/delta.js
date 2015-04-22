@@ -17,6 +17,10 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 
 
 	/* declaring the array operation type ***********************************************/
+	/**
+	 * @class DeltaJs#Delta.PutIntoArray
+	 * @extends DeltaJs#Delta
+	 */
 	deltaJs.newOperationType('PutIntoArray', class PutIntoArray extends deltaJs.Delta {
 
 		constructor(...args) {
@@ -59,6 +63,7 @@ export default oncePer('PutIntoArray', (deltaJs) => {
 
 
 	/* Proxy methods ****************************************************************************/
+	// TODO: docs
 	deltaJs.newProxyMethod('prepend', (value) => new deltaJs.Delta.PutIntoArray({ method: 'prepend', value }));
 	deltaJs.newProxyMethod('insert',  (value) => new deltaJs.Delta.PutIntoArray({ method: 'insert',  value }));
 	deltaJs.newProxyMethod('append',  (value) => new deltaJs.Delta.PutIntoArray({ method: 'append',  value }));

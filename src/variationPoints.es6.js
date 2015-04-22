@@ -20,9 +20,7 @@ export default oncePer('variation points', (deltaJs) => {
 			 */
 			vp(name, val) {
 				var root = { [name]: val };
-				this._deltaModelProxy.delta().applyTo(root, {
-					restrictToProperty: name
-				});
+				this._deltaModelProxy.delta().applyTo(root, { restrictToProperty: name });
 				return root[name];
 			},
 

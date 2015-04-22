@@ -14,6 +14,13 @@ export default oncePer('Overloaded', (deltaJs) => {
 	define_Delta         (deltaJs);
 
 
+	/**
+	 *
+	 * @class DeltaJs#Delta.Overloaded
+	 * @extends DeltaJs#Delta
+	 * @classdesc
+	 *
+	 */
 	deltaJs.newOperationType('Overloaded', class Overloaded extends deltaJs.Delta {
 
 		constructor(...args) {

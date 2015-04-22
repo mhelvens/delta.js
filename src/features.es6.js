@@ -7,8 +7,8 @@ export default oncePer('features', (deltaJs) => {
 
 
 	oncePer(deltaJs.constructor, 'features', (DeltaJs) => {
-
 		Object.assign(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
+
 			/**
 			 * @param name    {string}  - the name of the new feature
 			 * @param options {object?} - the (optional) options for the new feature
@@ -22,8 +22,8 @@ export default oncePer('features', (deltaJs) => {
 				/* create the new feature */
 				return this.features[name] = new this.Feature(name, options);
 			}
-		});
 
+		});
 	});
 
 
@@ -113,7 +113,6 @@ export default oncePer('features', (deltaJs) => {
 			/* set basic fields */
 			this.name = name;
 			this.options = options;
-
 			/* update conditions */
 			for (let option of Object.keys(options)) {
 				this.addOption(option, options[option]);
@@ -141,6 +140,12 @@ export default oncePer('features', (deltaJs) => {
 		[ 'requiredBy', [_addRequiredBy]     ], // error if other but not this
 		[ 'iff',        [_addIf, _addOnlyIf] ]  // if and onlyIf
 	];
+
+	/**
+	 * @method DeltaJs#Feature#addOption
+	 * @param optionName {string} -
+	 * @param value      {}       -
+	 */
 	deltaJs.Feature.prototype.addOption = function (optionName, value) {
 		for (let [connectionName, methods] of FEATURE_CONNECTIONS) {
 			if (optionName === connectionName) {
@@ -148,6 +153,7 @@ export default oncePer('features', (deltaJs) => {
 			}
 		}
 	};
+	// TODO: docs
 	for (let [name] of FEATURE_CONNECTIONS) {
 		deltaJs.Feature.prototype[name] = function (value) {
 			this.addOption(name, value);

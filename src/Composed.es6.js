@@ -7,11 +7,16 @@ export default oncePer('Composed', (deltaJs) => {
 
 
 	define_OperationTypes(deltaJs);
-
-	// NOTE: Not importing the circular dependency deltaJs.Delta here.
+	// NOTE: Not importing the circular dependency DeltaJs#Delta here.
 	//       That file will import this one at the proper time.
 
 
+	/**
+	 * @class DeltaJs#Delta.Composed
+	 * @extends DeltaJs#Delta
+	 * @classdesc
+	 *
+	 */
 	deltaJs.newOperationType('Composed', class Composed extends deltaJs.Delta {
 
 		constructor(...args) {
