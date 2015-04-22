@@ -1,6 +1,6 @@
 /* import internal stuff */
-import {extend, a, assert, isUndefined, oncePer} from './util.es6.js';
-import {ConstraintFailure}                       from './Error.es6.js';
+import {a, assert, isUndefined, oncePer} from './util.es6.js';
+import {ConstraintFailure}               from './Error.es6.js';
 
 
 export default oncePer('features', (deltaJs) => {
@@ -8,7 +8,7 @@ export default oncePer('features', (deltaJs) => {
 
 	oncePer(deltaJs.constructor, 'features', (DeltaJs) => {
 
-		extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
+		Object.assign(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
 			/**
 			 * @param name    {string}  - the name of the new feature
 			 * @param options {object?} - the (optional) options for the new feature
@@ -105,8 +105,8 @@ export default oncePer('features', (deltaJs) => {
 	}
 
 
-	/** {@public}{@class DeltaJs#Feature}
-	 *
+	/**
+	 * @class DeltaJs#Feature
 	 */
 	deltaJs.Feature = class Feature {
 		constructor(name, options = {}) {

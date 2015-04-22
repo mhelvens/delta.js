@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {extend, oncePer} from './util.es6.js';
+import {oncePer}         from './util.es6.js';
 import define_DeltaModel from './DeltaModel.es6.js';
 
 
@@ -10,7 +10,7 @@ export default oncePer('variation points', (deltaJs) => {
 
 
 	oncePer(deltaJs.constructor, 'variation points', (DeltaJs) => {
-		extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
+		Object.assign(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
 
 			/**
 			 * This method indicates a variation point.

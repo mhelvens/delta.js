@@ -15,22 +15,58 @@ export default oncePer('basic operations', (deltaJs) => {
 
 
 	/* declaring the basic operation types **********************************************/
+
+	/**
+	 * @class   DeltaJs#Delta.NoOp
+	 * @extends DeltaJs#Delta
+	 * @classdesc an operation type that changes nothing
+	 */
 	deltaJs.newOperationType('NoOp', class NoOp extends deltaJs.Delta {});
+
+	/**
+	 * @class   DeltaJs#Delta.Add
+	 * @extends DeltaJs#Delta
+	 * @classdesc an operation type for adding a new value
+	 */
 	deltaJs.newOperationType('Add', class Add extends deltaJs.Delta {
 		precondition(target, {weak}) { return target instanceof WritableTarget && (weak || isUndefined(target.value)) }
 		applyTo     (target)         { target.value = this.arg                                                        }
 	});
+
+	/**
+	 * @class   DeltaJs#Delta.Remove
+	 * @extends DeltaJs#Delta
+	 * @classdesc an operation type for removing an existing value, i.e., making it `undefined`
+	 */
 	deltaJs.newOperationType('Remove', class Remove extends deltaJs.Delta {
 		precondition(target, {weak}) { return target instanceof WritableTarget && (weak || isDefined(target.value)) }
 		applyTo     (target)         { target.delete()                                                              }
 	});
+
+	/**
+	 * @class   DeltaJs#Delta.Forbid
+	 * @extends DeltaJs#Delta
+	 * @classdesc an operation type that merely forbids a value from existing, i.e., asserts that it is `undefined`
+	 */
 	deltaJs.newOperationType('Forbid', class Forbid extends deltaJs.Delta {
 		precondition(target, {weak}) { return weak || isUndefined(target.value) }
 	});
+
+	/**
+	 * @class   DeltaJs#Delta.Replace
+	 * @extends DeltaJs#Delta
+	 * @classdesc an operation type for replacing a value with another
+	 */
 	deltaJs.newOperationType('Replace', class Replace extends deltaJs.Delta {
 		precondition(target, {weak}) { return target instanceof WritableTarget && (weak || isDefined(target.value)) }
 		applyTo     (target)         { target.value = this.arg                                                      }
 	});
+
+	/**
+	 * @class   DeltaJs#Delta.Update
+	 * @extends DeltaJs#Delta
+	 * @classdesc an operation type for arbitrarily transforming a value using a transformation function
+	 */
 	deltaJs.newOperationType('Update', class Update extends deltaJs.Delta {
 		precondition(target, {weak}) { return target instanceof WritableTarget && (weak || isDefined(target.value)) }
 		applyTo     (target)         { target.value = this.arg(target.value)                                        }

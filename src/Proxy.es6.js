@@ -1,6 +1,6 @@
 /* import internal stuff */
-import {extend, oncePer} from './util.es6.js';
-import define_Delta      from './Delta_class.es6.js';
+import {oncePer}    from './util.es6.js';
+import define_Delta from './Delta_class.es6.js';
 
 
 export default oncePer('Proxy', (deltaJs) => {
@@ -21,7 +21,7 @@ export default oncePer('Proxy', (deltaJs) => {
 	};
 
 
-	extend(deltaJs.Delta.prototype, {
+	Object.assign(deltaJs.Delta.prototype, {
 
 		/** {@public}{@method}
 		 * @param args {Array.<*>}

@@ -1,5 +1,5 @@
 /* import internal stuff */
-import {extend, a, isUndefined, oncePer} from './util.es6.js';
+import {a, isUndefined, oncePer} from './util.es6.js';
 import Path                              from './Path.es6.js';
 import define_Overloaded                 from './Overloaded.es6.js';
 import define_Proxy                      from './Proxy.es6.js';
@@ -13,7 +13,7 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 
 	oncePer(deltaJs.constructor, 'ContainerProxy', (DeltaJs) => {
-		extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
+		Object.assign(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
 			/**
 			 * @param method  {string}   - method name
 			 * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance

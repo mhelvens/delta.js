@@ -3,7 +3,7 @@ import Graph from 'graph.js';
 
 
 /* import internal stuff */
-import {extend, isDefined, indent, oncePer, s, t}       from './util.es6.js';
+import {isDefined, indent, oncePer, s, t}               from './util.es6.js';
 import Path                                             from './Path.es6.js';
 import define_OperationTypes                            from './operationTypes.es6.js';
 import define_Modify                                    from './Modify.es6.js';
@@ -56,7 +56,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 			/* no unresolved conflicts: apply the delta model */
 			for (let [, subDelta] of this.graph.vertices_topologically()) {
-				subDelta.applyTo(target, extend({}, options, { weak: true }));
+				subDelta.applyTo(target, Object.assign({}, options, { weak: true }));
 			}
 		}
 
@@ -181,9 +181,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 				if (rawArgs.length === 0) { throw new Error(`The argument list for this Modify.DeltaModel method is insufficient.`) }
 				var arg = rawArgs.shift();
 				if (typeof arg === 'string') {
-					if (!options.name) { options.name = arg   }
-					else               { options.path = arg   }
-				} else                 { extend(options, arg) }
+					if (!options.name) { options.name = arg          }
+					else               { options.path = arg          }
+				} else                 { Object.assign(options, arg) }
 			} while (!options.path || !options.name);
 			return { options, args: rawArgs };
 		}
@@ -201,11 +201,11 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			/* create application condition and optional eponymous linked feature */
 			if (!this._childApplicationConditions.has(name)) {
 				let appCond;
-				if (feature) { appCond = deltaJs.newFeature(  name,            options                           ) }
-				else         { appCond = deltaJs.newFeature( `delta__${name}`, extend({ hidden: true }, options) ) }
+				if (feature) { appCond = deltaJs.newFeature(  name,            options                                  ) }
+				else         { appCond = deltaJs.newFeature( `delta__${name}`, Object.assign({ hidden: true }, options) ) }
 				if (isDefined(options['resolves'])) {
 					appCond.if(options['resolves']);
-					options = extend({}, options, { feature: false });
+					options = Object.assign({}, options, { feature: false });
 				}
 				if (isDefined(options['requires'])) {
 					appCond.selects(options['requires']);
@@ -219,7 +219,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 			/* create proxies */
 			var deepestProxy;
 			if (path.prop) {
-				let newOptions = extend({}, options, { name: undefined });
+				let newOptions = Object.assign({}, options, { name: undefined });
 				let childProxy = this.addChildProxy(name, new deltaJs.Delta.Modify());
 				deepestProxy = childProxy.addOperation(delta, newOptions);
 			} else {

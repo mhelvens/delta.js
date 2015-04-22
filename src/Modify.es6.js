@@ -1,9 +1,9 @@
 /* import internal stuff */
-import {extend, indent, t, oncePer, mapEqual} from './util.es6.js';
-import Path                                   from './Path.es6.js';
-import {wt}                                   from './Target.es6.js';
-import define_OperationTypes                  from './operationTypes.es6.js';
-import define_ContainerProxy                  from './ContainerProxy.es6.js';
+import {indent, t, oncePer, mapEqual} from './util.es6.js';
+import Path                           from './Path.es6.js';
+import {wt}                           from './Target.es6.js';
+import define_OperationTypes          from './operationTypes.es6.js';
+import define_ContainerProxy          from './ContainerProxy.es6.js';
 
 
 export default oncePer('Modify', (deltaJs) => {
@@ -44,7 +44,7 @@ export default oncePer('Modify', (deltaJs) => {
 			for (let [prop, delta] of this.subDeltas) {
 				if (!options.restrictToProperty || options.restrictToProperty === prop) {
 					let judgment = delta.evaluatePrecondition(wt(target.value, prop),
-						extend({}, options, { restrictToProperty: null }));
+						Object.assign({}, options, { restrictToProperty: null }));
 					if (judgment !== true) { return judgment }
 				}
 			}
@@ -61,7 +61,7 @@ export default oncePer('Modify', (deltaJs) => {
 			for (let [prop, delta] of this.subDeltas) {
 				if (!options.restrictToProperty || options.restrictToProperty === prop) {
 					delta.applyTo(wt(target.value, prop),
-						extend({}, options, { restrictToProperty: null }));
+						Object.assign({}, options, { restrictToProperty: null }));
 				}
 			}
 		}
@@ -76,7 +76,7 @@ export default oncePer('Modify', (deltaJs) => {
 			var str = super.toString(options);
 			if (this.subDeltas.size > 0) {
 				var deltas = this.subDeltas.entries()
-						.map(([prop, delta]) => delta.toString(extend({}, options, { targetProp: prop })))
+						.map(([prop, delta]) => delta.toString(Object.assign({}, options, { targetProp: prop })))
 						.join('\n');
 				str += '\n' + indent(deltas, 4);
 			}
@@ -97,8 +97,8 @@ export default oncePer('Modify', (deltaJs) => {
 			do {
 				if (rawArgs.length === 0) { throw new Error(`The argument list for this Modify.Proxy method is insufficient.`) }
 				let arg = rawArgs.shift();
-				if (typeof arg === 'string') { options.path = arg     }
-				else                         { extend(options, arg) }
+				if (typeof arg === 'string') { options.path = arg          }
+				else                         { Object.assign(options, arg) }
 			} while (!options.path);
 			return { options, args: rawArgs };
 		}
@@ -115,7 +115,7 @@ export default oncePer('Modify', (deltaJs) => {
 			/* create proxies */
 			var deepestProxy;
 			if (path.rest) {
-				let newOptions = extend({}, options, { path: path.rest });
+				let newOptions = Object.assign({}, options, { path: path.rest });
 				let childProxy = this.addChildProxy(path.prop, new deltaJs.Delta.Modify());
 				deepestProxy = childProxy.addOperation(delta, newOptions);
 			} else {

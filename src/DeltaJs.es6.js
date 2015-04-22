@@ -1,9 +1,7 @@
 /* import internal stuff */
-import {extend, assert, isUndefined, isDefined, arraysEqual} from './util.es6.js';
-import Path                                                  from './Path.es6.js';
-import {ReadableTarget, WritableTarget, rt, wt}              from './Target.es6.js';
 import define_OperationTypes                                 from './operationTypes.es6.js';
 import define_Delta                                          from './Delta_class.es6.js';
+import define_Composed                                       from './Composed.es6.js';
 import define_Overloaded                                     from './Overloaded.es6.js';
 import define_Modify                                         from './Modify.es6.js';
 import define_basicOperations                                from './basicOperations.es6.js';
@@ -35,6 +33,7 @@ export default class DeltaJs {
 		define_OperationTypes       (this);
 		define_ContainerProxy       (this);
 		define_Delta                (this);
+		define_Composed             (this);
 		define_Overloaded           (this);
 		define_Modify               (this);
 		define_basicOperations      (this);
