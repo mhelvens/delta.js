@@ -10,9 +10,9 @@ export default oncePer('features', (deltaJs) => {
 		Object.assign(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
 
 			/**
-			 * @param name    {string}  - the name of the new feature
-			 * @param options {object?} - the (optional) options for the new feature
-			 * @return {DeltaJs#Feature} - the object representing the new feature
+			 * @param name    {string}  the name of the new feature
+			 * @param options {object?} the (optional) options for the new feature
+			 * @return {DeltaJs#Feature} the object representing the new feature
 			 */
 			newFeature(name, options = {}) {
 				/* sanity check*/
@@ -143,8 +143,8 @@ export default oncePer('features', (deltaJs) => {
 
 	/**
 	 * @method DeltaJs#Feature#addOption
-	 * @param optionName {string} -
-	 * @param value      {}       -
+	 * @param optionName {string}
+	 * @param value      {}
 	 */
 	deltaJs.Feature.prototype.addOption = function (optionName, value) {
 		for (let [connectionName, methods] of FEATURE_CONNECTIONS) {

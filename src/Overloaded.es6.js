@@ -28,8 +28,9 @@ export default oncePer('Overloaded', (deltaJs) => {
 			this.overloads = this.arg || [];
 		}
 
-		/** {@public}{@method}{@nosideeffects}
-		 * @return {DeltaJs#Delta.Overloaded} - a clone of this delta
+		/**
+		 * @nosideeffects
+		 * @return {DeltaJs#Delta.Overloaded} a clone of this delta
 		 */
 		clone() {
 			var result = super.clone();
@@ -62,9 +63,9 @@ export default oncePer('Overloaded', (deltaJs) => {
 			return true;
 		}
 
-		/** {@public}{@method}
-		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
-		 * @param options {object?}              - the (optional) options for this delta application
+		/**
+		 * @param target  {Delta.WritableTarget} the target to which to apply this delta
+		 * @param options {object?}              the (optional) options for this delta application
 		 */
 		applyTo(target, options = {}) {
 			/* apply the first overload that applies to the target; gather any errors */
@@ -90,8 +91,8 @@ export default oncePer('Overloaded', (deltaJs) => {
 			}
 		}
 
-		/** {@public}{@method}
-		 * @param options {object?}
+		/**
+		 * @param [options] {object}
 		 * @return {string}
 		 */
 		toString(options = {}) {

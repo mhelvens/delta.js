@@ -29,8 +29,8 @@ export default oncePer('Proxy', (deltaJs) => {
 	Object.assign(deltaJs.Delta.prototype, /** @lends DeltaJs#Delta.prototype */ {
 
 		/**
-		 * @param ...args {Array.<*>} -
-		 * @return {DeltaJs#Proxy} -
+		 * @param ...args {Array.<*>}
+		 * @return {DeltaJs#Proxy}
 		 */
 		do(...args) {
 			var ProxyClass = this.constructor.Proxy;

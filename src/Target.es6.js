@@ -25,13 +25,13 @@ export class WritableTarget extends ReadableTarget {
 
 /**
  * Convenience function to create a readable target from a value.
- * @param value {*} - the value to target
+ * @param value {*} the value to target
  */
 export function rt(value) { return new ReadableTarget(value) }
 
 /**
  * Convenience function to create a writable target from an object and key.
- * @param obj  {object} - the object that contains the target
- * @param prop {string} - the key on the `obj` object that refers to the target
+ * @param obj  {object} the object that contains the target
+ * @param prop {string} the key on the `obj` object that refers to the target
  */
 export function wt(obj, prop) { return new WritableTarget(obj, prop) }

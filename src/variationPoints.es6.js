@@ -14,9 +14,9 @@ export default oncePer('variation points', (deltaJs) => {
 
 			/**
 			 * This method indicates a variation point.
-			 * @param name {string} - a hook by which operations from the core delta model can be applied
-			 * @param val  {*}      - the initial value of this variation point
-			 * @return {*} - the value of this variation point after applying the appropriate deltas
+			 * @param name {string} a hook by which operations from the core delta model can be applied
+			 * @param val  {*}      the initial value of this variation point
+			 * @return {*} the value of this variation point after applying the appropriate deltas
 			 */
 			vp(name, val) {
 				var root = { [name]: val };
@@ -30,7 +30,7 @@ export default oncePer('variation points', (deltaJs) => {
 			 * method on that 'root' delta model. It returns the proxy that allows new delta operations
 			 * to be added more easily. It presets the 'feature' option to 'true', but this can be
 			 * overwritten manually.
-			 * @return {DeltaJs#Proxy} - the proxy to this delta, for easily adding operations
+			 * @return {DeltaJs#Proxy} the proxy to this delta, for easily adding operations
 			 */
 			do(...args) {
 				return this._deltaModelProxy.do({ feature: true }, ...args);

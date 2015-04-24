@@ -26,7 +26,7 @@ export default oncePer('Modify', (deltaJs) => {
 
 		/**
 		 * @nosideeffects
-		 * @return {DeltaJs#Delta.Modify} - a clone of this delta
+		 * @return {DeltaJs#Delta.Modify} a clone of this delta
 		 */
 		clone() {
 			var result = super.clone();
@@ -57,8 +57,8 @@ export default oncePer('Modify', (deltaJs) => {
 		/**
 		 * @public
 		 * @method
-		 * @param target  {Delta.WritableTarget} - the target to which to apply this delta
-		 * @param options {object?}              - the (optional) options for this delta application
+		 * @param target  {Delta.WritableTarget} the target to which to apply this delta
+		 * @param options {object?}              the (optional) options for this delta application
 		 */
 		applyTo(target, options = {}) {
 			for (let [prop, delta] of this.subDeltas) {
@@ -114,7 +114,7 @@ export default oncePer('Modify', (deltaJs) => {
 		/**
 		 * @param delta   {DeltaJs#Delta}
 		 * @param options {{path: Path}}
-		 * @return {DeltaJs#Proxy} - the deepest proxy created for this operation
+		 * @return {DeltaJs#Proxy} the deepest proxy created for this operation
 		 */
 		addOperation(delta, options) {
 			var {path} = options;

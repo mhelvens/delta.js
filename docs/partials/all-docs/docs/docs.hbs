@@ -1,5 +1,7 @@
-{{>header~}}
-{{>body}}
-{{!>member-index~}}
-{{>separator~}}
-{{>members~}}
+{{#unless inherited}}
+    {{~>header~}}
+    {{~>body~}}
+    {{!>member-index~}}
+    {{~>separator~}}
+    {{~>members~}}
+{{/unless}}

@@ -11,7 +11,7 @@ export default oncePer('application conditions', (deltaJs) => {
 
 			/**
 			 *
-			 * @param ...features {Array.<string>} -
+			 * @param ...features {Array.<string>}
 			 */
 			select(...features) {
 				for (let feature of features) {
@@ -31,21 +31,20 @@ export default oncePer('application conditions', (deltaJs) => {
 
 		/**
 		 *
-		 * @returns {DeltaJs#Feature} -
+		 * @property applicationCondition
+		 * @type {DeltaJs#Feature}
 		 */
 		get applicationCondition() { return this._applicationCondition },
-
-		/**
-		 *
-		 * @param ac {DeltaJs#Feature} -
-		 */
 		set applicationCondition(ac) { this._applicationCondition = ac },
 
 		/**
 		 *
-		 * @returns {boolean} -
+		 * @property selected
+		 * @type {boolean}
+		 * @readonly
 		 */
 		get selected() { return isUndefined(this.applicationCondition) || this.applicationCondition.selected }
+
 	});
 
 

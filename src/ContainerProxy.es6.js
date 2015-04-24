@@ -43,9 +43,9 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 		/**
 		 *
-		 * @param key   {string}        -
-		 * @param delta {DeltaJs#Delta} -
-		 * @returns {DeltaJs#Proxy} -
+		 * @param key   {string}
+		 * @param delta {DeltaJs#Delta}
+		 * @returns {DeltaJs#Proxy}
 		 */
 		addChildProxy(key, delta) {
 			/* get the current proxy for the given key */
@@ -86,7 +86,7 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 		/**
 		 *
-		 * @param key {string} -
+		 * @param key {string}
 		 * @returns {}
 		 */
 		childProxy(key) {
@@ -96,8 +96,8 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 		/**
 		 *
-		 * @param key {string} -
-		 * @returns {DeltaJs#Delta} -
+		 * @param key {string}
+		 * @returns {DeltaJs#Delta}
 		 */
 		childDelta(key) {
 			let result = deltaJs.Delta.composed(
@@ -109,8 +109,8 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		//noinspection JSCommentMatchesSignature
 		/**
 		 *
-		 * @param ...doArgs {Array} -
-		 * @returns {DeltaJs#Proxy} -
+		 * @param ...doArgs {Array}
+		 * @returns {DeltaJs#Proxy}
 		 */
 		do(...doArgs) {
 			/* is this proxy active? */
@@ -131,9 +131,9 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 		/**
 		 * @private
-		 * @param method {string} -
-		 * @param doArgs {Array}  -
-		 * @returns {DeltaJs#Proxy} -
+		 * @param method {string}
+		 * @param doArgs {Array}
+		 * @returns {DeltaJs#Proxy}
 		 */
 		_do(method, doArgs) {
 			/* is this proxy active? */
@@ -188,8 +188,8 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		 * an `Delta.Overloaded` instance.
 		 * @private
 		 * @static
-		 * @param method {string} -
-		 * @param [args] {*}      -
+		 * @param method {string}
+		 * @param [args] {*}
 		 * @return {DeltaJs#Delta}
 		 */
 		static _newDeltaByMethod(method, args) {
@@ -205,8 +205,8 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 
 		/**
 		 * @static
-		 * @param method  {string}   - method name
-		 * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
+		 * @param method  {string}   method name
+		 * @param handler {function} a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
 		 */
 		static newProxyMethod(method, handler) {
 
@@ -229,8 +229,8 @@ export default oncePer('ContainerProxy', (deltaJs) => {
 		Object.assign(DeltaJs.prototype, /** @lends DeltaJs.prototype */ {
 
 			/**
-			 * @param method  {string}   - method name
-			 * @param handler {function} - a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
+			 * @param method  {string}   method name
+			 * @param handler {function} a function that takes method arguments, and returns a new `DeltaJs#Delta` instance
 			 */
 			newProxyMethod(method, handler) {
 				this.ContainerProxy.newProxyMethod(method, handler);

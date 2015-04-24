@@ -30,7 +30,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/**
 		 *
-		 * @returns {DeltaJs#Delta.DeltaModel} - a clone of this delta model
+		 * @returns {DeltaJs#Delta.DeltaModel} a clone of this delta model
 		 */
 		clone() {
 			var result = super.clone();
@@ -52,9 +52,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/**
 		 *
-		 * @param  target   {DeltaJs.ReadableTarget|*} -
-		 * @param [options] {object}                   -
-		 * @returns {boolean|DeltaJs.PreconditionFailure} -
+		 * @param  target   {DeltaJs.ReadableTarget|*}
+		 * @param [options] {object}
+		 * @returns {boolean|DeltaJs.PreconditionFailure}
 		 */
 		precondition(target, options = {}) {
 			for (let [name, delta] of this.graph.vertices()) {
@@ -68,8 +68,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/**
 		 *
-		 * @param  target   {DeltaJs.ReadableTarget|*} -
-		 * @param [options] {object}                   -
+		 * @param  target   {DeltaJs.ReadableTarget|*}
+		 * @param [options] {object}
 		 */
 		applyTo(target, options = {}) {
 			/* throw an exception if there are unresolved conflicts */
@@ -82,9 +82,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/**
 		 *
-		 * @param [options]       {object}  -
-		 * @param [options.debug] {boolean} -
-		 * @returns {string} - a string representation of this delta model
+		 * @param [options]       {object}
+		 * @param [options.debug] {boolean}
+		 * @returns {string} a string representation of this delta model
 		 */
 		toString(options = {}) {
 			let str = super.toString(options);
@@ -101,7 +101,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 		/**
 		 *
 		 * @returns {Set.<{ conflictingDeltas: Set.<string>, conflictResolvingDeltas: Set.<string> }>}
-		 *          - information about all conflicts
+		 *          information about all conflicts
 		 */
 		conflicts() {
 			/* clone the graph */
@@ -205,8 +205,8 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/**
 		 *
-		 * @param rawArgs {Array.<*>} -
-		 * @return {{ options: Object, args: Array.<*> }} -
+		 * @param rawArgs {Array.<*>}
+		 * @return {{ options: Object, args: Array.<*> }}
 		 */
 		processProxyArguments(...rawArgs) {
 			// rawArgs is parsed as (...options, name, ...options, path, ...args),
@@ -225,9 +225,9 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/**
 		 *
-		 * @param delta   {DeltaJs#Delta} -
-		 * @param options {{path: Path, name: string, feature: boolean}} -
-		 * @return {DeltaJs#Proxy} -
+		 * @param delta   {DeltaJs#Delta}
+		 * @param options {{path: Path, name: string, feature: boolean}}
+		 * @return {DeltaJs#Proxy}
 		 */
 		addOperation(delta, options) {
 			var {path, name, feature} = options;
@@ -271,7 +271,7 @@ export default oncePer('DeltaModel', (deltaJs) => {
 
 		/**
 		 * Dynamically compute and return the delta belonging to this proxy.
-		 * @return {DeltaJs#Delta} - the delta belonging to this proxy
+		 * @return {DeltaJs#Delta} the delta belonging to this proxy
 		 */
 		delta() {
 			var result = super.delta();
