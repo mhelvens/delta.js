@@ -64,7 +64,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	Object.defineProperty(exports, '__esModule', {
 	                    value: true
@@ -77,7 +77,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _DeltaJs = __webpack_require__(4);
 	
-	var _DeltaJs2 = _interopRequireWildcard(_DeltaJs);
+	var _DeltaJs2 = _interopRequireDefault(_DeltaJs);
 	
 	/* make Target classes available under the DeltaJs symbol */
 	
@@ -87,7 +87,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _Path = __webpack_require__(6);
 	
-	var _Path2 = _interopRequireWildcard(_Path);
+	var _Path2 = _interopRequireDefault(_Path);
 	
 	/* make Error classes available under the DeltaJs symbol */
 	
@@ -419,13 +419,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
-	
-	var _bind = Function.prototype.bind;
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
-	
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 	
 	Object.defineProperty(exports, '__esModule', {
 		value: true
@@ -436,53 +432,57 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _Path = __webpack_require__(6);
 	
-	var _Path2 = _interopRequireWildcard(_Path);
+	var _Path2 = _interopRequireDefault(_Path);
 	
 	var _ReadableTarget$WritableTarget$rt$wt = __webpack_require__(5);
 	
-	var _define_Delta = __webpack_require__(9);
+	var _define_OperationTypes = __webpack_require__(9);
 	
-	var _define_Delta2 = _interopRequireWildcard(_define_Delta);
+	var _define_OperationTypes2 = _interopRequireDefault(_define_OperationTypes);
 	
-	var _define_Overloaded = __webpack_require__(10);
+	var _define_Delta = __webpack_require__(10);
 	
-	var _define_Overloaded2 = _interopRequireWildcard(_define_Overloaded);
+	var _define_Delta2 = _interopRequireDefault(_define_Delta);
 	
-	var _define_Modify = __webpack_require__(11);
+	var _define_Overloaded = __webpack_require__(11);
 	
-	var _define_Modify2 = _interopRequireWildcard(_define_Modify);
+	var _define_Overloaded2 = _interopRequireDefault(_define_Overloaded);
 	
-	var _define_basicOperations = __webpack_require__(12);
+	var _define_Modify = __webpack_require__(12);
 	
-	var _define_basicOperations2 = _interopRequireWildcard(_define_basicOperations);
+	var _define_Modify2 = _interopRequireDefault(_define_Modify);
 	
-	var _define_PutIntoArray = __webpack_require__(13);
+	var _define_basicOperations = __webpack_require__(13);
 	
-	var _define_PutIntoArray2 = _interopRequireWildcard(_define_PutIntoArray);
+	var _define_basicOperations2 = _interopRequireDefault(_define_basicOperations);
 	
-	var _define_PutIntoFunction = __webpack_require__(14);
+	var _define_PutIntoArray = __webpack_require__(14);
 	
-	var _define_PutIntoFunction2 = _interopRequireWildcard(_define_PutIntoFunction);
+	var _define_PutIntoArray2 = _interopRequireDefault(_define_PutIntoArray);
 	
-	var _define_DeltaModel = __webpack_require__(15);
+	var _define_PutIntoFunction = __webpack_require__(15);
 	
-	var _define_DeltaModel2 = _interopRequireWildcard(_define_DeltaModel);
+	var _define_PutIntoFunction2 = _interopRequireDefault(_define_PutIntoFunction);
 	
-	var _define_features = __webpack_require__(16);
+	var _define_DeltaModel = __webpack_require__(16);
 	
-	var _define_features2 = _interopRequireWildcard(_define_features);
+	var _define_DeltaModel2 = _interopRequireDefault(_define_DeltaModel);
 	
-	var _define_variationPoints = __webpack_require__(17);
+	var _define_features = __webpack_require__(17);
 	
-	var _define_variationPoints2 = _interopRequireWildcard(_define_variationPoints);
+	var _define_features2 = _interopRequireDefault(_define_features);
 	
-	var _define_applicationConditions = __webpack_require__(18);
+	var _define_variationPoints = __webpack_require__(18);
 	
-	var _define_applicationConditions2 = _interopRequireWildcard(_define_applicationConditions);
+	var _define_variationPoints2 = _interopRequireDefault(_define_variationPoints);
 	
-	var _define_ContainerProxy = __webpack_require__(19);
+	var _define_applicationConditions = __webpack_require__(19);
 	
-	var _define_ContainerProxy2 = _interopRequireWildcard(_define_ContainerProxy);
+	var _define_applicationConditions2 = _interopRequireDefault(_define_applicationConditions);
+	
+	var _define_ContainerProxy = __webpack_require__(20);
+	
+	var _define_ContainerProxy2 = _interopRequireDefault(_define_ContainerProxy);
 	
 	/**
 	 * @public
@@ -499,121 +499,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * instance per application.
 	 */
 	
-	var DeltaJs = (function () {
-		function DeltaJs() {
-			_classCallCheck(this, DeltaJs);
+	var DeltaJs = function DeltaJs() {
+		_classCallCheck(this, DeltaJs);
 	
-			_define_ContainerProxy2['default'](this);
-			_define_Delta2['default'](this);
-			_define_Overloaded2['default'](this);
-			_define_Modify2['default'](this);
-			_define_basicOperations2['default'](this);
-			_define_PutIntoArray2['default'](this);
-			_define_PutIntoFunction2['default'](this);
-			_define_DeltaModel2['default'](this);
-			_define_features2['default'](this);
-			_define_variationPoints2['default'](this);
-			_define_applicationConditions2['default'](this);
-		}
-	
-		_createClass(DeltaJs, [{
-			key: 'newOperationType',
-	
-			/**
-	   * This method allows you to tell delta.js about a new kind of delta operation.
-	   * This was also done for existing operations like `modify`, `add`, `remove`, and so on.
-	   * @param name       {string}    - name of the new operation type
-	   * @param DeltaClass {function}  - the new operation class
-	   * @param ProxyClass {?function} - the optional custom `Proxy` subclass for this operation-type
-	   */
-			value: function newOperationType(name, DeltaClass) {
-				var ProxyClass = arguments[2] === undefined ? null : arguments[2];
-	
-				/* sanity checks */
-				_extend$assert$isUndefined$isDefined$arraysEqual.assert(name[0] === name[0].toUpperCase(), 'Names of delta operation classes must start with a capital letter - \'' + name + '\' does not.');
-				_extend$assert$isUndefined$isDefined$arraysEqual.assert(_extend$assert$isUndefined$isDefined$arraysEqual.isUndefined(this.Delta[name]), 'The \'' + name + '\' operation type already exists.');
-	
-				/* store the operation class */
-				this.Delta[name] = DeltaClass;
-	
-				/* set the (optional) Proxy class */
-				DeltaClass.Proxy = ProxyClass;
-	
-				/* fetch certain given methods (if they exist) that need to be slightly augmented */
-				var givenApplyTo = DeltaClass.prototype.applyTo || function () {};
-	
-				/* augment the class prototype */
-				_extend$assert$isUndefined$isDefined$arraysEqual.extend(DeltaClass.prototype, {
-					applyTo: function applyTo(target) {
-						var options = arguments[1] === undefined ? {} : arguments[1];
-	
-						/* should this delta only be applied for a specific feature selection? */
-						if (!this.selected) {
-							return;
-						}
-	
-						/* if the target is not already in Target form, make it so now */
-						if (!(target instanceof DeltaJs.ReadableTarget)) {
-							target = new DeltaJs.ReadableTarget(target);
-						}
-	
-						/* option defaults */
-						if (_extend$assert$isUndefined$isDefined$arraysEqual.isUndefined(options.weak)) {
-							options.weak = false;
-						}
-	
-						/* does the target satisfy the precondition of the delta? */
-						var judgment = this.evaluatePrecondition(target, options);
-						if (judgment !== true) {
-							throw judgment;
-						}
-	
-						/* OK, then apply it if a method to do so was included in the operation */
-						givenApplyTo.call(this, target, options);
-					},
-					type: name
-				});
-	
-				/* create any given methods with default handler */
-				var lowercaseName = name[0].toLowerCase() + name.slice(1);
-				var _iteratorNormalCompletion = true;
-				var _didIteratorError = false;
-				var _iteratorError = undefined;
-	
-				try {
-					for (var _iterator = (DeltaClass.prototype.methods || [lowercaseName])[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-						var method = _step.value;
-	
-						this.ContainerProxy.newProxyMethod(method, function () {
-							for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-								args[_key] = arguments[_key];
-							}
-	
-							return new (_bind.apply(DeltaClass, [null].concat(args)))();
-						});
-					}
-				} catch (err) {
-					_didIteratorError = true;
-					_iteratorError = err;
-				} finally {
-					try {
-						if (!_iteratorNormalCompletion && _iterator['return']) {
-							_iterator['return']();
-						}
-					} finally {
-						if (_didIteratorError) {
-							throw _iteratorError;
-						}
-					}
-				}
-	
-				/* return the new class */
-				return DeltaClass;
-			}
-		}]);
-	
-		return DeltaJs;
-	})();
+		_define_OperationTypes2['default'](this);
+		_define_ContainerProxy2['default'](this);
+		_define_Delta2['default'](this);
+		_define_Overloaded2['default'](this);
+		_define_Modify2['default'](this);
+		_define_basicOperations2['default'](this);
+		_define_PutIntoArray2['default'](this);
+		_define_PutIntoFunction2['default'](this);
+		_define_DeltaModel2['default'](this);
+		_define_features2['default'](this);
+		_define_variationPoints2['default'](this);
+		_define_applicationConditions2['default'](this);
+	};
 	
 	exports['default'] = DeltaJs;
 	module.exports = exports['default'];
@@ -1021,11 +922,127 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _bind = Function.prototype.bind;
+	Object.defineProperty(exports, '__esModule', {
+		value: true
+	});
+	/* import internal stuff */
+	
+	var _extend$oncePer$assert$isUndefined = __webpack_require__(3);
+	
+	exports['default'] = _extend$oncePer$assert$isUndefined.oncePer('operation types', function (deltaJs) {
+	
+		_extend$oncePer$assert$isUndefined.oncePer(deltaJs.constructor, 'operation types', function (DeltaJs) {
+			_extend$oncePer$assert$isUndefined.extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */{
+	
+				/**
+	    * This method allows you to tell delta.js about a new kind of delta operation.
+	    * This was also done for existing operations like `modify`, `add`, `remove`, and so on.
+	    * @param name          {string}    - name of the new operation type
+	    * @param DeltaSubclass {function}  - the new operation class
+	    * @param ProxySubclass {?function} - the optional custom `Proxy` subclass for this operation-type
+	    */
+				newOperationType: function newOperationType(name, DeltaSubclass) {
+					var ProxySubclass = arguments[2] === undefined ? null : arguments[2];
+	
+					/* sanity checks */
+					_extend$oncePer$assert$isUndefined.assert(name[0] === name[0].toUpperCase(), 'Names of delta operation classes must start with a capital letter - \'' + name + '\' does not.');
+					_extend$oncePer$assert$isUndefined.assert(_extend$oncePer$assert$isUndefined.isUndefined(this.Delta[name]), 'The \'' + name + '\' operation type already exists.');
+	
+					/* store the operation class */
+					this.Delta[name] = DeltaSubclass;
+	
+					/* set the (optional) Proxy class */
+					DeltaSubclass.Proxy = ProxySubclass;
+	
+					/* fetch certain given methods (if they exist) that need to be slightly augmented */
+					var givenApplyTo = DeltaSubclass.prototype.applyTo || function () {};
+	
+					/* augment the class prototype */
+					_extend$oncePer$assert$isUndefined.extend(DeltaSubclass.prototype, {
+						applyTo: function applyTo(target) {
+							var options = arguments[1] === undefined ? {} : arguments[1];
+	
+							/* should this delta only be applied for a specific feature selection? */
+							if (!this.selected) {
+								return;
+							}
+	
+							/* if the target is not already in Target form, make it so now */
+							if (!(target instanceof DeltaJs.ReadableTarget)) {
+								target = new DeltaJs.ReadableTarget(target);
+							}
+	
+							/* option defaults */
+							if (_extend$oncePer$assert$isUndefined.isUndefined(options.weak)) {
+								options.weak = false;
+							}
+	
+							/* does the target satisfy the precondition of the delta? */
+							var judgment = this.evaluatePrecondition(target, options);
+							if (judgment !== true) {
+								throw judgment;
+							}
+	
+							/* OK, then apply it if a method to do so was included in the operation */
+							givenApplyTo.call(this, target, options);
+						},
+						type: name
+					});
+	
+					/* create any given methods with default handler */
+					var lowercaseName = name[0].toLowerCase() + name.slice(1);
+					var _iteratorNormalCompletion = true;
+					var _didIteratorError = false;
+					var _iteratorError = undefined;
+	
+					try {
+						for (var _iterator = (DeltaSubclass.prototype.methods || [lowercaseName])[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+							var method = _step.value;
+	
+							this.ContainerProxy.newProxyMethod(method, function () {
+								for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+									args[_key] = arguments[_key];
+								}
+	
+								return new (_bind.apply(DeltaSubclass, [null].concat(args)))();
+							});
+						}
+					} catch (err) {
+						_didIteratorError = true;
+						_iteratorError = err;
+					} finally {
+						try {
+							if (!_iteratorNormalCompletion && _iterator['return']) {
+								_iterator['return']();
+							}
+						} finally {
+							if (_didIteratorError) {
+								throw _iteratorError;
+							}
+						}
+					}
+	
+					/* return the new class */
+					return DeltaSubclass;
+				}
+	
+			});
+		});
+	});
+	module.exports = exports['default'];
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 	
-	var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: key == null || typeof Symbol == 'undefined' || key.constructor !== Symbol, configurable: true, writable: true }); };
+	var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
 	
 	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 	
@@ -1042,9 +1059,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _PreconditionFailure$CompositionError = __webpack_require__(7);
 	
-	var _define_Composed = __webpack_require__(21);
+	var _define_Composed = __webpack_require__(22);
 	
-	var _define_Composed2 = _interopRequireWildcard(_define_Composed);
+	var _define_Composed2 = _interopRequireDefault(_define_Composed);
 	
 	exports['default'] = _extend$oncePer$isDefined$isUndefined$arraysEqual$swapLastTwo.oncePer('Delta', function (deltaJs) {
 	
@@ -1472,12 +1489,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 	
@@ -1494,14 +1511,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _indent$oncePer$arraysEqual$t = __webpack_require__(3);
 	
-	var _define_Delta = __webpack_require__(9);
+	var _define_OperationTypes = __webpack_require__(9);
 	
-	var _define_Delta2 = _interopRequireWildcard(_define_Delta);
+	var _define_OperationTypes2 = _interopRequireDefault(_define_OperationTypes);
+	
+	var _define_Delta = __webpack_require__(10);
+	
+	var _define_Delta2 = _interopRequireDefault(_define_Delta);
 	
 	var _MultipleOverloadsApplicationError$NoOverloadsApplicationError$MultipleOverloadsCompositionError = __webpack_require__(7);
 	
 	exports['default'] = _indent$oncePer$arraysEqual$t.oncePer('Overloaded', function (deltaJs) {
 	
+		_define_OperationTypes2['default'](deltaJs);
 		_define_Delta2['default'](deltaJs);
 	
 		deltaJs.newOperationType('Overloaded', (function (_deltaJs$Delta) {
@@ -1697,12 +1719,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } };
 	
@@ -1723,16 +1745,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _Path = __webpack_require__(6);
 	
-	var _Path2 = _interopRequireWildcard(_Path);
+	var _Path2 = _interopRequireDefault(_Path);
 	
 	var _wt = __webpack_require__(5);
 	
-	var _define_ContainerProxy = __webpack_require__(19);
+	var _define_OperationTypes = __webpack_require__(9);
 	
-	var _define_ContainerProxy2 = _interopRequireWildcard(_define_ContainerProxy);
+	var _define_OperationTypes2 = _interopRequireDefault(_define_OperationTypes);
+	
+	var _define_ContainerProxy = __webpack_require__(20);
+	
+	var _define_ContainerProxy2 = _interopRequireDefault(_define_ContainerProxy);
 	
 	exports['default'] = _extend$indent$t$oncePer$mapEqual.oncePer('Modify', function (deltaJs) {
 	
+		_define_OperationTypes2['default'](deltaJs);
 		_define_ContainerProxy2['default'](deltaJs);
 	
 		//noinspection JSUnusedLocalSymbols
@@ -2102,12 +2129,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 	
@@ -2124,16 +2151,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _WritableTarget$ReadableTarget$rt$wt = __webpack_require__(5);
 	
-	var _define_Delta = __webpack_require__(9);
+	var _define_OperationTypes = __webpack_require__(9);
 	
-	var _define_Delta2 = _interopRequireWildcard(_define_Delta);
+	var _define_OperationTypes2 = _interopRequireDefault(_define_OperationTypes);
 	
-	var _define_Modify = __webpack_require__(11);
+	var _define_Delta = __webpack_require__(10);
 	
-	var _define_Modify2 = _interopRequireWildcard(_define_Modify);
+	var _define_Delta2 = _interopRequireDefault(_define_Delta);
+	
+	var _define_Modify = __webpack_require__(12);
+	
+	var _define_Modify2 = _interopRequireDefault(_define_Modify);
 	
 	exports['default'] = _isUndefined$isDefined$t$define_d$oncePer.oncePer('basic operations', function (deltaJs) {
 	
+		_define_OperationTypes2['default'](deltaJs);
 		_define_Delta2['default'](deltaJs);
 		_define_Modify2['default'](deltaJs);
 	
@@ -2399,12 +2431,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 	
@@ -2421,22 +2453,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	/* import internal stuff */
 	
+	var _define_OperationTypes = __webpack_require__(9);
+	
+	var _define_OperationTypes2 = _interopRequireDefault(_define_OperationTypes);
+	
+	var _define_Modify = __webpack_require__(12);
+	
+	var _define_Modify2 = _interopRequireDefault(_define_Modify);
+	
+	var _define_basicOperations = __webpack_require__(13);
+	
+	var _define_basicOperations2 = _interopRequireDefault(_define_basicOperations);
+	
+	var _define_Proxy = __webpack_require__(23);
+	
+	var _define_Proxy2 = _interopRequireDefault(_define_Proxy);
+	
 	var _isDefined$t$define_d$oncePer$arraysEqual$arraysHaveSameElements$customIndexOf = __webpack_require__(3);
-	
-	var _define_Modify = __webpack_require__(11);
-	
-	var _define_Modify2 = _interopRequireWildcard(_define_Modify);
-	
-	var _define_basicOperations = __webpack_require__(12);
-	
-	var _define_basicOperations2 = _interopRequireWildcard(_define_basicOperations);
-	
-	var _define_Proxy = __webpack_require__(22);
-	
-	var _define_Proxy2 = _interopRequireWildcard(_define_Proxy);
 	
 	exports['default'] = _isDefined$t$define_d$oncePer$arraysEqual$arraysHaveSameElements$customIndexOf.oncePer('PutIntoArray', function (deltaJs) {
 	
+		_define_OperationTypes2['default'](deltaJs);
 		_define_Modify2['default'](deltaJs);
 		_define_basicOperations2['default'](deltaJs);
 		_define_Proxy2['default'](deltaJs);
@@ -2630,12 +2667,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 	
@@ -2652,24 +2689,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	/* import internal stuff */
 	
-	var _isUndefined$isDefined$t$define_d$oncePer$arraysEqual = __webpack_require__(3);
+	var _define_OperationTypes = __webpack_require__(9);
+	
+	var _define_OperationTypes2 = _interopRequireDefault(_define_OperationTypes);
+	
+	var _define_Modify = __webpack_require__(12);
+	
+	var _define_Modify2 = _interopRequireDefault(_define_Modify);
+	
+	var _define_BasicOperations = __webpack_require__(13);
+	
+	var _define_BasicOperations2 = _interopRequireDefault(_define_BasicOperations);
+	
+	var _define_Proxy = __webpack_require__(23);
+	
+	var _define_Proxy2 = _interopRequireDefault(_define_Proxy);
 	
 	var _WritableTarget = __webpack_require__(5);
 	
-	var _define_Modify = __webpack_require__(11);
-	
-	var _define_Modify2 = _interopRequireWildcard(_define_Modify);
-	
-	var _define_BasicOperations = __webpack_require__(12);
-	
-	var _define_BasicOperations2 = _interopRequireWildcard(_define_BasicOperations);
-	
-	var _define_Proxy = __webpack_require__(22);
-	
-	var _define_Proxy2 = _interopRequireWildcard(_define_Proxy);
+	var _isUndefined$isDefined$t$define_d$oncePer$arraysEqual = __webpack_require__(3);
 	
 	exports['default'] = _isUndefined$isDefined$t$define_d$oncePer$arraysEqual.oncePer('PutIntoFunction', function (deltaJs) {
 	
+		_define_OperationTypes2['default'](deltaJs);
 		_define_Modify2['default'](deltaJs);
 		_define_BasicOperations2['default'](deltaJs);
 		_define_Proxy2['default'](deltaJs);
@@ -2874,12 +2916,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } };
 	
@@ -2898,9 +2940,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 	/* import external libraries */
 	
-	var _Graph = __webpack_require__(23);
+	var _Graph = __webpack_require__(24);
 	
-	var _Graph2 = _interopRequireWildcard(_Graph);
+	var _Graph2 = _interopRequireDefault(_Graph);
 	
 	/* import internal stuff */
 	
@@ -2908,20 +2950,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _Path = __webpack_require__(6);
 	
-	var _Path2 = _interopRequireWildcard(_Path);
+	var _Path2 = _interopRequireDefault(_Path);
 	
-	var _define_Modify = __webpack_require__(11);
+	var _define_OperationTypes = __webpack_require__(9);
 	
-	var _define_Modify2 = _interopRequireWildcard(_define_Modify);
+	var _define_OperationTypes2 = _interopRequireDefault(_define_OperationTypes);
 	
-	var _define_ContainerProxy = __webpack_require__(19);
+	var _define_Modify = __webpack_require__(12);
 	
-	var _define_ContainerProxy2 = _interopRequireWildcard(_define_ContainerProxy);
+	var _define_Modify2 = _interopRequireDefault(_define_Modify);
+	
+	var _define_ContainerProxy = __webpack_require__(20);
+	
+	var _define_ContainerProxy2 = _interopRequireDefault(_define_ContainerProxy);
 	
 	var _ApplicationOrderCycle$UnresolvedDeltaConflict = __webpack_require__(7);
 	
 	exports['default'] = _extend$isDefined$indent$oncePer$s$t.oncePer('DeltaModel', function (deltaJs) {
 	
+		_define_OperationTypes2['default'](deltaJs);
 		_define_ContainerProxy2['default'](deltaJs);
 	
 		//noinspection JSUnusedLocalSymbols
@@ -3670,7 +3717,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4062,14 +4109,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	// change nothing
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
-	var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: key == null || typeof Symbol == 'undefined' || key.constructor !== Symbol, configurable: true, writable: true }); };
+	var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
 	
 	Object.defineProperty(exports, '__esModule', {
 		value: true
@@ -4078,19 +4125,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _extend$oncePer = __webpack_require__(3);
 	
-	var _define_DeltaModel = __webpack_require__(15);
+	var _define_DeltaModel = __webpack_require__(16);
 	
-	var _define_DeltaModel2 = _interopRequireWildcard(_define_DeltaModel);
+	var _define_DeltaModel2 = _interopRequireDefault(_define_DeltaModel);
 	
 	exports['default'] = _extend$oncePer.oncePer('variation points', function (deltaJs) {
 	
-		_extend$oncePer.oncePer(deltaJs.constructor, 'variation points', function () {
+		_define_DeltaModel2['default'](deltaJs);
 	
-			_define_DeltaModel2['default'](deltaJs);
+		_extend$oncePer.oncePer(deltaJs.constructor, 'variation points', function (DeltaJs) {
+			_extend$oncePer.extend(DeltaJs.prototype, /** @lends DeltaJs.prototype */{
 	
-			_extend$oncePer.extend(deltaJs.constructor.prototype, {
-	
-				/** {@public}{@method}
+				/**
 	    * This method indicates a variation point.
 	    * @param name {string} - a hook by which operations from the core delta model can be applied
 	    * @param val  {*}      - the initial value of this variation point
@@ -4104,7 +4150,7 @@ return /******/ (function(modules) { // webpackBootstrap
 					return root[name];
 				},
 	
-				/** {@public}{@method}
+				/**
 	    * A {DeltaJs} instance has one fundamental {DeltaJs#DeltaModel} instance, which is applied
 	    * to any variation points that are encountered. This method is an alias to the eponymous
 	    * method on that 'root' delta model. It returns the proxy that allows new delta operations
@@ -4130,7 +4176,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4209,12 +4255,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 	
@@ -4235,15 +4281,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _Path = __webpack_require__(6);
 	
-	var _Path2 = _interopRequireWildcard(_Path);
+	var _Path2 = _interopRequireDefault(_Path);
 	
-	var _define_Overloaded = __webpack_require__(10);
+	var _define_Overloaded = __webpack_require__(11);
 	
-	var _define_Overloaded2 = _interopRequireWildcard(_define_Overloaded);
+	var _define_Overloaded2 = _interopRequireDefault(_define_Overloaded);
 	
-	var _define_Proxy = __webpack_require__(22);
+	var _define_Proxy = __webpack_require__(23);
 	
-	var _define_Proxy2 = _interopRequireWildcard(_define_Proxy);
+	var _define_Proxy2 = _interopRequireDefault(_define_Proxy);
 	
 	var _MultipleActiveProxiesError = __webpack_require__(7);
 	
@@ -4502,11 +4548,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 20 */,
-/* 21 */
+/* 21 */,
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+	
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 	
@@ -4525,7 +4573,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _indent$oncePer$arraysEqual$t = __webpack_require__(3);
 	
+	var _define_OperationTypes = __webpack_require__(9);
+	
+	var _define_OperationTypes2 = _interopRequireDefault(_define_OperationTypes);
+	
 	exports['default'] = _indent$oncePer$arraysEqual$t.oncePer('Composed', function (deltaJs) {
+	
+		_define_OperationTypes2['default'](deltaJs);
 	
 		// NOTE: Not importing the circular dependency deltaJs.Delta here.
 		//       That file will import this one at the proper time.
@@ -4730,12 +4784,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
+	var _interopRequireDefault = function (obj) { return obj && obj.__esModule ? obj : { 'default': obj }; };
 	
 	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } };
 	
@@ -4748,9 +4802,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _extend$oncePer = __webpack_require__(3);
 	
-	var _define_Delta = __webpack_require__(9);
+	var _define_Delta = __webpack_require__(10);
 	
-	var _define_Delta2 = _interopRequireWildcard(_define_Delta);
+	var _define_Delta2 = _interopRequireDefault(_define_Delta);
 	
 	exports['default'] = _extend$oncePer.oncePer('Proxy', function (deltaJs) {
 	
@@ -4815,7 +4869,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
