@@ -241,7 +241,7 @@ something you want to do very early in your application.
 
 ## The `Proxy` API
 
-<img align="right" width="300px" margin="15px" src="./docs/images/coder-generic.jpg" />
+<img align="right" width="300px" margin="15px" src="./docs/images/proxi.jpg" />
 
 Deltas can modify values in any number of ways, from completely
 replacing them with other values, to making fine-grained modifications in a deeply nested
