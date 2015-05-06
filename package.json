@@ -37,10 +37,9 @@
 	"graph.js": "~1"
   },
   "scripts": {
-	"prepublish": "npm run build && npm run docs",
+	"prepublish": "npm run build",
 	"build": "mkdir -p dist && webpack && uglifyjs dist/delta.js -mo dist/delta.min.js --in-source-map dist/delta.js.map --source-map dist/delta.min.js.map && uglifyjs dist/delta.full.js -mo dist/delta.full.min.js --in-source-map dist/delta.full.js.map --source-map dist/delta.full.min.js.map",
 	"test": "karma start",
-	"test-ci": "karma start ./karma.ci.conf.js",
-	"docs": "jsdoc2md src/**/*.es6.js -t docs/README.md.hbs -d 3 --partial \"./docs/partials/**/*.hbs\" --separators -l JavaScript > README.md"
+	"test-ci": "karma start ./karma.ci.conf.js"
   }
 }
